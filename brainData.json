@@ -1,24 +1,24 @@
 [
   {
     "id": "prefrontal-cortex",
-    "name": "Prefrontal Cortex (Dorsolateral & Ventromedial)",
+    "name": "Prefrontal Cortex (Dorsolateral, Ventromedial, Orbitofrontal)",
     "lobe": "Frontal Lobe",
     "broadmannArea": "BA 9, 10, 11, 46, 47",
-    "function": "Executive functioning, working memory, cognitive flexibility, abstract reasoning, decision-making, and emotional/impulse regulation.",
+    "function": "Executive functioning, reasoning, planning, problem-solving, personality characteristics, decision-making, emotional/impulse regulation, working memory, and recognition of smell.",
     "clinicalDeficit": {
-      "condition": "Dysexecutive Syndrome / Frontal Lobe Syndrome",
-      "symptoms": "Apathy, severe impulsivity, perseveration, poor risk assessment, utilization behavior, and personality changes (e.g., Phineas Gage pattern)."
+      "condition": "Dysexecutive Syndrome / Frontal Lobe Deficits",
+      "symptoms": "Apathy, severe impulsivity, poor risk assessment, emotional blunting, utilization behavior, and profound personality alterations (e.g., Phineas Gage pattern)."
     }
   },
   {
     "id": "brocas-area",
     "name": "Broca's Area (Inferior Frontal Gyrus)",
     "lobe": "Frontal Lobe",
-    "broadmannArea": "BA 44 (Pars Opercularis) & BA 45 (Pars Triangularis)",
-    "function": "Motor planning and execution of expressive language, articulation, and complex syntax construction.",
+    "broadmannArea": "BA 44 & 45",
+    "function": "Speech production, articulation, motor planning of expression, and complex grammatical syntax generation.",
     "clinicalDeficit": {
       "condition": "Broca's Aphasia (Expressive Aphasia)",
-      "symptoms": "Non-fluent, effortful, telegraphic speech with agrammatism; writing is similarly impaired, but auditory comprehension remains relatively intact."
+      "symptoms": "Non-fluent, slow, fragmented, telegraphic speech output with agrammatism; writing is similarly affected, though speech comprehension remains mostly intact."
     }
   },
   {
@@ -26,10 +26,10 @@
     "name": "Primary Motor Cortex (Precentral Gyrus)",
     "lobe": "Frontal Lobe",
     "broadmannArea": "BA 4",
-    "function": "Executes contralateral voluntary motor movements via the corticospinal tract, mapped topographically as the motor homunculus.",
+    "function": "Controls voluntary motor movements throughout the body via topographically organized corticospinal tract execution.",
     "clinicalDeficit": {
       "condition": "Contralateral Hemiparesis / Hemiplegia",
-      "symptoms": "Weakness or paralysis on the opposite side of the body, spasticity, and hyperreflexia."
+      "symptoms": "Weakness, loss of voluntary fine motor control, or spastic paralysis on the opposite side of the body."
     }
   },
   {
@@ -37,32 +37,32 @@
     "name": "Primary Somatosensory Cortex (Postcentral Gyrus)",
     "lobe": "Parietal Lobe",
     "broadmannArea": "BA 1, 2, 3",
-    "function": "Processes tactile sensations including touch, pain, temperature, pressure, and proprioception from the contralateral side of the body.",
+    "function": "Processes somatosensory input including touch, temperature, pressure, proprioception, and pain interpretation.",
     "clinicalDeficit": {
       "condition": "Contralateral Somatosensory Loss / Astereognosis",
-      "symptoms": "Inability to perceive touch or recognize objects by feel alone (astereognosis) on the opposite side of the body."
+      "symptoms": "Loss of tactile awareness, impaired temperature discrimination, and inability to identify objects by touch alone on the opposite side of the body."
     }
   },
   {
     "id": "posterior-parietal-cortex",
-    "name": "Posterior Parietal Cortex & Angular/Supramarginal Gyri",
+    "name": "Posterior Parietal Cortex & Spatial Processing Zone",
     "lobe": "Parietal Lobe",
     "broadmannArea": "BA 5, 7, 39, 40",
-    "function": "Spatial attention, visuospatial integration, sensorimotor transformation, mathematical calculation, and reading processing.",
+    "function": "Visuospatial relationships, body schema orientation in space (where body is relative to environment), object identification, calculation, and reading.",
     "clinicalDeficit": {
       "condition": "Hemispatial Neglect / Gerstmann Syndrome",
-      "symptoms": "Right lesion leads to left spatial neglect. Dominant (left) BA 39/40 lesion causes Gerstmann Syndrome: acalculia, agraphia, finger agnosia, and left-right disorientation."
+      "symptoms": "Right lesion causes left side spatial neglect. Left hemisphere damage to BA 39/40 causes Gerstmann Syndrome: acalculia, agraphia, finger agnosia, and right-left confusion."
     }
   },
   {
     "id": "wernickes-area",
-    "name": "Wernicke's Area (Superior Temporal Gyrus)",
-    "lobe": "Temporal Lobe",
-    "broadmannArea": "BA 22",
-    "function": "Comprehension of spoken and written language, phonological retrieval, and semantic interpretation.",
+    "name": "Wernicke's Area (Superior Temporal / Parietal Region)",
+    "lobe": "Temporal & Parietal Lobes",
+    "broadmannArea": "BA 22 (extended to BA 39/40)",
+    "function": "Language comprehension, decoding spoken and written speech, and semantic interpretation.",
     "clinicalDeficit": {
       "condition": "Wernicke's Aphasia (Receptive Aphasia)",
-      "symptoms": "Fluent but empty speech ('word salad'), neologisms, verbal paraphasias, and profound loss of language comprehension."
+      "symptoms": "Fluent but meaningless speech output ('word salad'), verbal paraphasias, neologisms, and severe impairment in language comprehension."
     }
   },
   {
@@ -70,87 +70,153 @@
     "name": "Primary Auditory Cortex (Heschl's Gyrus)",
     "lobe": "Temporal Lobe",
     "broadmannArea": "BA 41 & 42",
-    "function": "Tonotopic processing of sound frequency, pitch, volume, and auditory localization.",
+    "function": "Tonotopic processing of auditory signals including frequency, pitch, volume, musical rhythm, and sound localization.",
     "clinicalDeficit": {
       "condition": "Cortical Deafness / Auditory Agnosia",
-      "symptoms": "Inability to recognize non-verbal environmental sounds or comprehend speech despite functional peripheral auditory pathways."
+      "symptoms": "Inability to perceive complex environmental sounds or recognize familiar audio patterns despite intact inner ear pathways."
     }
   },
   {
     "id": "inferior-temporal-cortex",
-    "name": "Fusiform Face Area & Inferotemporal Cortex",
+    "name": "Inferior Temporal Cortex & Fusiform Gyrus",
     "lobe": "Temporal Lobe",
     "broadmannArea": "BA 20, 21, 37",
-    "function": "High-level visual object recognition, complex visual category representation, and facial identity recognition.",
+    "function": "High-level visual object recognition, facial identification, category representation, and short-term memory integration.",
     "clinicalDeficit": {
       "condition": "Prosopagnosia / Visual Object Agnosia",
-      "symptoms": "Inability to recognize familiar faces (prosopagnosia) or identify complex visual objects despite preserved visual acuity."
-    }
-  },
-  {
-    "id": "hippocampus-limbic",
-    "name": "Hippocampus & Medial Temporal Lobe",
-    "lobe": "Limbic / Temporal System",
-    "broadmannArea": "Archicortex (CA1-CA3, Dentate Gyrus)",
-    "function": "Encoding and consolidation of declarative (explicit) long-term episodic and semantic memories, as well as spatial navigation.",
-    "clinicalDeficit": {
-      "condition": "Anterograde Amnesia",
-      "symptoms": "Complete inability to form new episodic long-term memories (e.g., Patient H.M. profile), while procedural memory remains intact."
-    }
-  },
-  {
-    "id": "amygdala",
-    "name": "Amygdala",
-    "lobe": "Limbic System",
-    "broadmannArea": "Subcortical Nuclei Group",
-    "function": "Emotional valence assignment, threat detection, fear conditioning, and autonomic stress modulation.",
-    "clinicalDeficit": {
-      "condition": "Klüver-Bucy Syndrome / Fear Extinction Deficits",
-      "symptoms": "Bilateral damage causes loss of fear responses, hyperorality, hypersexuality, psychic blindness, and emotional blunting."
+      "symptoms": "Inability to recognize familiar faces (prosopagnosia) or identify common objects visually despite intact basic vision."
     }
   },
   {
     "id": "primary-visual-cortex",
-    "name": "Primary Visual Cortex (Striate Cortex / V1)",
+    "name": "Primary Visual Cortex (V1 / Striate Cortex)",
     "lobe": "Occipital Lobe",
     "broadmannArea": "BA 17",
-    "function": "Retinotopic mapping and processing of visual features like spatial orientation, line contrast, motion, and visual field representation.",
+    "function": "Primary visual processing center of the brain, handling spatial contrast, orientation, motion, and visual field topography.",
     "clinicalDeficit": {
       "condition": "Cortical Blindness / Homonymous Hemianopia",
-      "symptoms": "Contralateral visual field loss (hemianopia) or complete cortical blindness; sometimes accompanied by Anton-Babinski syndrome (denial of blindness)."
-    }
-  },
-  {
-    "id": "arcuate-fasciculus",
-    "name": "Arcuate Fasciculus",
-    "lobe": "Subcortical White Matter Tract",
-    "broadmannArea": "Association Fiber Tract",
-    "function": "Bidirectional white matter pathway linking Wernicke's and Broca's areas to coordinate language processing and repetition.",
-    "clinicalDeficit": {
-      "condition": "Conduction Aphasia",
-      "symptoms": "Fluent spontaneous speech and intact comprehension, but a severe and isolated inability to repeat spoken words or sentences."
-    }
-  },
-  {
-    "id": "basal-ganglia",
-    "name": "Basal Ganglia (Striatum, Globus Pallidus, Subthalamic Nucleus)",
-    "lobe": "Subcortical Structures",
-    "broadmannArea": "Subcortical Ganglia",
-    "function": "Action selection, gating of motor movement, habit formation, procedural learning, and reward-based reinforcement.",
-    "clinicalDeficit": {
-      "condition": "Parkinson's Disease / Huntington's Chorea",
-      "symptoms": "Hypokinetic disorders (bradykinesia, resting tremor, rigidity) or hyperkinetic movement disorders (chorea, ballism)."
+      "symptoms": "Loss of visual field awareness (e.g., hemianopia) or cortical blindness, sometimes with denial of visual deficit (Anton-Babinski syndrome)."
     }
   },
   {
     "id": "thalamus",
     "name": "Thalamus",
-    "lobe": "Diencephalon",
-    "broadmannArea": "Subcortical Nuclear Complex",
-    "function": "Sensory relay station (relays all sensory modalities except olfaction to cortex) and cortical arousal/consciousness regulation.",
+    "lobe": "Diencephalon / Deep Subcortical",
+    "broadmannArea": "Subcortical Nuclear Group",
+    "function": "Central relay station passing sensory (all except olfaction) and motor signals to the cerebral cortex; regulates cortical arousal and consciousness.",
     "clinicalDeficit": {
-      "condition": "Thalamic Pain Syndrome / Korsakoff's Syndrome / Coma",
-      "symptoms": "Severe sensory loss/pain, confabulation, anterograde memory loss (mammillothalamic damage), or altered consciousness states."
+      "condition": "Thalamic Pain Syndrome / Altered Consciousness",
+      "symptoms": "Contralateral sensory loss followed by severe neuropathic pain, sensory gating breakdown, or altered states of arousal."
+    }
+  },
+  {
+    "id": "hypothalamus",
+    "name": "Hypothalamus",
+    "lobe": "Diencephalon / Deep Subcortical",
+    "broadmannArea": "Subcortical Structure",
+    "function": "Maintains homeostasis: controls hunger, thirst, body temperature, circadian sleep patterns, autonomic functions, and memory/emotion via chemical signaling to the pituitary gland.",
+    "clinicalDeficit": {
+      "condition": "Hypothalamic Dysfunction / Endocrine Imbalance",
+      "symptoms": "Disrupted thermoregulation, severe hyperphagia/aphagia, diabetes insipidus, disrupted sleep-wake cycles, and emotional labileness."
+    }
+  },
+  {
+    "id": "pituitary-gland",
+    "name": "Pituitary Gland ('Master Gland')",
+    "lobe": "Endocrine System / Deep Sella Turcica",
+    "broadmannArea": "Subcortical Structure",
+    "function": "Pea-sized structure governing other glands; regulates hormone flow for thyroid, adrenals, ovaries, and testicles based on hypothalamic chemical signals via its stalk.",
+    "clinicalDeficit": {
+      "condition": "Pituitary Adenoma / Hypopituitarism",
+      "symptoms": "Systemic hormonal imbalances, Cushing's disease, acromegaly, or bitemporal hemianopia (due to optic chiasm compression above it)."
+    }
+  },
+  {
+    "id": "pineal-gland",
+    "name": "Pineal Gland",
+    "lobe": "Epithalamus / Third Ventricle Top",
+    "broadmannArea": "Subcortical Structure",
+    "function": "Responds to light/dark cycles and secretes melatonin to regulate circadian rhythms and the sleep-wake cycle.",
+    "clinicalDeficit": {
+      "condition": "Pineal Lesions / Circadian Rhythm Disorders",
+      "symptoms": "Severe sleep disruption, delayed sleep phase syndrome, or Parinaud syndrome (vertical gaze palsy) if pineal tumors compress the tectum."
+    }
+  },
+  {
+    "id": "amygdala",
+    "name": "Amygdala",
+    "lobe": "Limbic System / Medial Temporal",
+    "broadmannArea": "Subcortical Nuclei Group",
+    "function": "Regulates core emotions (particularly fear, threat responses, 'fight or flight'), emotional memory, stress, and reward processing.",
+    "clinicalDeficit": {
+      "condition": "Klüver-Bucy Syndrome / Threat Disinhibition",
+      "symptoms": "Loss of fear conditioning, hyperorality, hypersexuality, psychic blindness, and extreme emotional unresponsiveness to threat."
+    }
+  },
+  {
+    "id": "hippocampus-limbic",
+    "name": "Hippocampus & Hippocampal Formation",
+    "lobe": "Limbic System / Temporal Lobe Underside",
+    "broadmannArea": "Archicortex",
+    "function": "Converts short-term experiences into lasting long-term declarative memories; supports learning, spatial navigation, and spatial perception.",
+    "clinicalDeficit": {
+      "condition": "Anterograde Amnesia / Early Alzheimer's Pathology",
+      "symptoms": "Inability to consolidate new episodic/semantic memories (e.g., Patient H.M. profile), disorientation in space, and early vulnerability in Alzheimer's disease."
+    }
+  },
+  {
+    "id": "basal-ganglia",
+    "name": "Basal Ganglia (Striatum, Globus Pallidus, Subthalamic Nucleus)",
+    "lobe": "Deep Subcortical System",
+    "broadmannArea": "Subcortical Ganglia",
+    "function": "Fine-tunes voluntary motor movements, gates motor initiation, regulates habit formation, and supports procedural motor learning.",
+    "clinicalDeficit": {
+      "condition": "Parkinson's Disease / Huntington's Chorea",
+      "symptoms": "Hypokinetic symptoms (resting tremor, bradykinesia, rigidity) or hyperkinetic choreiform movements and involuntary motor bursts."
+    }
+  },
+  {
+    "id": "ventricles-csf",
+    "name": "Ventricular System & Cerebrospinal Fluid (CSF)",
+    "lobe": "Ventricular System",
+    "broadmannArea": "Internal Cavities (Lateral, 3rd, 4th Ventricles)",
+    "function": "Four open internal cavities that manufacture CSF; circulates fluid around central nervous system to cushion brain/spinal cord, deliver nutrients, and remove waste.",
+    "clinicalDeficit": {
+      "condition": "Hydrocephalus / Increased Intracranial Pressure",
+      "symptoms": "CSF blockage leading to ventricular expansion, headache, papilledema, cognitive slowing, gait ataxia, and urinary incontinence."
+    }
+  },
+  {
+    "id": "meninges-layer",
+    "name": "Meninges (Dura Mater, Arachnoid Mater, Pia Mater)",
+    "lobe": "Protective Membranes",
+    "broadmannArea": "Extracortical Layers",
+    "function": "Three protective membranes surrounding CNS: Dura (tough outer double-layer with venous sinuses), Arachnoid (weblike tissue over subarachnoid CSF space), and Pia (richly vascularized membrane hugging brain contours).",
+    "clinicalDeficit": {
+      "condition": "Meningitis / Subdural & Epidural Hematomas",
+      "symptoms": "Meningeal irritation (nuchal rigidity, photophobia), or intracranial hemorrhage causing mass effect and uncal herniation."
+    }
+  },
+  {
+    "id": "cerebral-blood-supply",
+    "name": "Cerebral Blood Supply (Carotid, Vertebral, Circle of Willis)",
+    "lobe": "Vascular Network",
+    "broadmannArea": "Vascular System",
+    "function": "Delivers oxygenated blood via Internal Carotids (front portion) and Vertebral/Basilar Arteries (rear portion); joined by the Circle of Willis loop at the base for collateral circulation.",
+    "clinicalDeficit": {
+      "condition": "Ischemic / Hemorrhagic Stroke (CVA) & Aneurysms",
+      "symptoms": "Focal neurological deficits depending on arterial territory (e.g., MCA stroke causing facial droop and arm weakness; PCA stroke causing visual field loss)."
+    }
+  },
+  {
+    "id": "cranial-nerves-group",
+    "name": "Cranial Nerves (CN I to XII)",
+    "lobe": "PNS / Brainstem Peripheral Interface",
+    "broadmannArea": "Cranial Nerves I-XII",
+    "function": "12 pairs: CN I (Olfactory/Smell) & CN II (Optic/Sight) emerge from cerebrum; CN III-XII emerge from brainstem handling eye movement (III, IV, VI), jaw/face sensation & chewing (V), face motor/taste (VII), balance/hearing (VIII), throat/taste (IX), heart/viscera/digestion (X), neck/shoulders (XI), and tongue (XII).",
+    "clinicalDeficit": {
+      "condition": "Cranial Neuropathies (e.g., Bell's Palsy, Trigeminal Neuralgia)",
+      "symptoms": "Anosmia (CN I), blindness/visual cut (CN II), diplopia/ptosis (CN III, IV, VI), facial numbness/tic (CN V), facial paralysis (CN VII), vertigo/hearing loss (CN VIII), dysphagia (CN IX, X), or tongue deviation (CN XII)."
     }
   },
   {
@@ -158,21 +224,21 @@
     "name": "Cerebellum",
     "lobe": "Hindbrain",
     "broadmannArea": "Cerebellar Cortex & Deep Nuclei",
-    "function": "Motor coordination, fine precision timing, posture control, motor learning, and cognitive/emotional sequence timing.",
+    "function": "Coordinates fine motor skills, precision movement timing, posture control, and balance.",
     "clinicalDeficit": {
       "condition": "Cerebellar Ataxia",
-      "symptoms": "Dysmetria (past-pointing), dysdiadochokinesia (inability to perform rapid alternating movements), intention tremor, and wide-based gait."
+      "symptoms": "Gait instability (wide-based gait), dysmetria (past-pointing), dysdiadochokinesia, and intention tremors during voluntary movement."
     }
   },
   {
     "id": "brainstem",
     "name": "Brainstem (Midbrain, Pons, Medulla Oblongata)",
     "lobe": "Brainstem",
-    "broadmannArea": "Cranial Nerve Nuclei & Reticular Formation",
-    "function": "Autonomic life-support functions (respiration, cardiovascular control), sleep-wake cycles, cranial nerve functions, and ascending arousal.",
+    "broadmannArea": "Midbrain, Pons & Medulla",
+    "function": "Manages involuntary life-sustaining tasks (breathing, heart rate, swallowing, blood pressure) and acts as the origin point for Cranial Nerves III through XII.",
     "clinicalDeficit": {
-      "condition": "Locked-in Syndrome / Brainstem Stroke / Coma",
-      "symptoms": "Pontine damage causes total paralysis with preserved consciousness (Locked-in); medullary damage is life-threatening due to respiratory arrest."
+      "condition": "Brainstem Stroke / Locked-in Syndrome / Coma",
+      "symptoms": "Pontine damage causes total quadriplegia with eye movement preservation (Locked-in); medullary damage is rapidly fatal due to respiratory failure."
     }
   }
 ]
