@@ -1,0 +1,68 @@
+[
+  {
+    "id": "brocas-area",
+    "name": "Broca's Area",
+    "lobe": "Frontal Lobe",
+    "broadmannArea": "BA 44 & 45",
+    "function": "Motor production of speech, articulation, and complex grammatical structure generation.",
+    "clinicalDeficit": {
+      "condition": "Broca's Aphasia (Expressive Aphasia)",
+      "symptoms": "Non-fluent, slow, fragmented speech output with intact auditory comprehension ('telegraphic speech')."
+    }
+  },
+  {
+    "id": "wernickes-area",
+    "name": "Wernicke's Area",
+    "lobe": "Temporal Lobe",
+    "broadmannArea": "BA 22",
+    "function": "Comprehension of written and spoken language and semantic interpretation.",
+    "clinicalDeficit": {
+      "condition": "Wernicke's Aphasia (Receptive Aphasia)",
+      "symptoms": "Fluent but paraphasic/meaningless speech ('word salad') paired with severe impairment in language comprehension."
+    }
+  },
+  {
+    "id": "arcuate-fasciculus",
+    "name": "Arcuate Fasciculus",
+    "lobe": "Subcortical Pathway",
+    "broadmannArea": "White Matter Tract",
+    "function": "Connects Wernicke's area to Broca's area, allowing phonological signals to pass directly for speech repetition.",
+    "clinicalDeficit": {
+      "condition": "Conduction Aphasia",
+      "symptoms": "Fluent speech output and intact comprehension, but a severe inability to repeat spoken phrases word-for-word."
+    }
+  },
+  {
+    "id": "prefrontal-cortex",
+    "name": "Prefrontal Cortex",
+    "lobe": "Frontal Lobe",
+    "broadmannArea": "BA 9, 10, 11, 46",
+    "function": "Executive control, working memory, decision-making, planning, and emotional regulation.",
+    "clinicalDeficit": {
+      "condition": "Dysexecutive Syndrome",
+      "symptoms": "Impulsivity, poor risk assessment, emotional blunting or disinhibition, and difficulty initiating or switching tasks."
+    }
+  },
+  {
+    "id": "primary-visual-cortex",
+    "name": "Primary Visual Cortex (V1)",
+    "lobe": "Occipital Lobe",
+    "broadmannArea": "BA 17",
+    "function": "Initial cortical processing of visual features (lines, orientation, spatial contrast, visual field representation).",
+    "clinicalDeficit": {
+      "condition": "Cortical Blindness / Visual Field Defects",
+      "symptoms": "Loss of visual awareness in specific visual fields (e.g., hemianopia) or visual agnosia."
+    }
+  },
+  {
+    "id": "primary-auditory-cortex",
+    "name": "Primary Auditory Cortex (A1)",
+    "lobe": "Temporal Lobe",
+    "broadmannArea": "BA 41 & 42",
+    "function": "Tonotopic processing of auditory signals including frequency, pitch, volume, and sound localization.",
+    "clinicalDeficit": {
+      "condition": "Cortical Deafness / Auditory Agnosia",
+      "symptoms": "Inability to perceive complex sounds or recognize familiar non-speech sounds despite undamaged ear anatomy."
+    }
+  }
+]
