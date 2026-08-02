@@ -2,101 +2,130 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Neuromap - Master Neuroanatomy & Neuropsychology Atlas</title>
+  <title>Neuromap - Master Neuroanatomy Atlas</title>
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; gap: 16px; padding: 24px; background: #0f172a; color: #f8fafc; }
-    #container { display: flex; width: 100%; max-width: 1100px; gap: 20px; margin-top: 10px; }
     
-    #brain-viewer { position: relative; width: 560px; height: 420px; background: #1e293b; border-radius: 12px; padding: 10px; border: 1px solid #334155; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 1150px; background: #1e293b; padding: 12px 16px; border-radius: 8px; border: 1px solid #334155; }
+    .search-box { position: relative; flex: 1; max-width: 380px; }
+    .search-box input { width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
     
-    .brain-region { transition: opacity 0.2s ease, filter 0.2s ease, stroke-width 0.2s ease; }
+    .layer-toggles { display: flex; gap: 6px; flex-wrap: wrap; }
+    .layer-btn { background: #334155; color: #cbd5e1; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
+    .layer-btn.active { background: #0284c7; color: white; font-weight: bold; }
+
+    #container { display: flex; width: 100%; max-width: 1150px; gap: 20px; }
+    #brain-viewer { position: relative; width: 600px; height: 440px; background: #1e293b; border-radius: 12px; padding: 12px; border: 1px solid #334155; }
+    
+    .brain-region { transition: all 0.2s ease; cursor: pointer; }
     .brain-region:hover { opacity: 1 !important; filter: drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.9)); }
     .brain-region.selected { opacity: 1 !important; stroke: #ffffff !important; stroke-width: 3px !important; filter: drop-shadow(0px 0px 12px #38bdf8); }
+    .brain-region.dimmed { opacity: 0.15 !important; }
 
-    #info-panel { flex: 1; padding: 20px; background: #1e293b; border-radius: 12px; border: 1px solid #334155; }
+    #info-panel { flex: 1; padding: 20px; background: #1e293b; border-radius: 12px; border: 1px solid #334155; display: flex; flex-direction: column; justify-content: space-between; }
     .badge { background: #312e81; color: #c7d2fe; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; margin-right: 6px; }
-    .deficit-box { background: #450a0a; border-left: 4px solid #ef4444; padding: 12px; margin-top: 16px; border-radius: 4px; }
+    .deficit-box { background: #450a0a; border-left: 4px solid #ef4444; padding: 12px; margin-top: 12px; border-radius: 4px; }
+    .case-box { background: #172554; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 12px; border-radius: 4px; }
     
-    button { background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-    button:hover { background: #1d4ed8; }
+    .btn-action { background: #2563eb; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+    .btn-action:hover { background: #1d4ed8; }
+    .btn-export { background: #059669; }
+    .btn-export:hover { background: #047857; }
+    
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem; margin-top: 8px; max-width: 600px; }
+    .legend-item { display: flex; align-items: center; gap: 4px; color: #94a3b8; }
+    .color-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
   </style>
 </head>
 <body>
 
-  <h1>Neuromap</h1>
-  <p style="color: #94a3b8; margin-top: -10px;">Comprehensive Neuroanatomy & Clinical Neuropsychology Atlas</p>
+  <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1150px;">
+    <div>
+      <h1 style="margin: 0;">Neuromap</h1>
+      <p style="color: #94a3b8; margin: 4px 0 0 0;">Master Neuroanatomy, Clinical Simulator & Anki Generator</p>
+    </div>
+    <button class="btn-action btn-export" onclick="exportAnkiDeck()">📥 Export Anki Deck (.txt)</button>
+  </div>
 
-  <div style="display: flex; align-items: center; gap: 12px;">
-    <button id="mode-btn" onclick="toggleMode()">Switch to Quiz Mode</button>
-    <div id="quiz-banner" style="display: none; background: #0284c7; padding: 8px 16px; border-radius: 6px; font-weight: 500;">
-      <span id="quiz-question">Question loading...</span> | <strong>Score: <span id="quiz-score">0</span></strong>
+  <!-- TOOLBAR: SEARCH & LAYER TOGGLES -->
+  <div class="toolbar">
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Search structure, BA area, or clinical symptom..." oninput="handleSearch()">
+    </div>
+    
+    <div class="layer-toggles">
+      <button class="layer-btn active" onclick="filterLayer('all', this)">All Layers</button>
+      <button class="layer-btn" onclick="filterLayer('cortex', this)">Cortical Lobes</button>
+      <button class="layer-btn" onclick="filterLayer('subcortical', this)">Subcortical & Limbic</button>
+      <button class="layer-btn" onclick="filterLayer('vascular', this)">Vascular & Meninges</button>
+      <button class="layer-btn" onclick="filterLayer('cranial', this)">Cranial Nerves</button>
+    </div>
+  </div>
+
+  <!-- MODE BANNER & CASE SIMULATOR -->
+  <div style="display: flex; align-items: center; gap: 12px; max-width: 1150px;">
+    <button id="mode-btn" class="btn-action" onclick="toggleMode()">Switch to Clinical Case Mode</button>
+    <div id="quiz-banner" style="display: none; background: #0284c7; padding: 8px 16px; border-radius: 6px; font-weight: 500; flex: 1;">
+      <span id="quiz-question">Loading case study...</span> | <strong>Score: <span id="quiz-score">0</span></strong>
     </div>
   </div>
 
   <div id="container">
-    <div id="brain-viewer">
-      <svg viewBox="0 0 500 380" width="100%" height="100%">
-        <!-- Cerebrum Silhouette -->
-        <path d="M 50,180 C 40,80 180,20 320,30 C 420,40 470,120 460,200 C 450,260 380,280 340,280 C 310,280 280,250 250,250 C 180,250 140,270 90,240 C 60,220 50,200 50,180 Z" fill="#334155" stroke="#64748b" stroke-width="2" />
+    <div>
+      <div id="brain-viewer">
+        <svg viewBox="0 0 540 400" width="100%" height="100%">
+          <!-- 1. PROTECTIVE LAYERS & VASCULAR NETWORKS -->
+          <path class="brain-region layer-vascular" data-id="meninges-layer" d="M 30,160 C 30,60 120,20 280,25 C 440,30 490,120 480,210 C 460,280 380,300 340,300 C 310,300 270,370 240,370 C 220,370 140,280 80,250 C 40,230 30,180 30,160 Z" fill="none" stroke="#64748b" stroke-width="4" stroke-dasharray="6,4" />
+          <path class="brain-region layer-vascular" data-id="cerebral-blood-supply" d="M 190,260 Q 230,230 260,240 T 310,250 M 230,235 L 210,330 M 260,240 L 270,330" fill="none" stroke="#f43f5e" stroke-width="3" />
 
-        <!-- Prefrontal Cortex -->
-        <path class="brain-region" data-id="prefrontal-cortex" d="M 60,150 Q 80,70 160,80 Q 120,140 60,150 Z" fill="#10b981" opacity="0.65" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
+          <!-- 2. CORTICAL LOBES -->
+          <path class="brain-region layer-cortex" data-id="prefrontal-cortex" d="M 40,160 C 40,80 120,40 180,45 L 160,190 L 60,200 Z" fill="#10b981" opacity="0.6" stroke="#ffffff" stroke-width="1.5" />
+          <path class="brain-region layer-cortex" data-id="brocas-area" d="M 120,150 Q 155,130 170,165 Q 145,190 120,170 Z" fill="#3b82f6" opacity="0.8" stroke="#ffffff" stroke-width="1.5" />
+          <path class="brain-region layer-cortex" data-id="primary-motor-cortex" d="M 180,45 L 210,48 L 190,195 L 160,190 Z" fill="#ef4444" opacity="0.75" stroke="#ffffff" stroke-width="1.5" />
+          <path class="brain-region layer-cortex" data-id="primary-somatosensory-cortex" d="M 210,48 L 240,53 L 215,198 L 190,195 Z" fill="#f97316" opacity="0.75" stroke="#ffffff" stroke-width="1.5" />
+          <path class="brain-region layer-cortex" data-id="posterior-parietal-cortex" d="M 240,53 C 310,65 370,100 380,150 L 290,185 L 215,198 Z" fill="#a855f7" opacity="0.6" stroke="#ffffff" stroke-width="1.5" />
+          <path class="brain-region layer-cortex" data-id="primary-visual-cortex" d="M 380,150 C 460,170 470,230 420,260 L 340,220 L 290,185 Z" fill="#f59e0b" opacity="0.7" stroke="#ffffff" stroke-width="1.5" />
+          <path class="brain-region layer-cortex" data-id="wernickes-area" d="M 290,185 L 340,220 L 270,250 L 240,200 Z" fill="#8b5cf6" opacity="0.85" stroke="#ffffff" stroke-width="1.5" />
+          <path class="brain-region layer-cortex" data-id="primary-auditory-cortex" d="M 220,180 Q 250,170 250,195 Q 220,205 220,180 Z" fill="#06b6d4" opacity="0.85" stroke="#ffffff" stroke-width="1.5" />
+          <path class="brain-region layer-cortex" data-id="inferior-temporal-cortex" d="M 120,200 C 180,210 270,230 330,240 C 300,270 190,270 110,230 Z" fill="#e11d48" opacity="0.6" stroke="#ffffff" stroke-width="1.5" />
 
-        <!-- Broca's Area -->
-        <path class="brain-region" data-id="brocas-area" d="M 120,140 Q 150,120 170,150 Q 150,180 120,160 Z" fill="#3b82f6" opacity="0.65" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
+          <!-- 3. SUBCORTICAL & LIMBIC STRUCTURES -->
+          <path class="brain-region layer-subcortical" data-id="ventricles-csf" d="M 170,130 Q 230,100 290,140 Q 240,165 170,130 Z" fill="#38bdf8" opacity="0.5" stroke="#0284c7" stroke-width="1.5" />
+          <ellipse class="brain-region layer-subcortical" data-id="thalamus" cx="230" cy="155" rx="18" ry="12" fill="#eab308" opacity="0.9" stroke="#ffffff" stroke-width="1.5" />
+          <polygon class="brain-region layer-subcortical" data-id="hypothalamus" points="215,165 235,165 225,182" fill="#fbbf24" stroke="#ffffff" stroke-width="1" />
+          <circle class="brain-region layer-subcortical" data-id="pituitary-gland" cx="218" cy="198" r="6" fill="#f472b6" opacity="0.95" stroke="#ffffff" stroke-width="1" />
+          <circle class="brain-region layer-subcortical" data-id="pineal-gland" cx="260" cy="150" r="5" fill="#c084fc" opacity="0.95" stroke="#ffffff" stroke-width="1" />
+          <path class="brain-region layer-subcortical" data-id="basal-ganglia" d="M 185,140 C 185,120 225,120 235,138 C 210,148 195,148 185,140 Z" fill="#14b8a6" opacity="0.9" stroke="#ffffff" stroke-width="1.5" />
+          <path class="brain-region layer-subcortical" data-id="hippocampus-limbic" d="M 215,190 C 235,180 255,190 245,205 C 225,205 210,200 215,190 Z" fill="#84cc16" opacity="0.9" stroke="#ffffff" stroke-width="1.5" />
+          <circle class="brain-region layer-subcortical" data-id="amygdala" cx="198" cy="190" r="8" fill="#dc2626" opacity="0.95" stroke="#ffffff" stroke-width="1.5" />
+          <path class="brain-region layer-subcortical" data-id="cerebellum" d="M 330,255 C 390,250 430,280 400,340 C 330,340 310,300 330,255 Z" fill="#6366f1" opacity="0.8" stroke="#ffffff" stroke-width="1.5" />
+          <path class="brain-region layer-subcortical" data-id="brainstem" d="M 240,250 L 285,250 L 275,350 L 240,350 Z" fill="#64748b" opacity="0.85" stroke="#ffffff" stroke-width="1.5" />
 
-        <!-- Primary Motor Cortex (Precentral Gyrus) -->
-        <path class="brain-region" data-id="primary-motor-cortex" d="M 175,70 L 195,65 L 185,180 L 165,175 Z" fill="#ef4444" opacity="0.65" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
+          <!-- 4. CRANIAL NERVES -->
+          <path class="brain-region layer-cranial" data-id="cranial-nerves-group" d="M 235,220 L 200,225 M 240,260 L 205,270 M 242,280 L 208,295 M 245,310 L 210,325 M 248,335 L 215,348" fill="none" stroke="#facc15" stroke-width="2.5" />
+        </svg>
+      </div>
 
-        <!-- Primary Somatosensory Cortex (Postcentral Gyrus) -->
-        <path class="brain-region" data-id="primary-somatosensory-cortex" d="M 200,65 L 220,68 L 210,180 L 190,180 Z" fill="#f97316" opacity="0.65" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-
-        <!-- Posterior Parietal Cortex -->
-        <path class="brain-region" data-id="posterior-parietal-cortex" d="M 225,69 Q 320,60 360,120 Q 300,170 215,170 Z" fill="#a855f7" opacity="0.65" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-
-        <!-- Primary Visual Cortex -->
-        <path class="brain-region" data-id="primary-visual-cortex" d="M 400,160 Q 450,180 430,220 Q 380,210 400,160 Z" fill="#f59e0b" opacity="0.65" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-
-        <!-- Wernicke's Area -->
-        <path class="brain-region" data-id="wernickes-area" d="M 280,160 Q 320,150 340,180 Q 300,210 270,180 Z" fill="#8b5cf6" opacity="0.65" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-
-        <!-- Primary Auditory Cortex -->
-        <path class="brain-region" data-id="primary-auditory-cortex" d="M 240,170 Q 270,160 270,185 Q 240,195 240,170 Z" fill="#06b6d4" opacity="0.65" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-
-        <!-- Inferior Temporal / Fusiform Cortex -->
-        <path class="brain-region" data-id="inferior-temporal-cortex" d="M 180,210 Q 260,220 330,220 Q 280,250 180,240 Z" fill="#e11d48" opacity="0.65" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-
-        <!-- Arcuate Fasciculus -->
-        <path class="brain-region" data-id="arcuate-fasciculus" d="M 170,150 Q 220,110 280,160" fill="none" stroke="#ec4899" stroke-width="5" stroke-dasharray="4,4" style="cursor: pointer;" />
-
-        <!-- Deep Limbic / Subcortical Structures -->
-        <!-- Hippocampus -->
-        <path class="brain-region" data-id="hippocampus-limbic" d="M 230,200 C 250,190 270,200 260,215 C 240,215 225,210 230,200 Z" fill="#84cc16" opacity="0.85" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-
-        <!-- Amygdala -->
-        <circle class="brain-region" data-id="amygdala" cx="215" cy="200" r="10" fill="#dc2626" opacity="0.85" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-
-        <!-- Thalamus -->
-        <ellipse class="brain-region" data-id="thalamus" cx="240" cy="165" rx="16" ry="12" fill="#eab308" opacity="0.85" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-
-        <!-- Basal Ganglia -->
-        <path class="brain-region" data-id="basal-ganglia" d="M 200,150 C 200,130 230,130 240,145 C 220,155 205,155 200,150 Z" fill="#14b8a6" opacity="0.85" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-
-        <!-- Cerebellum -->
-        <path class="brain-region" data-id="cerebellum" d="M 330,255 C 380,250 420,280 390,340 C 330,340 310,300 330,255 Z" fill="#6366f1" opacity="0.75" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-
-        <!-- Brainstem -->
-        <path class="brain-region" data-id="brainstem" d="M 260,250 L 295,250 L 285,350 L 255,350 Z" fill="#64748b" opacity="0.85" stroke="#ffffff" stroke-width="1.5" style="cursor: pointer;" />
-      </svg>
+      <div class="legend">
+        <span class="legend-item"><span class="color-dot" style="background: #10b981;"></span> Frontal</span>
+        <span class="legend-item"><span class="color-dot" style="background: #a855f7;"></span> Parietal</span>
+        <span class="legend-item"><span class="color-dot" style="background: #e11d48;"></span> Temporal</span>
+        <span class="legend-item"><span class="color-dot" style="background: #f59e0b;"></span> Occipital</span>
+        <span class="legend-item"><span class="color-dot" style="background: #f472b6;"></span> Subcortical/Endocrine</span>
+        <span class="legend-item"><span class="color-dot" style="background: #38bdf8;"></span> Ventricles</span>
+        <span class="legend-item"><span class="color-dot" style="background: #facc15;"></span> Cranial Nerves</span>
+      </div>
     </div>
 
-    <!-- Details Display Panel -->
+    <!-- DETAIL DISPLAY PANEL -->
     <div id="info-panel">
-      <h2 id="region-name" style="margin-top: 0;">Select a Brain Region</h2>
-      <p><span id="region-lobe" class="badge">Lobe / System</span> <span id="region-ba" class="badge">Brodmann Area</span></p>
-      <hr style="border-color: #334155;">
-      <h3>Neuropsychological Function</h3>
-      <p id="region-function" style="color: #cbd5e1;">Click any region on the map to display its core functions and clinical deficits.</p>
+      <div>
+        <h2 id="region-name" style="margin-top: 0;">Select a Brain Region</h2>
+        <p><span id="region-lobe" class="badge">Lobe / System</span> <span id="region-ba" class="badge">Brodmann / System</span></p>
+        <hr style="border-color: #334155;">
+        <h3>Neuropsychological & Anatomical Function</h3>
+        <p id="region-function" style="color: #cbd5e1;">Click any region on the map or use the search bar to display functions and deficits.</p>
+      </div>
       
       <div class="deficit-box">
         <strong id="deficit-title" style="color: #fca5a5;">Clinical Deficit / Syndrome</strong>
@@ -106,9 +135,5 @@
   </div>
 
   <script src="app.js"></script>
-</body>
-</html>
-</body>
-</html>
 </body>
 </html>
