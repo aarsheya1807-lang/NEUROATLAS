@@ -242,3 +242,71 @@
     }
   }
 ]
+[
+  {
+    "id": "central-sulcus-omega",
+    "name": "Central Sulcus & Motor Hand Omega Area",
+    "lobe": "Frontal / Parietal Junction",
+    "broadmannArea": "BA 4 (Precentral) / BA 3, 1, 2 (Postcentral)",
+    "function": "Divides frontal and parietal lobes. Features a distinct inverted 'Omega' shape on the lateral aspect representing hand motor (precentral) and somatosensory (postcentral) control. Shows structural motor lateralization based on handedness.",
+    "clinicalDeficit": {
+      "condition": "Contralateral Hand Monoparesis / Sensory Loss",
+      "symptoms": "Isolated loss of motor control, weakness, or tactile discrimination specifically in the contralateral hand."
+    }
+  },
+  {
+    "id": "calcarine-sulcus",
+    "name": "Calcarine Sulcus (Primary Visual Cortex - V1)",
+    "lobe": "Occipital Lobe (Medial Aspect)",
+    "broadmannArea": "BA 17",
+    "function": "Receives initial retinotopic visual inputs from the LGN. Acts as the primary gateway for conscious visual perception.",
+    "clinicalDeficit": {
+      "condition": "Cortical Blindness / Homonymous Hemianopia",
+      "symptoms": "Loss of vision in the contralateral visual field with macular sparing if collateral circulation is intact."
+    }
+  },
+  {
+    "id": "ventral-stream",
+    "name": "Ventral Temporal Visual Stream ('What' Pathway)",
+    "lobe": "Inferior Temporal Lobe",
+    "broadmannArea": "BA 20, 21, 37",
+    "function": "Processes visual information streaming from V1 down the inferior temporal lobe to recognize complex shapes, places, objects, and faces (Fusiform Face Area).",
+    "clinicalDeficit": {
+      "condition": "Visual Agnosia & Prosopagnosia",
+      "symptoms": "Inability to recognize familiar objects or faces visually, despite intact basic vision."
+    }
+  },
+  {
+    "id": "middle-temporal-v5",
+    "name": "Area MT / V5 (Middle Temporal Area)",
+    "lobe": "Temporo-Parieto-Occipital Junction",
+    "broadmannArea": "BA 37 / MT",
+    "function": "Enriched in direction-selective motion neurons. Specialized for processing visual motion ('building our notion of motion').",
+    "clinicalDeficit": {
+      "condition": "Akinetopsia (Motion Blindness)",
+      "symptoms": "Inability to perceive continuous fluid movement; objects appear as a series of frozen freeze-frame snapshots."
+    }
+  },
+  {
+    "id": "orbitofrontal-cortex",
+    "name": "Orbitofrontal Cortex (Phineas Gage Region)",
+    "lobe": "Frontal Lobe (Ventral Surface)",
+    "broadmannArea": "BA 11, 12, 47",
+    "function": "Integrates visceral/emotional signals with decision-making, impulse control, social decorum, and risk reward assessment.",
+    "clinicalDeficit": {
+      "condition": "Orbitofrontal Syndrome / Personality Dissociation",
+      "symptoms": "Profound changes in personality, disinhibition, emotional apathy, impulsivity, and poor judgment (classical Phineas Gage presentation)."
+    }
+  },
+  {
+    "id": "pyramidal-neuron-microanatomy",
+    "name": "Cortical Pyramidal Neurons (Microanatomy)",
+    "lobe": "Cerebral Cortex (Layers III & V)",
+    "broadmannArea": "Microscopic Cellular Level",
+    "function": "Principal excitatory projection neurons of gray matter. Feature a pyramid-shaped soma, long apical dendrite extending to the surface, basal dendritic tree with spiny protrusions for synaptic input, and a long axon (conducting zone).",
+    "clinicalDeficit": {
+      "condition": "Dendritic Spine Loss / Excitotoxicity",
+      "symptoms": "Loss of dendritic spines leads to synaptic disconnectivity seen in neurodegenerative conditions and cognitive decline."
+    }
+  }
+]
