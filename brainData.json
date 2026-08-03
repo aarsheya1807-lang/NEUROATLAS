@@ -1,81 +1,476 @@
 {
-  "hierarchy": {
-    "id": "cranium",
-    "name": "Cranial Skull",
-    "type": "outer_shell",
-    "description": "Bony structure protecting the brain, consisting of the neurocranium and facial skeleton.",
-    "children": [
-      {
-        "id": "meninges",
-        "name": "Meningeal Layers",
-        "type": "membrane_shell",
-        "description": "Three protective membranes: Dura Mater (outer thick layer), Arachnoid Mater (vascular web), and Pia Mater (adhered directly to gyri).",
-        "children": [
-          {
-            "id": "frontal-lobe",
-            "name": "Frontal & Prefrontal Lobe",
-            "color": "0x6366f1",
-            "description": "Responsible for high-level executive function, motor control, speech production, and personality.",
-            "position": { "x": -1.2, "y": 0.5, "z": 1.0 },
-            "subRegions": [
-              {
-                "id": "prefrontal-cortex",
-                "name": "Dorsolateral Prefrontal Cortex (DLPFC)",
-                "ba": "BA 9, 46",
-                "function": "Executive control, working memory, task-switching, and emotional regulation.",
-                "deficit": "Dysexecutive syndrome, planning deficits, cognitive rigidity.",
-                "dsm5": "Major Depressive Disorder (296.2), ADHD (314.01)",
-                "position": { "x": -1.8, "y": 0.8, "z": 1.4 }
-              },
-              {
-                "id": "orbitofrontal-cortex",
-                "name": "Orbitofrontal Cortex (Phineas Gage Region)",
-                "ba": "BA 11, 12, 47",
-                "function": "Impulse control, value-based decision making, social decorum, and reward regulation.",
-                "deficit": "Orbitofrontal disinhibition syndrome, profound personality alteration, risk-seeking behavior.",
-                "dsm5": "Behavioral Variant Frontotemporal Neurocognitive Disorder (F02.80), OCD (300.3)",
-                "position": { "x": -1.3, "y": -0.3, "z": 1.5 }
-              },
-              {
-                "id": "brocas-area",
-                "name": "Broca's Area",
-                "ba": "BA 44, 45 (Inferior Frontal Gyrus)",
-                "function": "Motor speech articulation and syntactic language construction.",
-                "deficit": "Broca's Expressive Aphasia (halting, non-fluent speech with preserved comprehension).",
-                "dsm5": "Primary Progressive Aphasia (Agrammatic Variant)",
-                "position": { "x": -2.0, "y": 0.2, "z": 0.8 }
-              }
-            ]
-          },
-          {
-            "id": "temporal-lobe",
-            "name": "Temporal Lobe",
-            "color": "0x38bdf8",
-            "description": "Processes auditory input, speech comprehension, visual object recognition, and memory formation.",
-            "position": { "x": -1.5, "y": -0.6, "z": -0.2 },
-            "subRegions": [
-              {
-                "id": "wernickes-area",
-                "name": "Wernicke's Area",
-                "ba": "BA 22 (Superior Temporal Gyrus)",
-                "function": "Semantic speech comprehension and phonological decoding.",
-                "deficit": "Wernicke's Receptive Aphasia (fluent 'word salad' speech with severe comprehension loss).",
-                "dsm5": "Primary Progressive Aphasia (Semantic Variant)",
-                "position": { "x": -1.8, "y": -0.2, "z": -0.6 }
-              },
-              {
-                "id": "ventral-stream",
-                "name": "Fusiform Face Area / Ventral Visual Stream",
-                "ba": "BA 20, 21, 37",
-                "function": "High-level object, place, and facial feature recognition ('What' pathway).",
-                "deficit": "Prosopagnosia (face blindness) and visual agnosia.",
-                "dsm5": "Major Neurocognitive Disorder Due to Alzheimer's (Visuoperceptual Domain)",
-                "position": { "x": -1.4, "y": -1.2, "z": -0.1 }
-              }
-            ]
-          }
-        ]
-      }
+  "categories": {
+    "lobe": {
+      "label": "Cortical Lobe",
+      "color": "#5B7FBD"
+    },
+    "language": {
+      "label": "Language Network",
+      "color": "#E8A23D"
+    },
+    "limbic": {
+      "label": "Limbic System",
+      "color": "#D9607A"
+    },
+    "subcortical": {
+      "label": "Subcortical Structure",
+      "color": "#8B6FD6"
+    },
+    "sensorimotor": {
+      "label": "Sensorimotor Strip",
+      "color": "#47E0B0"
+    },
+    "other": {
+      "label": "Other Structure",
+      "color": "#7A8494"
+    }
+  },
+  "regions": [
+    {
+      "id": "frontal-l",
+      "name": "Frontal Lobe (Left)",
+      "group": "Frontal Lobe",
+      "category": "lobe",
+      "pos": [
+        -0.55,
+        0.2,
+        0.75
+      ],
+      "scale": [
+        0.55,
+        0.5,
+        0.62
+      ],
+      "brodmann": "4, 6, 8–13, 44–47",
+      "function": "Executive control, working memory, voluntary motor planning, personality and impulse regulation, and expressive language (left side).",
+      "clinical": "Damage here produces disinhibition, apathy, poor judgment, or — if the inferior left portion is involved — expressive (Broca's) aphasia."
+    },
+    {
+      "id": "frontal-r",
+      "name": "Frontal Lobe (Right)",
+      "group": "Frontal Lobe",
+      "category": "lobe",
+      "pos": [
+        0.55,
+        0.2,
+        0.75
+      ],
+      "scale": [
+        0.55,
+        0.5,
+        0.62
+      ],
+      "brodmann": "4, 6, 8–13",
+      "function": "Non-verbal executive function, sustained attention, and aspects of social/emotional judgment.",
+      "clinical": "Right frontal lesions are classically linked to disinhibition and impaired insight with relatively preserved language."
+    },
+    {
+      "id": "parietal-l",
+      "name": "Parietal Lobe (Left)",
+      "group": "Parietal Lobe",
+      "category": "lobe",
+      "pos": [
+        -0.55,
+        0.35,
+        -0.15
+      ],
+      "scale": [
+        0.5,
+        0.45,
+        0.55
+      ],
+      "brodmann": "1–3, 5, 7, 39, 40",
+      "function": "Somatosensory integration, spatial processing, and (left side) mathematical reasoning and left-right orientation.",
+      "clinical": "Left angular gyrus damage can cause Gerstmann syndrome: agraphia, acalculia, finger agnosia, and left-right confusion."
+    },
+    {
+      "id": "parietal-r",
+      "name": "Parietal Lobe (Right)",
+      "group": "Parietal Lobe",
+      "category": "lobe",
+      "pos": [
+        0.55,
+        0.35,
+        -0.15
+      ],
+      "scale": [
+        0.5,
+        0.45,
+        0.55
+      ],
+      "brodmann": "1–3, 5, 7, 39, 40",
+      "function": "Spatial awareness of the whole body and surrounding space; attention allocation across both visual fields.",
+      "clinical": "Right posterior parietal lesions are the classic cause of hemispatial (left-sided) neglect."
+    },
+    {
+      "id": "temporal-l",
+      "name": "Temporal Lobe (Left)",
+      "group": "Temporal Lobe",
+      "category": "lobe",
+      "pos": [
+        -0.75,
+        -0.25,
+        0.25
+      ],
+      "scale": [
+        0.35,
+        0.3,
+        0.55
+      ],
+      "brodmann": "20–22, 41–42",
+      "function": "Auditory processing, semantic memory, and — in the posterior superior region — language comprehension.",
+      "clinical": "Posterior superior temporal damage on the left produces Wernicke's (receptive) aphasia: fluent but meaningless speech with impaired comprehension."
+    },
+    {
+      "id": "temporal-r",
+      "name": "Temporal Lobe (Right)",
+      "group": "Temporal Lobe",
+      "category": "lobe",
+      "pos": [
+        0.75,
+        -0.25,
+        0.25
+      ],
+      "scale": [
+        0.35,
+        0.3,
+        0.55
+      ],
+      "brodmann": "20–22, 41–42",
+      "function": "Prosody (tone of speech), music perception, and facial/scene memory.",
+      "clinical": "Right temporal lesions can flatten prosody (aprosodia) and impair recognition of unfamiliar faces or environments."
+    },
+    {
+      "id": "occipital",
+      "name": "Occipital Lobe",
+      "group": "Occipital Lobe",
+      "category": "lobe",
+      "pos": [
+        0,
+        0.1,
+        -0.9
+      ],
+      "scale": [
+        0.68,
+        0.4,
+        0.35
+      ],
+      "brodmann": "17–19",
+      "function": "Primary and associative visual processing — edges, motion, color, and the start of the dorsal ('where') and ventral ('what') visual streams.",
+      "clinical": "Bilateral occipital infarcts (posterior cerebral artery) can cause cortical blindness; unilateral lesions cause contralateral visual field cuts."
+    },
+    {
+      "id": "cerebellum",
+      "name": "Cerebellum",
+      "group": "Cerebellum",
+      "category": "other",
+      "pos": [
+        0,
+        -0.6,
+        -0.8
+      ],
+      "scale": [
+        0.58,
+        0.36,
+        0.42
+      ],
+      "brodmann": "—",
+      "function": "Coordination, balance, motor timing, and error-correction of movement; also contributes to cognitive timing and procedural learning.",
+      "clinical": "Lesions cause ipsilateral ataxia, dysmetria, intention tremor, and dysdiadochokinesia — never contralateral, unlike cortical motor lesions."
+    },
+    {
+      "id": "brainstem",
+      "name": "Brainstem",
+      "group": "Brainstem",
+      "category": "other",
+      "pos": [
+        0,
+        -0.78,
+        -0.35
+      ],
+      "scale": [
+        0.17,
+        0.4,
+        0.17
+      ],
+      "brodmann": "—",
+      "function": "Midbrain, pons, and medulla — houses cranial nerve nuclei, and cardiorespiratory and arousal (reticular activating system) centers.",
+      "clinical": "Lateral medullary (Wallenberg) syndrome: crossed sensory loss, Horner's syndrome, dysphagia, and ataxia from PICA territory infarct."
+    },
+    {
+      "id": "broca",
+      "name": "Broca's Area",
+      "group": "Language Network",
+      "category": "language",
+      "pos": [
+        -0.86,
+        -0.02,
+        0.58
+      ],
+      "scale": [
+        0.16,
+        0.13,
+        0.16
+      ],
+      "brodmann": "44, 45",
+      "function": "Speech production planning and grammatical (syntactic) construction of language, in the inferior frontal gyrus.",
+      "clinical": "Damage causes non-fluent, effortful, telegraphic speech with intact comprehension and impaired repetition — Broca's aphasia."
+    },
+    {
+      "id": "wernicke",
+      "name": "Wernicke's Area",
+      "group": "Language Network",
+      "category": "language",
+      "pos": [
+        -0.84,
+        -0.12,
+        -0.12
+      ],
+      "scale": [
+        0.17,
+        0.13,
+        0.17
+      ],
+      "brodmann": "22",
+      "function": "Language comprehension — decoding the meaning of spoken and written words, at the posterior superior temporal gyrus.",
+      "clinical": "Damage causes fluent but meaningless ('word salad') speech, with impaired comprehension and impaired repetition — Wernicke's aphasia."
+    },
+    {
+      "id": "amygdala",
+      "name": "Amygdala",
+      "group": "Limbic System",
+      "category": "limbic",
+      "pos": [
+        0.32,
+        -0.32,
+        0.35
+      ],
+      "scale": [
+        0.13,
+        0.11,
+        0.13
+      ],
+      "brodmann": "—",
+      "function": "Fear conditioning, threat detection, and emotional tagging of memories. Normally bilateral; shown here on one side for clarity.",
+      "clinical": "Bilateral damage (e.g. Klüver–Bucy syndrome) causes placidity, hyperorality, and hypersexuality; also implicated in PTSD hyperactivity."
+    },
+    {
+      "id": "hippocampus",
+      "name": "Hippocampus",
+      "group": "Limbic System",
+      "category": "limbic",
+      "pos": [
+        0.4,
+        -0.34,
+        0.02
+      ],
+      "scale": [
+        0.32,
+        0.09,
+        0.12
+      ],
+      "brodmann": "—",
+      "function": "Formation of new declarative (episodic and semantic) memories and spatial navigation. Normally bilateral.",
+      "clinical": "Bilateral medial temporal damage (e.g. patient H.M.) produces anterograde amnesia with preserved procedural learning."
+    },
+    {
+      "id": "thalamus",
+      "name": "Thalamus",
+      "group": "Diencephalon",
+      "category": "subcortical",
+      "pos": [
+        0,
+        0.02,
+        0
+      ],
+      "scale": [
+        0.24,
+        0.19,
+        0.24
+      ],
+      "brodmann": "—",
+      "function": "The brain's major sensory relay station (except olfaction), routing signals to appropriate cortical areas; also involved in arousal.",
+      "clinical": "Thalamic stroke can cause central post-stroke pain syndrome (Dejerine–Roussy) — severe contralateral burning pain."
+    },
+    {
+      "id": "hypothalamus",
+      "name": "Hypothalamus",
+      "group": "Diencephalon",
+      "category": "subcortical",
+      "pos": [
+        0,
+        -0.2,
+        0.16
+      ],
+      "scale": [
+        0.11,
+        0.09,
+        0.11
+      ],
+      "brodmann": "—",
+      "function": "Homeostasis: temperature, hunger, thirst, circadian rhythm, and control of the pituitary/endocrine axis.",
+      "clinical": "Lesions can cause diabetes insipidus, temperature dysregulation, or disrupted sleep-wake cycles."
+    },
+    {
+      "id": "corpus-callosum",
+      "name": "Corpus Callosum",
+      "group": "White Matter",
+      "category": "other",
+      "pos": [
+        0,
+        0.18,
+        0.1
+      ],
+      "scale": [
+        0.52,
+        0.07,
+        0.68
+      ],
+      "brodmann": "—",
+      "function": "The largest white-matter tract, carrying information between the left and right cerebral hemispheres.",
+      "clinical": "Split-brain (callosotomy) patients show striking hemisphere-specific deficits, e.g. left-hand alien-limb-like behaviour."
+    },
+    {
+      "id": "motor-strip",
+      "name": "Primary Motor Cortex",
+      "group": "Sensorimotor Strip",
+      "category": "sensorimotor",
+      "pos": [
+        0.5,
+        0.55,
+        0.06
+      ],
+      "scale": [
+        0.52,
+        0.09,
+        0.16
+      ],
+      "brodmann": "4",
+      "function": "The precentral gyrus — the motor homunculus. Controls voluntary movement of the contralateral body, organized medial (leg) to lateral (face).",
+      "clinical": "Lesions cause contralateral spastic weakness; MCA territory infarcts spare the leg (supplied by ACA) but affect face/arm most."
+    },
+    {
+      "id": "sensory-strip",
+      "name": "Primary Somatosensory Cortex",
+      "group": "Sensorimotor Strip",
+      "category": "sensorimotor",
+      "pos": [
+        0.5,
+        0.55,
+        -0.11
+      ],
+      "scale": [
+        0.52,
+        0.09,
+        0.16
+      ],
+      "brodmann": "1, 2, 3",
+      "function": "The postcentral gyrus — receives touch, pressure, vibration, and proprioceptive input from the contralateral body.",
+      "clinical": "Lesions cause contralateral cortical sensory loss: impaired two-point discrimination and stereognosis with preserved crude touch."
+    },
+    {
+      "id": "insula",
+      "name": "Insula",
+      "group": "Other",
+      "category": "other",
+      "pos": [
+        0.66,
+        -0.06,
+        0.2
+      ],
+      "scale": [
+        0.19,
+        0.19,
+        0.19
+      ],
+      "brodmann": "13–16",
+      "function": "Interoception (internal body awareness), taste, pain processing, and emotional awareness/disgust.",
+      "clinical": "Implicated in addiction (craving states) and in autonomic changes seen after right insular strokes."
+    },
+    {
+      "id": "basal-ganglia",
+      "name": "Basal Ganglia",
+      "group": "Subcortical",
+      "category": "subcortical",
+      "pos": [
+        0.26,
+        0.03,
+        0.2
+      ],
+      "scale": [
+        0.21,
+        0.19,
+        0.23
+      ],
+      "brodmann": "—",
+      "function": "Caudate, putamen, and globus pallidus — action selection, procedural/habit learning, and movement modulation.",
+      "clinical": "Degeneration causes Parkinson's disease (bradykinesia, rigidity, tremor) or Huntington's disease (chorea), depending on the circuit affected."
+    }
+  ],
+  "connections": [
+    [
+      "broca",
+      "wernicke"
+    ],
+    [
+      "amygdala",
+      "hippocampus"
+    ],
+    [
+      "thalamus",
+      "frontal-l"
+    ],
+    [
+      "thalamus",
+      "frontal-r"
+    ],
+    [
+      "thalamus",
+      "parietal-l"
+    ],
+    [
+      "thalamus",
+      "parietal-r"
+    ],
+    [
+      "thalamus",
+      "occipital"
+    ],
+    [
+      "thalamus",
+      "hypothalamus"
+    ],
+    [
+      "basal-ganglia",
+      "thalamus"
+    ],
+    [
+      "basal-ganglia",
+      "motor-strip"
+    ],
+    [
+      "motor-strip",
+      "sensory-strip"
+    ],
+    [
+      "cerebellum",
+      "brainstem"
+    ],
+    [
+      "brainstem",
+      "thalamus"
+    ],
+    [
+      "corpus-callosum",
+      "frontal-l"
+    ],
+    [
+      "corpus-callosum",
+      "frontal-r"
+    ],
+    [
+      "insula",
+      "amygdala"
     ]
-  }
+  ]
 }
