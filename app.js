@@ -252,3 +252,69 @@ function exportAnkiDeck() {
   link.click();
   document.body.removeChild(link);
 }
+// ==========================================
+// MICROANATOMY & CELLULAR EXPLORER MODULE
+// ==========================================
+
+const microanatomyTopics = [
+  {
+    title: "Functional Domains of a Neuron",
+    inputZone: "Dendrites & Spines (Synaptic Reception)",
+    integrationZone: "Soma / Cell Body (Organelles & Nucleus)",
+    conductingZone: "Axon (Action Potential Generation & Conduction)",
+    outputZone: "Synaptic Boutons / Terminals (Neurotransmitter Release)",
+    summary: "Information flows strictly from Input (Dendrites) → Integration (Soma) → Conduction (Axon) → Output (Synapse)."
+  },
+  {
+    title: "Gray Matter vs. White Matter Architecture",
+    grayMatter: "Contains Neuronal Cell Bodies, Spiny Dendrites, Interneurons, and Synapses (Input & Integration Zones).",
+    whiteMatter: "Contains Myelinated Axons (Conducting Zone), Oligodendrocytes (Glial Insulation), and Vascular Endothelium.",
+    summary: "Gray matter processes signals; White matter conducts signals across regions."
+  },
+  {
+    title: "Cortical Pyramidal vs. Interneuron Morphology",
+    pyramidal: "Excitatory projection neurons with long apical & basal spiny dendrites and long-projecting axons.",
+    interneurons: "Local circuit neurons (~100-300μm axons); can be Excitatory or Inhibitory (often with smooth dendrites).",
+    summary: "Pyramidal cells carry output across brain areas, while interneurons modulate local cortical processing."
+  }
+];
+
+function renderMicroanatomyExplorer() {
+  const container = document.getElementById('microanatomy-container');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="background: #1e293b; color: #f8fafc; padding: 20px; border-radius: 10px; margin-top: 20px;">
+      <h2 style="color: #6366f1;">Microanatomy & Functional Cellular Zones</h2>
+      <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        ${microanatomyTopics.map((topic, index) => `
+          <button onclick="displayMicroTopic(${index})" style="padding: 8px 12px; background: #334155; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            ${topic.title}
+          </button>
+        `).join('')}
+      </div>
+      <div id="micro-topic-content" style="background: #0f172a; padding: 15px; border-radius: 8px;">
+        <p>Select a topic above to explore cellular structure and micro-circuitry.</p>
+      </div>
+    </div>
+  `;
+}
+
+function displayMicroTopic(index) {
+  const topic = microanatomyTopics[index];
+  const contentEl = document.getElementById('micro-topic-content');
+  if (!contentEl) return;
+
+  let detailsHtml = `<h3>${topic.title}</h3>`;
+  for (const [key, value] of Object.entries(topic)) {
+    if (key !== 'title') {
+      detailsHtml += `<p><strong style="color: #38bdf8; text-transform: capitalize;">${key}:</strong> ${value}</p>`;
+    }
+  }
+  contentEl.innerHTML = detailsHtml;
+}
+
+// Automatically mount microanatomy module when DOM loads
+document.addEventListener('DOMContentLoaded', () => {
+  renderMicroanatomyExplorer();
+});
