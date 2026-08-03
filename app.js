@@ -1,279 +1,257 @@
-// ==========================================
-// STATE & DATA MANAGEMENT
-// ==========================================
-let brainData = [];
-let currentMode = 'explore'; // 'explore' or 'quiz'
-let activeTab = 'explore'; 
-let isOcclusionMode = false;
-let currentFlashcardIndex = 0;
+let scene, camera, renderer, controls;
+let brainHierarchy = null;
 
-// DSM-5 Quiz Engine Questions
-const dsmCases = [
-  {
-    title: "Case #201: Progressive Personality & Behavioral Change",
-    description: "A 54-year-old patient exhibits socially inappropriate behavior, profound apathy, loss of empathy, and sudden hyperorality (obsessive food preference changes). Brain MRI shows anterior lobar atrophy. What is the diagnosis and primary structure involved?",
-    options: [
-      { text: "Behavioral Variant Frontotemporal Neurocognitive Disorder — Orbitofrontal Cortex", correct: true },
-      { text: "Alzheimer's Neurocognitive Disorder — Hippocampus", correct: false },
-      { text: "Major Depressive Disorder — Dorsolateral Prefrontal Cortex", correct: false }
-    ],
-    explanation: "Early behavioral disinhibition and loss of empathy are cardinal DSM-5 criteria for Behavioral Variant Frontotemporal Neurocognitive Disorder, mapping to the Orbitofrontal Cortex."
-  },
-  {
-    title: "Case #202: Visual Object Agnosia & Prosopagnosia",
-    description: "Following a stroke, a patient can describe facial features (e.g., 'eyes, nose, mouth') but cannot recognize her daughter's face visually. Basic visual acuity is 20/20. Where is the lesion and pathway?",
-    options: [
-      { text: "Primary Visual Cortex (V1) — Calcarine Sulcus", correct: false },
-      { text: "Ventral Temporal Stream ('What' Pathway) — Fusiform Gyrus", correct: true },
-      { text: "Dorsal Motion Area — MT / V5", correct: false }
-    ],
-    explanation: "The Ventral Temporal Visual Stream processes visual identity (objects, faces). Lesions cause prosopagnosia under DSM-5 visual perception deficits."
-  }
-];
+// Multi-Tier Depth Trackers
+// 1 = Skull | 2 = Meninges | 3 = Cortex Lobes | 4 = Deep Sub-regions
+let currentDepth = 1; 
+let activePath = [];
 
-// ==========================================
-// INITIALIZATION
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
+// Mesh Repositories
+let skullMesh, meningesMesh;
+let lobeMeshes = [];
+let subRegionMeshes = [];
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+init();
+
+function init() {
+  const container = document.getElementById('canvas-container');
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x020617);
+
+  camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 0, 7);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  // Lighting Setup
+  const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+  scene.add(ambient);
+
+  const dirLight = new THREE.DirectionalLight(0x6366f1, 1.2);
+  dirLight.position.set(5, 10, 7);
+  scene.add(dirLight);
+
+  const pointLight = new THREE.PointLight(0x38bdf8, 1);
+  pointLight.position.set(-5, -5, -5);
+  scene.add(pointLight);
+
+  // Load Anatomical Data
   fetch('brainData.json')
     .then(res => res.json())
     .then(data => {
-      brainData = data;
-      setupEventListeners();
-      renderTabNavigation();
-      renderMicroanatomyExplorer();
-      initThreeJsEngine();
-      loadDsmCase(0);
-    })
-    .catch(err => console.error("Error loading brainData.json:", err));
-});
+      brainHierarchy = data.hierarchy;
+      buildMultiTierScene();
+    });
 
-// ==========================================
-// NAVIGATION ENGINE
-// ==========================================
-function renderTabNavigation() {
-  const navContainer = document.getElementById('tab-nav');
-  if (!navContainer) return;
+  window.addEventListener('resize', onWindowResize);
+  window.addEventListener('click', onCanvasClick);
 
-  navContainer.innerHTML = `
-    <div style="display: flex; gap: 8px;">
-      <button class="tab-btn ${activeTab==='explore'?'active':''}" onclick="switchTab('explore')">Brain Explorer & SVG</button>
-      <button class="tab-btn ${activeTab==='diagnostic'?'active':''}" onclick="switchTab('diagnostic')">DSM-5 Diagnostic Simulator</button>
-      <button class="tab-btn ${activeTab==='flashcards'?'active':''}" onclick="switchTab('flashcards')">Flashcards & Spaced Repetition</button>
-    </div>
-  `;
+  animate();
 }
 
-function switchTab(tabId) {
-  activeTab = tabId;
-  renderTabNavigation();
+// Build 3D Nested Geometry
+function buildMultiTierScene() {
+  const group = new THREE.Group();
 
-  document.getElementById('explore-section').style.display = (tabId === 'explore') ? 'block' : 'none';
-  document.getElementById('diagnostic-section').style.display = (tabId === 'diagnostic') ? 'block' : 'none';
-  document.getElementById('flashcards-section').style.display = (tabId === 'flashcards') ? 'block' : 'none';
-}
+  // TIER 1: Cranial Skull Shell
+  const skullGeo = new THREE.SphereGeometry(2.3, 64, 64);
+  skullGeo.scale(1, 1.1, 1.25);
+  const skullMat = new THREE.MeshStandardMaterial({
+    color: 0xe2e8f0,
+    roughness: 0.5,
+    transparent: true,
+    opacity: 0.45
+  });
+  skullMesh = new THREE.Mesh(skullGeo, skullMat);
+  skullMesh.userData = { depth: 1, name: "Cranial Skull", data: brainHierarchy };
+  group.add(skullMesh);
 
-// ==========================================
-// CORE MAP INTERACTIVITY & DSM-5 RENDERING
-// ==========================================
-function setupEventListeners() {
-  document.querySelectorAll('.brain-region').forEach(element => {
-    element.addEventListener('click', (e) => {
-      const regionId = e.currentTarget.getAttribute('data-id');
-      selectRegion(regionId);
+  // TIER 2: Meninges Membrane Shell
+  const meningesGeo = new THREE.SphereGeometry(2.0, 64, 64);
+  meningesGeo.scale(0.98, 1.08, 1.2);
+  const meningesMat = new THREE.MeshStandardMaterial({
+    color: 0xf43f5e,
+    roughness: 0.3,
+    transparent: true,
+    opacity: 0.65
+  });
+  meningesMesh = new THREE.Mesh(meningesGeo, meningesMat);
+  meningesMesh.userData = { depth: 2, name: "Meninges Layer", data: brainHierarchy.children[0] };
+  group.add(meningesMesh);
+
+  // TIER 3 & 4: Cortical Lobes & Sub-regions
+  const lobesData = brainHierarchy.children[0].children[0].children; // Access lobes array
+
+  lobesData.forEach(lobe => {
+    // Tier 3 Lobe Mesh
+    const lobeGeo = new THREE.SphereGeometry(0.75, 32, 32);
+    const lobeMat = new THREE.MeshStandardMaterial({
+      color: parseInt(lobe.color),
+      transparent: true,
+      opacity: 0.85
+    });
+    const lobeMesh = new THREE.Mesh(lobeGeo, lobeMat);
+    lobeMesh.position.set(lobe.position.x, lobe.position.y, lobe.position.z);
+    lobeMesh.userData = { depth: 3, name: lobe.name, data: lobe };
+    group.add(lobeMesh);
+    lobeMeshes.push(lobeMesh);
+
+    // Tier 4 Sub-region Nodes
+    lobe.subRegions.forEach(sub => {
+      const subGeo = new THREE.SphereGeometry(0.22, 24, 24);
+      const subMat = new THREE.MeshStandardMaterial({
+        color: 0xfff176,
+        emissive: 0xf59e0b,
+        emissiveIntensity: 0.6
+      });
+      const subMesh = new THREE.Mesh(subGeo, subMat);
+      subMesh.position.set(sub.position.x, sub.position.y, sub.position.z);
+      subMesh.visible = false; // Hidden until Tier 3 zoom
+      subMesh.userData = { depth: 4, name: sub.name, data: sub };
+      group.add(subMesh);
+      subRegionMeshes.push(subMesh);
     });
   });
 
-  const searchInput = document.getElementById('search-input');
-  if (searchInput) searchInput.addEventListener('input', handleSearch);
+  scene.add(group);
 }
 
-function selectRegion(regionId) {
-  document.querySelectorAll('.brain-region').forEach(el => el.classList.remove('selected'));
-  const element = document.querySelector(`[data-id="${regionId}"]`);
-  if (element) element.classList.add('selected');
+// Raycasting Click Drill-Down Logic
+function onCanvasClick(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  const info = brainData.find(item => item.id === regionId);
-  if (info) {
-    document.getElementById('region-name').innerText = info.name;
-    document.getElementById('region-lobe').innerText = info.lobe;
-    document.getElementById('region-ba').innerText = info.broadmannArea;
-    document.getElementById('region-function').innerText = info.function;
-    document.getElementById('deficit-title').innerText = info.clinicalDeficit.condition;
-    document.getElementById('deficit-desc').innerText = info.clinicalDeficit.symptoms;
+  raycaster.setFromCamera(mouse, camera);
 
-    // DSM-5 Mapping
-    if (info.dsm5Mapping) {
-      document.getElementById('dsm-disorders').innerText = info.dsm5Mapping.disorders.join(", ");
-      document.getElementById('dsm-criteria').innerText = info.dsm5Mapping.criteria;
-    }
+  let targetMeshes = [];
+  if (currentDepth === 1) targetMeshes = [skullMesh];
+  else if (currentDepth === 2) targetMeshes = [meningesMesh];
+  else if (currentDepth === 3) targetMeshes = lobeMeshes;
+  else if (currentDepth === 4) targetMeshes = subRegionMeshes;
 
-    // PubMed / DOI Link
-    if (info.doiLink) {
-      document.getElementById('research-link').innerHTML = `<a href="${info.doiLink}" target="_blank" style="color: #6366f1;">Read Seminal Research Paper (DOI) →</a>`;
-    }
+  const intersects = raycaster.intersectObjects(targetMeshes);
+
+  if (intersects.length > 0) {
+    const clicked = intersects[0].object;
+    drillDownToNextTier(clicked);
   }
 }
 
-// Search Filter supporting DSM-5 text
-function handleSearch() {
-  const query = document.getElementById('search-input').value.toLowerCase().trim();
-  brainData.forEach(item => {
-    const match = item.name.toLowerCase().includes(query) ||
-                  item.function.toLowerCase().includes(query) ||
-                  item.clinicalDeficit.condition.toLowerCase().includes(query) ||
-                  (item.dsm5Mapping && item.dsm5Mapping.disorders.some(d => d.toLowerCase().includes(query)));
+// Advance Depth Tier
+function drillDownToNextTier(clickedObject) {
+  const data = clickedObject.userData.data;
+
+  if (currentDepth === 1) {
+    // Skull -> Meninges
+    currentDepth = 2;
+    skullMesh.material.opacity = 0.08; // Peel Skull back
+    updateUI("Depth Tier 2: Protective Membranes", data.name, data.description, "Cranium > Meninges");
+  } 
+  else if (currentDepth === 2) {
+    // Meninges -> Cortical Lobes
+    currentDepth = 3;
+    meningesMesh.material.opacity = 0.08; // Peel Meninges back
+    updateUI("Depth Tier 3: Cortical Lobes", "Brain Parenchyma / Lobes", "Click a colored lobe (Frontal, Temporal) to drill into localized functional structures.", "Cranium > Meninges > Cortical Lobes");
+  } 
+  else if (currentDepth === 3) {
+    // Lobe -> Sub-regions (Broca's, Wernicke's, etc.)
+    currentDepth = 4;
     
-    const element = document.querySelector(`[data-id="${item.id}"]`);
-    if (element) {
-      if (match || !query) element.classList.remove('dimmed');
-      else element.classList.add('dimmed');
-    }
-  });
-}
+    // Dim other lobes
+    lobeMeshes.forEach(m => {
+      if (m !== clickedObject) m.material.opacity = 0.15;
+      else m.material.opacity = 0.35;
+    });
 
-// ==========================================
-// NETWORK OVERLAYS & OCCLUSION
-// ==========================================
-function toggleNetworkOverlay(networkName, isChecked) {
-  brainData.forEach(item => {
-    if (item.network === networkName) {
-      const el = document.querySelector(`[data-id="${item.id}"]`);
-      if (el) {
-        el.style.fill = isChecked ? '#f59e0b' : '#334155';
-      }
-    }
-  });
-}
+    // Reveal sub-region nodes
+    subRegionMeshes.forEach(s => s.visible = true);
 
-function toggleOcclusionMode() {
-  isOcclusionMode = !isOcclusionMode;
-  alert(isOcclusionMode ? "Image Occlusion Mode ENABLED: Region names are now hidden for self-testing." : "Image Occlusion Mode DISABLED.");
-  document.getElementById('region-name').style.filter = isOcclusionMode ? 'blur(8px)' : 'none';
-}
-
-// ==========================================
-// DSM-5 DIAGNOSTIC SIMULATOR ENGINE
-// ==========================================
-function loadDsmCase(index) {
-  const q = dsmCases[index];
-  if (!q) return;
-
-  document.getElementById('dsm-case-title').innerText = q.title;
-  document.getElementById('dsm-case-desc').innerText = q.description;
-  
-  const optionsContainer = document.getElementById('dsm-options');
-  optionsContainer.innerHTML = '';
-
-  q.options.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.style.cssText = "padding: 12px; background: #1e293b; color: white; border: 1px solid #334155; text-align: left; border-radius: 6px; cursor: pointer;";
-    btn.innerText = opt.text;
-    btn.onclick = () => {
-      if (opt.correct) {
-        alert("CORRECT DIAGNOSIS!\n\n" + q.explanation);
-      } else {
-        alert("INCORRECT. Review the DSM-5 criteria and neural circuitry.");
-      }
-    };
-    optionsContainer.appendChild(btn);
-  });
-}
-
-// ==========================================
-// SPACED REPETITION FLASHCARDS & ANKI
-// ==========================================
-function revealCard() {
-  if (!brainData.length) return;
-  const card = brainData[currentFlashcardIndex];
-  document.getElementById('fc-front').innerText = `${card.name} (${card.broadmannArea})`;
-  document.getElementById('fc-back').innerHTML = `<strong>Function:</strong> ${card.function}<br><br><strong>Clinical Deficit:</strong> ${card.clinicalDeficit.condition}`;
-  document.getElementById('fc-back').style.display = 'block';
-  document.getElementById('fc-rating-btns').style.display = 'flex';
-}
-
-function rateCard(rating) {
-  if (rating === 'hard') {
-    // Save to LocalStorage for repetition
-    let hardCards = JSON.parse(localStorage.getItem('neuromap_hard') || '[]');
-    hardCards.push(brainData[currentFlashcardIndex].id);
-    localStorage.setItem('neuromap_hard', JSON.stringify(hardCards));
+    zoomCameraTo(clickedObject.position.x * 1.4, clickedObject.position.y * 1.4, clickedObject.position.z + 2.2);
+    updateUI("Depth Tier 4: Internal Functional Circuitry", data.name, `${data.description} Click yellow nodes for DSM-5 and lesion profiles.`, `Cranium > Meninges > ${data.name}`);
+  } 
+  else if (currentDepth === 4) {
+    // Inspect Specific Sub-Region Node
+    showDeepSubDetails(data);
   }
-  currentFlashcardIndex = (currentFlashcardIndex + 1) % brainData.length;
-  document.getElementById('fc-back').style.display = 'none';
-  document.getElementById('fc-rating-btns').style.display = 'none';
-  document.getElementById('fc-front').innerText = `Next Card Ready. Click Reveal.`;
+
+  document.getElementById('back-btn').style.display = 'block';
 }
 
-function exportAnkiDeck() {
-  if (!brainData.length) return alert("Data loading...");
-  let txtContent = "#separator:tab\n#html:true\n#deck:Neuromap Neuroanatomy DSM5\n";
-  brainData.forEach(item => {
-    const front = `<b>Structure:</b> ${item.name} (${item.broadmannArea})`;
-    const back = `<b>Function:</b> ${item.function}<br><b>Deficit:</b> ${item.clinicalDeficit.condition}<br><b>DSM-5:</b> ${item.dsm5Mapping ? item.dsm5Mapping.disorders.join(', ') : 'N/A'}`;
-    txtContent += `${front}\t${back}\n`;
-  });
-
-  const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", "Neuromap_Anki_Deck.txt");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+// Display Specific Region Properties
+function showDeepSubDetails(sub) {
+  document.getElementById('layer-title').innerText = sub.name;
+  document.getElementById('sub-details').style.display = 'block';
+  document.getElementById('info-ba').innerText = sub.ba;
+  document.getElementById('info-func').innerText = sub.function;
+  document.getElementById('info-deficit').innerText = sub.deficit;
+  document.getElementById('info-dsm').innerText = sub.dsm5;
 }
 
-// ==========================================
-// 3D CANVAS ENGINE & MICROANATOMY
-// ==========================================
-function switchViewMode(mode) {
-  document.getElementById('view-2d').style.display = (mode === '2d') ? 'block' : 'none';
-  document.getElementById('view-3d').style.display = (mode === '3d') ? 'block' : 'none';
-  document.getElementById('btn-view-2d').classList.toggle('active', mode === '2d');
-  document.getElementById('btn-view-3d').classList.toggle('active', mode === '3d');
-}
-
-function initThreeJsEngine() {
-  const canvas = document.getElementById('three-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  
-  // Lightweight 3D Canvas Rendering Fallback Engine
-  let angle = 0;
-  function render3DPose() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#6366f1';
-    ctx.beginPath();
-    ctx.arc(150 + Math.cos(angle) * 40, 100 + Math.sin(angle) * 20, 30, 0, Math.PI * 2);
-    ctx.fill();
-    angle += 0.03;
-    requestAnimationFrame(render3DPose);
+// Navigate Backward
+function navigateUpTier() {
+  if (currentDepth === 4) {
+    currentDepth = 3;
+    subRegionMeshes.forEach(s => s.visible = false);
+    lobeMeshes.forEach(m => m.material.opacity = 0.85);
+    document.getElementById('sub-details').style.display = 'none';
+    zoomCameraTo(0, 0, 7);
+    updateUI("Depth Tier 3: Cortical Lobes", "Cortical Lobes", "Select a lobe to drill into sub-structures.", "Cranium > Meninges > Cortical Lobes");
+  } 
+  else if (currentDepth === 3) {
+    currentDepth = 2;
+    meningesMesh.material.opacity = 0.65;
+    updateUI("Depth Tier 2: Protective Membranes", "Meninges Layer", "Click meninges to peel back membrane.", "Cranium > Meninges");
+  } 
+  else if (currentDepth === 2) {
+    currentDepth = 1;
+    skullMesh.material.opacity = 0.45;
+    document.getElementById('back-btn').style.display = 'none';
+    updateUI("Depth Tier 1: Outer Cranium", "Cranial Skull", "Click skull to peel outer bone.", "Cranium");
   }
-  render3DPose();
 }
 
-function renderMicroanatomyExplorer() {
-  const container = document.getElementById('microanatomy-container');
-  if (!container) return;
+function updateUI(badge, title, desc, path) {
+  document.getElementById('tier-badge').innerText = badge;
+  document.getElementById('layer-title').innerText = title;
+  document.getElementById('layer-desc').innerText = desc;
+  document.getElementById('breadcrumb').innerText = `Path: ${path}`;
+}
 
-  container.innerHTML = `
-    <div class="card" style="margin-top: 20px;">
-      <h3 style="color: var(--accent);">Microanatomy & Functional Cellular Zones</h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-        <div style="background: #020617; padding: 15px; border-radius: 6px;">
-          <h4 style="color: #38bdf8; margin: 0 0 10px 0;">Input Zone</h4>
-          <p style="font-size: 0.85rem; color: var(--text-sub);">Dendrites & Spines. Receives synaptic contacts. Smooth dendrites indicate inhibitory cells.</p>
-        </div>
-        <div style="background: #020617; padding: 15px; border-radius: 6px;">
-          <h4 style="color: #38bdf8; margin: 0 0 10px 0;">Conducting Zone</h4>
-          <p style="font-size: 0.85rem; color: var(--text-sub);">Axons. Generates and regenerates action potentials toward synaptic terminals.</p>
-        </div>
-        <div style="background: #020617; padding: 15px; border-radius: 6px;">
-          <h4 style="color: #38bdf8; margin: 0 0 10px 0;">Output Zone</h4>
-          <p style="font-size: 0.85rem; color: var(--text-sub);">Synaptic Boutons / Terminals. Releases chemical neurotransmitters across clefts.</p>
-        </div>
-      </div>
-    </div>
-  `;
+function zoomCameraTo(x, y, z) {
+  let steps = 0;
+  function anim() {
+    camera.position.x += (x - camera.position.x) * 0.1;
+    camera.position.y += (y - camera.position.y) * 0.1;
+    camera.position.z += (z - camera.position.z) * 0.1;
+    steps++;
+    if (steps < 25) requestAnimationFrame(anim);
+  }
+  anim();
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+
+  if (currentDepth === 4) {
+    subRegionMeshes.forEach(s => s.rotation.y += 0.03);
+  }
+
+  renderer.render(scene, camera);
 }
