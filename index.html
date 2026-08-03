@@ -3,157 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Neuromap | Advanced Neuroanatomy & DSM-5 Diagnostic Platform</title>
+  <title>NEUROMAP | Multi-Tier Anatomical Drill-Down</title>
   <style>
     :root {
-      --bg-dark: #0f172a;
-      --card-bg: #1e293b;
+      --bg: #020617;
+      --card: #0f172a;
       --accent: #6366f1;
-      --accent-hover: #4f46e5;
-      --text-main: #f8fafc;
-      --text-sub: #94a3b8;
+      --text: #f8fafc;
+      --sub: #94a3b8;
     }
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-    }
-    header {
+    body { margin: 0; overflow: hidden; background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; }
+    #canvas-container { width: 100vw; height: 100vh; position: absolute; top:0; left:0; }
+    
+    .panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 380px;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(12px);
       padding: 20px;
-      background: #020617;
-      border-bottom: 1px solid #1e293b;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      z-index: 10;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
     }
-    h1 { margin: 0; font-size: 1.5rem; color: var(--accent); }
-    .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-    .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-    .card { background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1px solid #334155; }
-    button { cursor: pointer; }
-    .brain-region { fill: #334155; stroke: #64748b; stroke-width: 2; transition: all 0.3s; cursor: pointer; }
-    .brain-region:hover, .brain-region.selected { fill: var(--accent); stroke: #fff; }
-    .dimmed { opacity: 0.2; }
-    .layer-btn, .tab-btn { background: #334155; color: white; border: none; padding: 8px 14px; border-radius: 6px; }
-    .layer-btn.active, .tab-btn.active { background: var(--accent); }
-    canvas { width: 100%; height: 300px; background: #000; border-radius: 8px; }
+    .tier-indicator {
+      display: inline-block;
+      background: #1e293b;
+      color: #38bdf8;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 15px;
+      width: 100%;
+    }
+    .btn:hover { background: #4f46e5; }
+    .bread-crumb { font-size: 0.8rem; color: var(--sub); margin-bottom: 8px; }
   </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
-  <header>
-    <h1>NEUROMAP flagship</h1>
-    <div id="tab-nav"></div>
-  </header>
+  <div id="canvas-container"></div>
 
-  <div class="container">
-    
-    <!-- EXPLORER & CLINICAL TAB -->
-    <div id="explore-section">
-      <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
-        <input type="text" id="search-input" placeholder="Search structures, functions, or DSM-5 disorders..." style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #020617; color: white;">
-        <button id="mode-btn" onclick="toggleMode()" class="tab-btn">Switch to Case Mode</button>
-        <button onclick="toggleOcclusionMode()" class="tab-btn">Image Occlusion Mode</button>
-      </div>
+  <div class="panel">
+    <div id="breadcrumb" class="bread-crumb">Path: Cranium</div>
+    <div id="tier-badge" class="tier-indicator">Depth Tier 1: Outer Cranium</div>
+    <h2 id="layer-title" style="margin:0 0 10px 0; color: var(--accent);">Skull (Cranium)</h2>
+    <p id="layer-desc" style="color: var(--sub); font-size: 0.9rem; line-height: 1.5;">
+      Click directly on the skull in the 3D space to peel away the cranial bone and expose the inner meningeal layers.
+    </p>
 
-      <!-- Functional Network Overlays -->
-      <div style="background: #020617; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 15px; align-items: center;">
-        <span style="font-weight: 600; color: var(--text-sub);">Network Overlays:</span>
-        <label><input type="checkbox" onchange="toggleNetworkOverlay('Default Mode Network', this.checked)"> DMN</label>
-        <label><input type="checkbox" onchange="toggleNetworkOverlay('Executive Control Network', this.checked)"> ECN</label>
-        <label><input type="checkbox" onchange="toggleNetworkOverlay('Salience / Reward Network', this.checked)"> Salience</label>
-      </div>
-
-      <div class="grid-2">
-        <!-- SVG Map & 3D Model -->
-        <div class="card">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <h3>Anatomical Canvas</h3>
-            <div>
-              <button onclick="switchViewMode('2d')" class="layer-btn active" id="btn-view-2d">2D Vector</button>
-              <button onclick="switchViewMode('3d')" class="layer-btn" id="btn-view-3d">3D Model Engine</button>
-            </div>
-          </div>
-
-          <!-- 2D SVG View -->
-          <div id="view-2d">
-            <svg viewBox="0 0 600 400" style="width: 100%; height: auto;">
-              <!-- Central Sulcus / Omega -->
-              <path class="brain-region" data-id="central-sulcus-omega" d="M 300,80 Q 310,120 290,160 T 310,200" />
-              <!-- Calcarine Sulcus -->
-              <path class="brain-region" data-id="calcarine-sulcus" d="M 480,220 L 550,230 L 510,260 Z" />
-              <!-- Ventral Stream -->
-              <path class="brain-region" data-id="ventral-stream" d="M 320,280 C 360,280 420,300 460,270 L 400,250 Z" />
-              <!-- MT / V5 -->
-              <circle class="brain-region" data-id="middle-temporal-v5" cx="440" cy="220" r="25" />
-              <!-- Orbitofrontal Cortex -->
-              <path class="brain-region" data-id="orbitofrontal-cortex" d="M 120,240 C 150,240 180,260 200,250 L 160,280 Z" />
-              <!-- Wernicke's Area -->
-              <circle class="brain-region" data-id="wernickes-area" cx="380" cy="200" r="20" />
-              <!-- DLPFC -->
-              <rect class="brain-region" data-id="prefrontal-cortex" x="140" y="100" width="80" height="60" rx="10" />
-            </svg>
-          </div>
-
-          <!-- 3D Canvas View -->
-          <div id="view-3d" style="display: none;">
-            <canvas id="three-canvas"></canvas>
-            <p style="font-size: 0.8rem; color: var(--text-sub); text-align: center;">Interactive 3D Brain Space Engine (Drag to rotate model)</p>
-          </div>
-        </div>
-
-        <!-- Info Panel -->
-        <div class="card">
-          <h2 id="region-name" style="color: var(--accent); margin-top: 0;">Select a Region</h2>
-          <p><strong>Lobe:</strong> <span id="region-lobe">-</span></p>
-          <p><strong>Brodmann Area:</strong> <span id="region-ba">-</span></p>
-          <p><strong>Primary Function:</strong> <span id="region-function">-</span></p>
-          <hr style="border-color: #334155;">
-          <h4 style="color: #f43f5e; margin-bottom: 5px;">Clinical Neurological Deficit</h4>
-          <p id="deficit-title" style="font-weight: 600;">-</p>
-          <p id="deficit-desc" style="font-size: 0.9rem; color: var(--text-sub);">-</p>
-          <hr style="border-color: #334155;">
-          <h4 style="color: #38bdf8; margin-bottom: 5px;">DSM-5 Diagnostic Criteria</h4>
-          <p id="dsm-disorders" style="font-weight: 600; font-size: 0.9rem; color: #a7f3d0;">-</p>
-          <p id="dsm-criteria" style="font-size: 0.85rem; color: var(--text-sub);">-</p>
-          <p id="research-link" style="margin-top: 10px; font-size: 0.85rem;"></p>
-        </div>
-      </div>
+    <!-- Deep Region Information Panel -->
+    <div id="sub-details" style="display: none; border-top: 1px solid #334155; margin-top: 15px; padding-top: 15px; font-size: 0.88rem;">
+      <p><strong>Brodmann Area:</strong> <span id="info-ba" style="color: #38bdf8;">-</span></p>
+      <p><strong>Primary Function:</strong> <span id="info-func">-</span></p>
+      <p><strong>Clinical Deficit:</strong> <span id="info-deficit" style="color: #f43f5e;">-</span></p>
+      <p><strong>DSM-5 Criteria:</strong> <span id="info-dsm" style="color: #a7f3d0;">-</span></p>
     </div>
 
-    <!-- DSM-5 & DIAGNOSTIC SIMULATOR TAB -->
-    <div id="diagnostic-section" style="display: none;">
-      <div class="card">
-        <h2>DSM-5 Neuropsychiatric Differential Diagnosis Engine</h2>
-        <p>Review the patient history, presenting symptoms, and behavioral profile, then select the corresponding lesion or network.</p>
-        <div id="dsm-quiz-container" style="background: #020617; padding: 20px; border-radius: 8px; margin-top: 15px;">
-          <h3 id="dsm-case-title" style="color: #f59e0b;">Case File #104</h3>
-          <p id="dsm-case-desc" style="font-size: 1.1rem; line-height: 1.6;">-</p>
-          <div id="dsm-options" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- FLASHCARDS TAB -->
-    <div id="flashcards-section" style="display: none;">
-      <div class="card">
-        <h2>Built-in Spaced Repetition (Leitner System) & Anki Exporter</h2>
-        <div id="flashcard-container" style="background: #020617; padding: 30px; border-radius: 8px; text-align: center; margin: 20px 0;">
-          <h3 id="fc-front" style="color: #38bdf8;">Click Start to begin review session</h3>
-          <p id="fc-back" style="display: none; color: var(--text-sub); margin-top: 15px;"></p>
-          <button id="fc-reveal-btn" onclick="revealCard()" class="tab-btn" style="margin-top: 15px;">Reveal Answer</button>
-          <div id="fc-rating-btns" style="display: none; gap: 10px; justify-content: center; margin-top: 15px;">
-            <button onclick="rateCard('hard')" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 5px;">Hard (Repeat Soon)</button>
-            <button onclick="rateCard('easy')" style="background: #22c55e; color: white; border: none; padding: 8px 16px; border-radius: 5px;">Easy (Mastered)</button>
-          </div>
-        </div>
-        <button onclick="exportAnkiDeck()" class="layer-btn active">Export Anki Deck (.txt format)</button>
-      </div>
-    </div>
-
-    <!-- MICROANATOMY SECTION -->
-    <div id="microanatomy-container"></div>
+    <button id="back-btn" class="btn" style="display: none;" onclick="navigateUpTier()">← Move Up Outer Layer</button>
   </div>
 
   <script src="app.js"></script>
