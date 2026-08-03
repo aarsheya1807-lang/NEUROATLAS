@@ -3,80 +3,64 @@
 // ==========================================
 let brainData = [];
 let currentMode = 'explore'; // 'explore' or 'quiz'
-let currentQuestionIndex = 0;
-let score = 0;
-let activeTab = 'explore'; // 'explore', 'diagnostic', or 'flashcards'
+let activeTab = 'explore'; 
+let isOcclusionMode = false;
+let currentFlashcardIndex = 0;
 
-// Clinical Case Study Questions for Quiz Mode
-const caseQuestions = [
+// DSM-5 Quiz Engine Questions
+const dsmCases = [
   {
-    case: "A 58-year-old patient presents with speech that is fluent and grammatical, but completely devoid of meaning ('word salad'). She cannot comprehend spoken commands. Where is the lesion?",
-    targetId: "wernickes-area"
+    title: "Case #201: Progressive Personality & Behavioral Change",
+    description: "A 54-year-old patient exhibits socially inappropriate behavior, profound apathy, loss of empathy, and sudden hyperorality (obsessive food preference changes). Brain MRI shows anterior lobar atrophy. What is the diagnosis and primary structure involved?",
+    options: [
+      { text: "Behavioral Variant Frontotemporal Neurocognitive Disorder — Orbitofrontal Cortex", correct: true },
+      { text: "Alzheimer's Neurocognitive Disorder — Hippocampus", correct: false },
+      { text: "Major Depressive Disorder — Dorsolateral Prefrontal Cortex", correct: false }
+    ],
+    explanation: "Early behavioral disinhibition and loss of empathy are cardinal DSM-5 criteria for Behavioral Variant Frontotemporal Neurocognitive Disorder, mapping to the Orbitofrontal Cortex."
   },
   {
-    case: "A 67-year-old man exhibits resting tremors, muscle rigidity, and bradykinesia (slowness of movement). Which subcortical structure system is degenerated?",
-    targetId: "basal-ganglia"
-  },
-  {
-    case: "Following a traumatic head injury, a patient exhibits profound changes in personality, impulsivity, poor decision-making, and emotional apathy. Which cortex is damaged?",
-    targetId: "prefrontal-cortex"
-  },
-  {
-    case: "A patient complains of severe insomnia, body temperature fluctuations, and disruption in circadian sleep-wake rhythm. Which neuroendocrine gland is impaired?",
-    targetId: "pineal-gland"
-  },
-  {
-    case: "An individual cannot form any new declarative episodic memories after surgery, though their short-term memory remains intact. Which structure is damaged?",
-    targetId: "hippocampus-limbic"
-  },
-  {
-    case: "A stroke patient exhibits left-sided facial droop, inability to close the left eye, and loss of taste on the anterior two-thirds of the tongue. Which system is affected?",
-    targetId: "cranial-nerves-group"
+    title: "Case #202: Visual Object Agnosia & Prosopagnosia",
+    description: "Following a stroke, a patient can describe facial features (e.g., 'eyes, nose, mouth') but cannot recognize her daughter's face visually. Basic visual acuity is 20/20. Where is the lesion and pathway?",
+    options: [
+      { text: "Primary Visual Cortex (V1) — Calcarine Sulcus", correct: false },
+      { text: "Ventral Temporal Stream ('What' Pathway) — Fusiform Gyrus", correct: true },
+      { text: "Dorsal Motion Area — MT / V5", correct: false }
+    ],
+    explanation: "The Ventral Temporal Visual Stream processes visual identity (objects, faces). Lesions cause prosopagnosia under DSM-5 visual perception deficits."
   }
 ];
 
 // ==========================================
-// INITIALIZATION & DATA FETCHING
+// INITIALIZATION
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
   fetch('brainData.json')
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
       brainData = data;
       setupEventListeners();
       renderTabNavigation();
+      renderMicroanatomyExplorer();
+      initThreeJsEngine();
+      loadDsmCase(0);
     })
     .catch(err => console.error("Error loading brainData.json:", err));
 });
 
 // ==========================================
-// NAVIGATION & TAB SWITCHING ENGINE
+// NAVIGATION ENGINE
 // ==========================================
 function renderTabNavigation() {
   const navContainer = document.getElementById('tab-nav');
-  if (!navContainer) return; // Renders automatically if container exists in index.html
+  if (!navContainer) return;
 
   navContainer.innerHTML = `
-    <div style="display: flex; gap: 10px; background: #0f172a; padding: 8px; border-radius: 8px; border: 1px solid #1e293b; margin-bottom: 20px;">
-      <button id="tab-btn-explore" onclick="switchTab('explore')" style="${getTabStyle('explore')}">Brain Explorer & Quiz</button>
-      <button id="tab-btn-diagnostic" onclick="switchTab('diagnostic')" style="${getTabStyle('diagnostic')}">Symptom-to-Structure</button>
-      <button id="tab-btn-flashcards" onclick="switchTab('flashcards')" style="${getTabStyle('flashcards')}">Flashcards & Anki</button>
+    <div style="display: flex; gap: 8px;">
+      <button class="tab-btn ${activeTab==='explore'?'active':''}" onclick="switchTab('explore')">Brain Explorer & SVG</button>
+      <button class="tab-btn ${activeTab==='diagnostic'?'active':''}" onclick="switchTab('diagnostic')">DSM-5 Diagnostic Simulator</button>
+      <button class="tab-btn ${activeTab==='flashcards'?'active':''}" onclick="switchTab('flashcards')">Flashcards & Spaced Repetition</button>
     </div>
-  `;
-}
-
-function getTabStyle(tabId) {
-  const isActive = activeTab === tabId;
-  return `
-    flex: 1;
-    padding: 10px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s;
-    background: ${isActive ? '#4f46e5' : 'transparent'};
-    color: ${isActive ? '#ffffff' : '#94a3b8'};
   `;
 }
 
@@ -84,162 +68,149 @@ function switchTab(tabId) {
   activeTab = tabId;
   renderTabNavigation();
 
-  // Hide or show relevant section containers in your index.html
-  const exploreSec = document.getElementById('explore-section');
-  const diagSec = document.getElementById('diagnostic-section');
-  const flashSec = document.getElementById('flashcards-section');
-
-  if (exploreSec) exploreSec.style.display = (tabId === 'explore') ? 'block' : 'none';
-  if (diagSec) diagSec.style.display = (tabId === 'diagnostic') ? 'block' : 'none';
-  if (flashSec) flashSec.style.display = (tabId === 'flashcards') ? 'block' : 'none';
+  document.getElementById('explore-section').style.display = (tabId === 'explore') ? 'block' : 'none';
+  document.getElementById('diagnostic-section').style.display = (tabId === 'diagnostic') ? 'block' : 'none';
+  document.getElementById('flashcards-section').style.display = (tabId === 'flashcards') ? 'block' : 'none';
 }
 
 // ==========================================
-// CORE BRAIN MAP & INTERACTIVITY LOGIC
+// CORE MAP INTERACTIVITY & DSM-5 RENDERING
 // ==========================================
 function setupEventListeners() {
   document.querySelectorAll('.brain-region').forEach(element => {
     element.addEventListener('click', (e) => {
       const regionId = e.currentTarget.getAttribute('data-id');
-      if (currentMode === 'explore') {
-        selectRegion(regionId);
-      } else {
-        handleQuizAnswer(regionId);
-      }
+      selectRegion(regionId);
     });
   });
 
-  // Attach search input listener if present
   const searchInput = document.getElementById('search-input');
-  if (searchInput) {
-    searchInput.addEventListener('input', handleSearch);
-  }
+  if (searchInput) searchInput.addEventListener('input', handleSearch);
 }
 
 function selectRegion(regionId) {
   document.querySelectorAll('.brain-region').forEach(el => el.classList.remove('selected'));
-  
   const element = document.querySelector(`[data-id="${regionId}"]`);
   if (element) element.classList.add('selected');
 
-  const regionInfo = brainData.find(item => item.id === regionId);
-  if (regionInfo) {
-    const elName = document.getElementById('region-name');
-    const elLobe = document.getElementById('region-lobe');
-    const elBa = document.getElementById('region-ba');
-    const elFunc = document.getElementById('region-function');
-    const elDefTitle = document.getElementById('deficit-title');
-    const elDefDesc = document.getElementById('deficit-desc');
+  const info = brainData.find(item => item.id === regionId);
+  if (info) {
+    document.getElementById('region-name').innerText = info.name;
+    document.getElementById('region-lobe').innerText = info.lobe;
+    document.getElementById('region-ba').innerText = info.broadmannArea;
+    document.getElementById('region-function').innerText = info.function;
+    document.getElementById('deficit-title').innerText = info.clinicalDeficit.condition;
+    document.getElementById('deficit-desc').innerText = info.clinicalDeficit.symptoms;
 
-    if (elName) elName.innerText = regionInfo.name;
-    if (elLobe) elLobe.innerText = regionInfo.lobe;
-    if (elBa) elBa.innerText = regionInfo.broadmannArea;
-    if (elFunc) elFunc.innerText = regionInfo.function;
-    if (elDefTitle) elDefTitle.innerText = regionInfo.clinicalDeficit.condition;
-    if (elDefDesc) elDefDesc.innerText = regionInfo.clinicalDeficit.symptoms;
+    // DSM-5 Mapping
+    if (info.dsm5Mapping) {
+      document.getElementById('dsm-disorders').innerText = info.dsm5Mapping.disorders.join(", ");
+      document.getElementById('dsm-criteria').innerText = info.dsm5Mapping.criteria;
+    }
+
+    // PubMed / DOI Link
+    if (info.doiLink) {
+      document.getElementById('research-link').innerHTML = `<a href="${info.doiLink}" target="_blank" style="color: #6366f1;">Read Seminal Research Paper (DOI) →</a>`;
+    }
   }
 }
 
-// ==========================================
-// SEARCH & LAYER FILTERING
-// ==========================================
+// Search Filter supporting DSM-5 text
 function handleSearch() {
   const query = document.getElementById('search-input').value.toLowerCase().trim();
-  if (!query) {
-    document.querySelectorAll('.brain-region').forEach(el => el.classList.remove('dimmed'));
-    return;
-  }
-
   brainData.forEach(item => {
     const match = item.name.toLowerCase().includes(query) ||
                   item.function.toLowerCase().includes(query) ||
-                  item.broadmannArea.toLowerCase().includes(query) ||
-                  item.clinicalDeficit.condition.toLowerCase().includes(query);
+                  item.clinicalDeficit.condition.toLowerCase().includes(query) ||
+                  (item.dsm5Mapping && item.dsm5Mapping.disorders.some(d => d.toLowerCase().includes(query)));
     
     const element = document.querySelector(`[data-id="${item.id}"]`);
     if (element) {
-      if (match) {
-        element.classList.remove('dimmed');
-      } else {
-        element.classList.add('dimmed');
-      }
-    }
-  });
-}
-
-function filterLayer(layerClass, buttonEl) {
-  document.querySelectorAll('.layer-btn').forEach(btn => btn.classList.remove('active'));
-  if (buttonEl) buttonEl.classList.add('active');
-
-  document.querySelectorAll('.brain-region').forEach(el => {
-    if (layerClass === 'all') {
-      el.style.display = 'block';
-    } else {
-      if (el.classList.contains(`layer-${layerClass}`)) {
-        el.style.display = 'block';
-      } else {
-        el.style.display = 'none';
-      }
+      if (match || !query) element.classList.remove('dimmed');
+      else element.classList.add('dimmed');
     }
   });
 }
 
 // ==========================================
-// CLINICAL CASE / QUIZ MODE LOGIC
+// NETWORK OVERLAYS & OCCLUSION
 // ==========================================
-function toggleMode() {
-  const modeBtn = document.getElementById('mode-btn');
-  const quizBanner = document.getElementById('quiz-banner');
-
-  if (currentMode === 'explore') {
-    currentMode = 'quiz';
-    score = 0;
-    currentQuestionIndex = 0;
-    if (modeBtn) modeBtn.innerText = "Exit Case Mode";
-    if (quizBanner) quizBanner.style.display = "block";
-    loadQuestion();
-  } else {
-    currentMode = 'explore';
-    if (modeBtn) modeBtn.innerText = "Switch to Clinical Case Mode";
-    if (quizBanner) quizBanner.style.display = "none";
-  }
-}
-
-function loadQuestion() {
-  const qQuestion = document.getElementById('quiz-question');
-  const qScore = document.getElementById('quiz-score');
-
-  if (currentQuestionIndex < caseQuestions.length) {
-    const q = caseQuestions[currentQuestionIndex];
-    if (qQuestion) qQuestion.innerText = `PATIENT CASE: ${q.case}`;
-    if (qScore) qScore.innerText = score;
-  } else {
-    if (qQuestion) qQuestion.innerText = `Case Exam Completed! Final Score: ${score}/${caseQuestions.length}`;
-  }
-}
-
-function handleQuizAnswer(selectedId) {
-  const targetId = caseQuestions[currentQuestionIndex].targetId;
-  if (selectedId === targetId) {
-    alert("Correct Diagnosis!");
-    score++;
-  } else {
-    alert(`Incorrect. Target region was: ${caseQuestions[currentQuestionIndex].targetId}`);
-  }
-  currentQuestionIndex++;
-  loadQuestion();
-}
-
-// ==========================================
-// EXPORT ANKI DECK (.TXT FORMAT)
-// ==========================================
-function exportAnkiDeck() {
-  if (!brainData.length) return alert("Data loading... please try again in a moment.");
-  
-  let txtContent = "#separator:tab\n#html:true\n#deck:Neuromap Neuroanatomy\n";
+function toggleNetworkOverlay(networkName, isChecked) {
   brainData.forEach(item => {
-    const front = `<b>Structure / Area:</b> ${item.name} (${item.broadmannArea})`;
-    const back = `<b>Lobe:</b> ${item.lobe}<br><b>Function:</b> ${item.function}<br><b>Clinical Deficit:</b> ${item.clinicalDeficit.condition} (${item.clinicalDeficit.symptoms})`;
+    if (item.network === networkName) {
+      const el = document.querySelector(`[data-id="${item.id}"]`);
+      if (el) {
+        el.style.fill = isChecked ? '#f59e0b' : '#334155';
+      }
+    }
+  });
+}
+
+function toggleOcclusionMode() {
+  isOcclusionMode = !isOcclusionMode;
+  alert(isOcclusionMode ? "Image Occlusion Mode ENABLED: Region names are now hidden for self-testing." : "Image Occlusion Mode DISABLED.");
+  document.getElementById('region-name').style.filter = isOcclusionMode ? 'blur(8px)' : 'none';
+}
+
+// ==========================================
+// DSM-5 DIAGNOSTIC SIMULATOR ENGINE
+// ==========================================
+function loadDsmCase(index) {
+  const q = dsmCases[index];
+  if (!q) return;
+
+  document.getElementById('dsm-case-title').innerText = q.title;
+  document.getElementById('dsm-case-desc').innerText = q.description;
+  
+  const optionsContainer = document.getElementById('dsm-options');
+  optionsContainer.innerHTML = '';
+
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.style.cssText = "padding: 12px; background: #1e293b; color: white; border: 1px solid #334155; text-align: left; border-radius: 6px; cursor: pointer;";
+    btn.innerText = opt.text;
+    btn.onclick = () => {
+      if (opt.correct) {
+        alert("CORRECT DIAGNOSIS!\n\n" + q.explanation);
+      } else {
+        alert("INCORRECT. Review the DSM-5 criteria and neural circuitry.");
+      }
+    };
+    optionsContainer.appendChild(btn);
+  });
+}
+
+// ==========================================
+// SPACED REPETITION FLASHCARDS & ANKI
+// ==========================================
+function revealCard() {
+  if (!brainData.length) return;
+  const card = brainData[currentFlashcardIndex];
+  document.getElementById('fc-front').innerText = `${card.name} (${card.broadmannArea})`;
+  document.getElementById('fc-back').innerHTML = `<strong>Function:</strong> ${card.function}<br><br><strong>Clinical Deficit:</strong> ${card.clinicalDeficit.condition}`;
+  document.getElementById('fc-back').style.display = 'block';
+  document.getElementById('fc-rating-btns').style.display = 'flex';
+}
+
+function rateCard(rating) {
+  if (rating === 'hard') {
+    // Save to LocalStorage for repetition
+    let hardCards = JSON.parse(localStorage.getItem('neuromap_hard') || '[]');
+    hardCards.push(brainData[currentFlashcardIndex].id);
+    localStorage.setItem('neuromap_hard', JSON.stringify(hardCards));
+  }
+  currentFlashcardIndex = (currentFlashcardIndex + 1) % brainData.length;
+  document.getElementById('fc-back').style.display = 'none';
+  document.getElementById('fc-rating-btns').style.display = 'none';
+  document.getElementById('fc-front').innerText = `Next Card Ready. Click Reveal.`;
+}
+
+function exportAnkiDeck() {
+  if (!brainData.length) return alert("Data loading...");
+  let txtContent = "#separator:tab\n#html:true\n#deck:Neuromap Neuroanatomy DSM5\n";
+  brainData.forEach(item => {
+    const front = `<b>Structure:</b> ${item.name} (${item.broadmannArea})`;
+    const back = `<b>Function:</b> ${item.function}<br><b>Deficit:</b> ${item.clinicalDeficit.condition}<br><b>DSM-5:</b> ${item.dsm5Mapping ? item.dsm5Mapping.disorders.join(', ') : 'N/A'}`;
     txtContent += `${front}\t${back}\n`;
   });
 
@@ -252,69 +223,57 @@ function exportAnkiDeck() {
   link.click();
   document.body.removeChild(link);
 }
-// ==========================================
-// MICROANATOMY & CELLULAR EXPLORER MODULE
-// ==========================================
 
-const microanatomyTopics = [
-  {
-    title: "Functional Domains of a Neuron",
-    inputZone: "Dendrites & Spines (Synaptic Reception)",
-    integrationZone: "Soma / Cell Body (Organelles & Nucleus)",
-    conductingZone: "Axon (Action Potential Generation & Conduction)",
-    outputZone: "Synaptic Boutons / Terminals (Neurotransmitter Release)",
-    summary: "Information flows strictly from Input (Dendrites) → Integration (Soma) → Conduction (Axon) → Output (Synapse)."
-  },
-  {
-    title: "Gray Matter vs. White Matter Architecture",
-    grayMatter: "Contains Neuronal Cell Bodies, Spiny Dendrites, Interneurons, and Synapses (Input & Integration Zones).",
-    whiteMatter: "Contains Myelinated Axons (Conducting Zone), Oligodendrocytes (Glial Insulation), and Vascular Endothelium.",
-    summary: "Gray matter processes signals; White matter conducts signals across regions."
-  },
-  {
-    title: "Cortical Pyramidal vs. Interneuron Morphology",
-    pyramidal: "Excitatory projection neurons with long apical & basal spiny dendrites and long-projecting axons.",
-    interneurons: "Local circuit neurons (~100-300μm axons); can be Excitatory or Inhibitory (often with smooth dendrites).",
-    summary: "Pyramidal cells carry output across brain areas, while interneurons modulate local cortical processing."
+// ==========================================
+// 3D CANVAS ENGINE & MICROANATOMY
+// ==========================================
+function switchViewMode(mode) {
+  document.getElementById('view-2d').style.display = (mode === '2d') ? 'block' : 'none';
+  document.getElementById('view-3d').style.display = (mode === '3d') ? 'block' : 'none';
+  document.getElementById('btn-view-2d').classList.toggle('active', mode === '2d');
+  document.getElementById('btn-view-3d').classList.toggle('active', mode === '3d');
+}
+
+function initThreeJsEngine() {
+  const canvas = document.getElementById('three-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  // Lightweight 3D Canvas Rendering Fallback Engine
+  let angle = 0;
+  function render3DPose() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#6366f1';
+    ctx.beginPath();
+    ctx.arc(150 + Math.cos(angle) * 40, 100 + Math.sin(angle) * 20, 30, 0, Math.PI * 2);
+    ctx.fill();
+    angle += 0.03;
+    requestAnimationFrame(render3DPose);
   }
-];
+  render3DPose();
+}
 
 function renderMicroanatomyExplorer() {
   const container = document.getElementById('microanatomy-container');
   if (!container) return;
 
   container.innerHTML = `
-    <div style="background: #1e293b; color: #f8fafc; padding: 20px; border-radius: 10px; margin-top: 20px;">
-      <h2 style="color: #6366f1;">Microanatomy & Functional Cellular Zones</h2>
-      <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-        ${microanatomyTopics.map((topic, index) => `
-          <button onclick="displayMicroTopic(${index})" style="padding: 8px 12px; background: #334155; color: white; border: none; border-radius: 5px; cursor: pointer;">
-            ${topic.title}
-          </button>
-        `).join('')}
-      </div>
-      <div id="micro-topic-content" style="background: #0f172a; padding: 15px; border-radius: 8px;">
-        <p>Select a topic above to explore cellular structure and micro-circuitry.</p>
+    <div class="card" style="margin-top: 20px;">
+      <h3 style="color: var(--accent);">Microanatomy & Functional Cellular Zones</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+        <div style="background: #020617; padding: 15px; border-radius: 6px;">
+          <h4 style="color: #38bdf8; margin: 0 0 10px 0;">Input Zone</h4>
+          <p style="font-size: 0.85rem; color: var(--text-sub);">Dendrites & Spines. Receives synaptic contacts. Smooth dendrites indicate inhibitory cells.</p>
+        </div>
+        <div style="background: #020617; padding: 15px; border-radius: 6px;">
+          <h4 style="color: #38bdf8; margin: 0 0 10px 0;">Conducting Zone</h4>
+          <p style="font-size: 0.85rem; color: var(--text-sub);">Axons. Generates and regenerates action potentials toward synaptic terminals.</p>
+        </div>
+        <div style="background: #020617; padding: 15px; border-radius: 6px;">
+          <h4 style="color: #38bdf8; margin: 0 0 10px 0;">Output Zone</h4>
+          <p style="font-size: 0.85rem; color: var(--text-sub);">Synaptic Boutons / Terminals. Releases chemical neurotransmitters across clefts.</p>
+        </div>
       </div>
     </div>
   `;
 }
-
-function displayMicroTopic(index) {
-  const topic = microanatomyTopics[index];
-  const contentEl = document.getElementById('micro-topic-content');
-  if (!contentEl) return;
-
-  let detailsHtml = `<h3>${topic.title}</h3>`;
-  for (const [key, value] of Object.entries(topic)) {
-    if (key !== 'title') {
-      detailsHtml += `<p><strong style="color: #38bdf8; text-transform: capitalize;">${key}:</strong> ${value}</p>`;
-    }
-  }
-  contentEl.innerHTML = detailsHtml;
-}
-
-// Automatically mount microanatomy module when DOM loads
-document.addEventListener('DOMContentLoaded', () => {
-  renderMicroanatomyExplorer();
-});
