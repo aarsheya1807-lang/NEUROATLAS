@@ -1,127 +1,81 @@
-[
-  {
-    "id": "central-sulcus-omega",
-    "name": "Central Sulcus & Motor Hand Omega Area",
-    "lobe": "Frontal / Parietal Junction",
-    "broadmannArea": "BA 4 (Precentral) / BA 3, 1, 2 (Postcentral)",
-    "function": "Divides frontal and parietal lobes. Features a distinct inverted 'Omega' shape representing hand motor (precentral) and somatosensory (postcentral) control. Exhibits motor lateralization based on handedness.",
-    "clinicalDeficit": {
-      "condition": "Contralateral Hand Monoparesis / Sensory Loss",
-      "symptoms": "Isolated loss of motor control, weakness, or tactile discrimination specifically in the contralateral hand."
-    },
-    "dsm5Mapping": {
-      "disorders": ["Major/Minor Neurocognitive Disorder Due to Vascular Disease (290.40 / F01.50)"],
-      "criteria": "Focal neurological signs (monoparesis) consistent with vascular lesion along the central sulcus."
-    },
-    "doiLink": "https://doi.org/10.1016/0006-8993(95)00958-8",
-    "network": "Sensorimotor Network"
-  },
-  {
-    "id": "calcarine-sulcus",
-    "name": "Calcarine Sulcus (Primary Visual Cortex - V1)",
-    "lobe": "Occipital Lobe (Medial Aspect)",
-    "broadmannArea": "BA 17",
-    "function": "Receives initial retinotopic visual inputs from the LGN via optic radiations. Primary gateway for conscious vision.",
-    "clinicalDeficit": {
-      "condition": "Cortical Blindness / Homonymous Hemianopia",
-      "symptoms": "Loss of vision in the contralateral visual field with macular sparing if PCA collateral flow is intact."
-    },
-    "dsm5Mapping": {
-      "disorders": ["Neurocognitive Disorder with Lewy Bodies (331.82 / G31.83)"],
-      "criteria": "Recurrent complex visual hallucinations caused by altered occipital/visuoperceptual processing."
-    },
-    "doiLink": "https://doi.org/10.1038/nrn1201",
-    "network": "Primary Visual Network"
-  },
-  {
-    "id": "ventral-stream",
-    "name": "Ventral Temporal Visual Stream ('What' Pathway)",
-    "lobe": "Inferior Temporal Lobe / Fusiform Gyrus",
-    "broadmannArea": "BA 20, 21, 37",
-    "function": "Processes visual signals streaming from V1 down the temporal lobe to recognize complex shapes, objects, places, and faces.",
-    "clinicalDeficit": {
-      "condition": "Visual Agnosia & Prosopagnosia",
-      "symptoms": "Inability to recognize familiar objects or faces visually despite intact primary visual acuity."
-    },
-    "dsm5Mapping": {
-      "disorders": ["Major Neurocognitive Disorder Due to Alzheimer's Disease (331.0 / G30.9)"],
-      "criteria": "Progressive impairment in visual agnosia and visuoperceptual domains."
-    },
-    "doiLink": "https://doi.org/10.1016/j.neuropsychologia.2008.03.008",
-    "network": "Ventral Visual Network"
-  },
-  {
-    "id": "middle-temporal-v5",
-    "name": "Area MT / V5 (Middle Temporal Area)",
-    "lobe": "Temporo-Parieto-Occipital Junction",
-    "broadmannArea": "BA 37 / MT",
-    "function": "Enriched in direction-selective motion neurons. Specialized for processing visual motion ('building our notion of motion').",
-    "clinicalDeficit": {
-      "condition": "Akinetopsia (Motion Blindness)",
-      "symptoms": "Inability to perceive continuous fluid movement; moving objects appear as freeze-frame snapshots."
-    },
-    "dsm5Mapping": {
-      "disorders": ["Subcortical/Vascular Neurocognitive Deficits"],
-      "criteria": "Visuoperceptual disturbance involving loss of spatial-motion tracking."
-    },
-    "doiLink": "https://doi.org/10.1093/brain/114.6.2811",
-    "network": "Dorsal/Motion Visual Stream"
-  },
-  {
-    "id": "orbitofrontal-cortex",
-    "name": "Orbitofrontal Cortex (Phineas Gage Region)",
-    "lobe": "Frontal Lobe (Ventral Surface)",
-    "broadmannArea": "BA 11, 12, 47",
-    "function": "Integrates visceral/emotional signals with decision-making, impulse control, social decorum, and risk-reward evaluation.",
-    "clinicalDeficit": {
-      "condition": "Orbitofrontal Syndrome / Personality Dissociation",
-      "symptoms": "Profound changes in personality, disinhibition, emotional apathy, impulsivity, and poor judgment."
-    },
-    "dsm5Mapping": {
-      "disorders": [
-        "Behavioral Variant Frontotemporal Neurocognitive Disorder (318.1 / F02.80)",
-        "Obsessive-Compulsive Disorder (300.3 / F42.2)"
-      ],
-      "criteria": "Early behavioral disinhibition, loss of sympathy/empathy, hyperorality, and repetitive/compulsive behaviors."
-    },
-    "doiLink": "https://doi.org/10.1093/cercor/10.3.220",
-    "network": "Salience / Reward Network"
-  },
-  {
-    "id": "wernickes-area",
-    "name": "Wernicke's Area",
-    "lobe": "Posterior Superior Temporal Gyrus (Left)",
-    "broadmannArea": "BA 22",
-    "function": "Primary language node encoding dimensions of speech comprehension and semantic decoding.",
-    "clinicalDeficit": {
-      "condition": "Wernicke's (Receptive) Aphasia",
-      "symptoms": "Fluent, grammatical speech lacking meaning ('word salad'); severely impaired auditory comprehension."
-    },
-    "dsm5Mapping": {
-      "disorders": ["Major Neurocognitive Disorder with Language Impairment (Primary Progressive Aphasia)"],
-      "criteria": "Prominent decline in language comprehension and object naming."
-    },
-    "doiLink": "https://doi.org/10.1016/S0010-9452(08)70120-1",
-    "network": "Language Network"
-  },
-  {
-    "id": "prefrontal-cortex",
-    "name": "Dorsolateral Prefrontal Cortex (DLPFC)",
-    "lobe": "Frontal Lobe",
-    "broadmannArea": "BA 9, 46",
-    "function": "Central node for executive function, working memory, cognitive flexibility, planning, and top-down emotional regulation.",
-    "clinicalDeficit": {
-      "condition": "Dysexecutive Syndrome",
-      "symptoms": "Impaired task-switching, poor working memory, inability to plan, and cognitive rigidity."
-    },
-    "dsm5Mapping": {
-      "disorders": [
-        "Major Depressive Disorder (296.2 / F32.9)",
-        "Attention-Deficit/Hyperactivity Disorder (314.01 / F90.2)"
-      ],
-      "criteria": "Hypoactivity leading to executive dysfunction, concentration difficulties, and unmodulated negative affect."
-    },
-    "doiLink": "https://doi.org/10.1126/science.288.5472.1835",
-    "network": "Executive Control Network"
+{
+  "hierarchy": {
+    "id": "cranium",
+    "name": "Cranial Skull",
+    "type": "outer_shell",
+    "description": "Bony structure protecting the brain, consisting of the neurocranium and facial skeleton.",
+    "children": [
+      {
+        "id": "meninges",
+        "name": "Meningeal Layers",
+        "type": "membrane_shell",
+        "description": "Three protective membranes: Dura Mater (outer thick layer), Arachnoid Mater (vascular web), and Pia Mater (adhered directly to gyri).",
+        "children": [
+          {
+            "id": "frontal-lobe",
+            "name": "Frontal & Prefrontal Lobe",
+            "color": "0x6366f1",
+            "description": "Responsible for high-level executive function, motor control, speech production, and personality.",
+            "position": { "x": -1.2, "y": 0.5, "z": 1.0 },
+            "subRegions": [
+              {
+                "id": "prefrontal-cortex",
+                "name": "Dorsolateral Prefrontal Cortex (DLPFC)",
+                "ba": "BA 9, 46",
+                "function": "Executive control, working memory, task-switching, and emotional regulation.",
+                "deficit": "Dysexecutive syndrome, planning deficits, cognitive rigidity.",
+                "dsm5": "Major Depressive Disorder (296.2), ADHD (314.01)",
+                "position": { "x": -1.8, "y": 0.8, "z": 1.4 }
+              },
+              {
+                "id": "orbitofrontal-cortex",
+                "name": "Orbitofrontal Cortex (Phineas Gage Region)",
+                "ba": "BA 11, 12, 47",
+                "function": "Impulse control, value-based decision making, social decorum, and reward regulation.",
+                "deficit": "Orbitofrontal disinhibition syndrome, profound personality alteration, risk-seeking behavior.",
+                "dsm5": "Behavioral Variant Frontotemporal Neurocognitive Disorder (F02.80), OCD (300.3)",
+                "position": { "x": -1.3, "y": -0.3, "z": 1.5 }
+              },
+              {
+                "id": "brocas-area",
+                "name": "Broca's Area",
+                "ba": "BA 44, 45 (Inferior Frontal Gyrus)",
+                "function": "Motor speech articulation and syntactic language construction.",
+                "deficit": "Broca's Expressive Aphasia (halting, non-fluent speech with preserved comprehension).",
+                "dsm5": "Primary Progressive Aphasia (Agrammatic Variant)",
+                "position": { "x": -2.0, "y": 0.2, "z": 0.8 }
+              }
+            ]
+          },
+          {
+            "id": "temporal-lobe",
+            "name": "Temporal Lobe",
+            "color": "0x38bdf8",
+            "description": "Processes auditory input, speech comprehension, visual object recognition, and memory formation.",
+            "position": { "x": -1.5, "y": -0.6, "z": -0.2 },
+            "subRegions": [
+              {
+                "id": "wernickes-area",
+                "name": "Wernicke's Area",
+                "ba": "BA 22 (Superior Temporal Gyrus)",
+                "function": "Semantic speech comprehension and phonological decoding.",
+                "deficit": "Wernicke's Receptive Aphasia (fluent 'word salad' speech with severe comprehension loss).",
+                "dsm5": "Primary Progressive Aphasia (Semantic Variant)",
+                "position": { "x": -1.8, "y": -0.2, "z": -0.6 }
+              },
+              {
+                "id": "ventral-stream",
+                "name": "Fusiform Face Area / Ventral Visual Stream",
+                "ba": "BA 20, 21, 37",
+                "function": "High-level object, place, and facial feature recognition ('What' pathway).",
+                "deficit": "Prosopagnosia (face blindness) and visual agnosia.",
+                "dsm5": "Major Neurocognitive Disorder Due to Alzheimer's (Visuoperceptual Domain)",
+                "position": { "x": -1.4, "y": -1.2, "z": -0.1 }
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
-]
+}
