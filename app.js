@@ -1,257 +1,299 @@
-let scene, camera, renderer, controls;
-let brainHierarchy = null;
+/* ==========================================================================
+   NEUROMAP — Region & Connection Data
+   Coordinate system: x = right(+)/left(-), y = up(+)/down(-), z = anterior(+)/posterior(-)
+   All positions/scales are stylized (not volumetrically accurate) — built for
+   teaching spatial-functional relationships, not for clinical measurement.
+   ========================================================================== */
 
-// Multi-Tier Depth Trackers
-// 1 = Skull | 2 = Meninges | 3 = Cortex Lobes | 4 = Deep Sub-regions
-let currentDepth = 1; 
-let activePath = [];
+const REGION_CATEGORIES = {
+  lobe: { label: "Cortical Lobe", color: "#5B7FBD" },
+  language: { label: "Language Network", color: "#E8A23D" },
+  limbic: { label: "Limbic System", color: "#D9607A" },
+  subcortical: { label: "Subcortical Structure", color: "#8B6FD6" },
+  sensorimotor: { label: "Sensorimotor Strip", color: "#47E0B0" },
+  other: { label: "Other Structure", color: "#7A8494" },
+};
 
-// Mesh Repositories
-let skullMesh, meningesMesh;
-let lobeMeshes = [];
-let subRegionMeshes = [];
+const REGIONS = [
+  {
+    id: "frontal-l",
+    name: "Frontal Lobe (Left)",
+    group: "Frontal Lobe",
+    category: "lobe",
+    pos: [-0.55, 0.2, 0.75],
+    scale: [0.55, 0.5, 0.62],
+    brodmann: "4, 6, 8–13, 44–47",
+    function:
+      "Executive control, working memory, voluntary motor planning, personality and impulse regulation, and expressive language (left side).",
+    clinical:
+      "Damage here produces disinhibition, apathy, poor judgment, or — if the inferior left portion is involved — expressive (Broca's) aphasia.",
+  },
+  {
+    id: "frontal-r",
+    name: "Frontal Lobe (Right)",
+    group: "Frontal Lobe",
+    category: "lobe",
+    pos: [0.55, 0.2, 0.75],
+    scale: [0.55, 0.5, 0.62],
+    brodmann: "4, 6, 8–13",
+    function:
+      "Non-verbal executive function, sustained attention, and aspects of social/emotional judgment.",
+    clinical:
+      "Right frontal lesions are classically linked to disinhibition and impaired insight with relatively preserved language.",
+  },
+  {
+    id: "parietal-l",
+    name: "Parietal Lobe (Left)",
+    group: "Parietal Lobe",
+    category: "lobe",
+    pos: [-0.55, 0.35, -0.15],
+    scale: [0.5, 0.45, 0.55],
+    brodmann: "1–3, 5, 7, 39, 40",
+    function:
+      "Somatosensory integration, spatial processing, and (left side) mathematical reasoning and left-right orientation.",
+    clinical:
+      "Left angular gyrus damage can cause Gerstmann syndrome: agraphia, acalculia, finger agnosia, and left-right confusion.",
+  },
+  {
+    id: "parietal-r",
+    name: "Parietal Lobe (Right)",
+    group: "Parietal Lobe",
+    category: "lobe",
+    pos: [0.55, 0.35, -0.15],
+    scale: [0.5, 0.45, 0.55],
+    brodmann: "1–3, 5, 7, 39, 40",
+    function:
+      "Spatial awareness of the whole body and surrounding space; attention allocation across both visual fields.",
+    clinical:
+      "Right posterior parietal lesions are the classic cause of hemispatial (left-sided) neglect.",
+  },
+  {
+    id: "temporal-l",
+    name: "Temporal Lobe (Left)",
+    group: "Temporal Lobe",
+    category: "lobe",
+    pos: [-0.75, -0.25, 0.25],
+    scale: [0.35, 0.3, 0.55],
+    brodmann: "20–22, 41–42",
+    function:
+      "Auditory processing, semantic memory, and — in the posterior superior region — language comprehension.",
+    clinical:
+      "Posterior superior temporal damage on the left produces Wernicke's (receptive) aphasia: fluent but meaningless speech with impaired comprehension.",
+  },
+  {
+    id: "temporal-r",
+    name: "Temporal Lobe (Right)",
+    group: "Temporal Lobe",
+    category: "lobe",
+    pos: [0.75, -0.25, 0.25],
+    scale: [0.35, 0.3, 0.55],
+    brodmann: "20–22, 41–42",
+    function:
+      "Prosody (tone of speech), music perception, and facial/scene memory.",
+    clinical:
+      "Right temporal lesions can flatten prosody (aprosodia) and impair recognition of unfamiliar faces or environments.",
+  },
+  {
+    id: "occipital",
+    name: "Occipital Lobe",
+    group: "Occipital Lobe",
+    category: "lobe",
+    pos: [0, 0.1, -0.9],
+    scale: [0.68, 0.4, 0.35],
+    brodmann: "17–19",
+    function:
+      "Primary and associative visual processing — edges, motion, color, and the start of the dorsal ('where') and ventral ('what') visual streams.",
+    clinical:
+      "Bilateral occipital infarcts (posterior cerebral artery) can cause cortical blindness; unilateral lesions cause contralateral visual field cuts.",
+  },
+  {
+    id: "cerebellum",
+    name: "Cerebellum",
+    group: "Cerebellum",
+    category: "other",
+    pos: [0, -0.6, -0.8],
+    scale: [0.58, 0.36, 0.42],
+    brodmann: "—",
+    function:
+      "Coordination, balance, motor timing, and error-correction of movement; also contributes to cognitive timing and procedural learning.",
+    clinical:
+      "Lesions cause ipsilateral ataxia, dysmetria, intention tremor, and dysdiadochokinesia — never contralateral, unlike cortical motor lesions.",
+  },
+  {
+    id: "brainstem",
+    name: "Brainstem",
+    group: "Brainstem",
+    category: "other",
+    pos: [0, -0.78, -0.35],
+    scale: [0.17, 0.4, 0.17],
+    brodmann: "—",
+    function:
+      "Midbrain, pons, and medulla — houses cranial nerve nuclei, and cardiorespiratory and arousal (reticular activating system) centers.",
+    clinical:
+      "Lateral medullary (Wallenberg) syndrome: crossed sensory loss, Horner's syndrome, dysphagia, and ataxia from PICA territory infarct.",
+  },
+  {
+    id: "broca",
+    name: "Broca's Area",
+    group: "Language Network",
+    category: "language",
+    pos: [-0.86, -0.02, 0.58],
+    scale: [0.16, 0.13, 0.16],
+    brodmann: "44, 45",
+    function:
+      "Speech production planning and grammatical (syntactic) construction of language, in the inferior frontal gyrus.",
+    clinical:
+      "Damage causes non-fluent, effortful, telegraphic speech with intact comprehension and impaired repetition — Broca's aphasia.",
+  },
+  {
+    id: "wernicke",
+    name: "Wernicke's Area",
+    group: "Language Network",
+    category: "language",
+    pos: [-0.84, -0.12, -0.12],
+    scale: [0.17, 0.13, 0.17],
+    brodmann: "22",
+    function:
+      "Language comprehension — decoding the meaning of spoken and written words, at the posterior superior temporal gyrus.",
+    clinical:
+      "Damage causes fluent but meaningless ('word salad') speech, with impaired comprehension and impaired repetition — Wernicke's aphasia.",
+  },
+  {
+    id: "amygdala",
+    name: "Amygdala",
+    group: "Limbic System",
+    category: "limbic",
+    pos: [0.32, -0.32, 0.35],
+    scale: [0.13, 0.11, 0.13],
+    brodmann: "—",
+    function:
+      "Fear conditioning, threat detection, and emotional tagging of memories. Normally bilateral; shown here on one side for clarity.",
+    clinical:
+      "Bilateral damage (e.g. Klüver–Bucy syndrome) causes placidity, hyperorality, and hypersexuality; also implicated in PTSD hyperactivity.",
+  },
+  {
+    id: "hippocampus",
+    name: "Hippocampus",
+    group: "Limbic System",
+    category: "limbic",
+    pos: [0.4, -0.34, 0.02],
+    scale: [0.32, 0.09, 0.12],
+    brodmann: "—",
+    function:
+      "Formation of new declarative (episodic and semantic) memories and spatial navigation. Normally bilateral.",
+    clinical:
+      "Bilateral medial temporal damage (e.g. patient H.M.) produces anterograde amnesia with preserved procedural learning.",
+  },
+  {
+    id: "thalamus",
+    name: "Thalamus",
+    group: "Diencephalon",
+    category: "subcortical",
+    pos: [0, 0.02, 0],
+    scale: [0.24, 0.19, 0.24],
+    brodmann: "—",
+    function:
+      "The brain's major sensory relay station (except olfaction), routing signals to appropriate cortical areas; also involved in arousal.",
+    clinical:
+      "Thalamic stroke can cause central post-stroke pain syndrome (Dejerine–Roussy) — severe contralateral burning pain.",
+  },
+  {
+    id: "hypothalamus",
+    name: "Hypothalamus",
+    group: "Diencephalon",
+    category: "subcortical",
+    pos: [0, -0.2, 0.16],
+    scale: [0.11, 0.09, 0.11],
+    brodmann: "—",
+    function:
+      "Homeostasis: temperature, hunger, thirst, circadian rhythm, and control of the pituitary/endocrine axis.",
+    clinical:
+      "Lesions can cause diabetes insipidus, temperature dysregulation, or disrupted sleep-wake cycles.",
+  },
+  {
+    id: "corpus-callosum",
+    name: "Corpus Callosum",
+    group: "White Matter",
+    category: "other",
+    pos: [0, 0.18, 0.1],
+    scale: [0.52, 0.07, 0.68],
+    brodmann: "—",
+    function:
+      "The largest white-matter tract, carrying information between the left and right cerebral hemispheres.",
+    clinical:
+      "Split-brain (callosotomy) patients show striking hemisphere-specific deficits, e.g. left-hand alien-limb-like behaviour.",
+  },
+  {
+    id: "motor-strip",
+    name: "Primary Motor Cortex",
+    group: "Sensorimotor Strip",
+    category: "sensorimotor",
+    pos: [0.5, 0.55, 0.06],
+    scale: [0.52, 0.09, 0.16],
+    brodmann: "4",
+    function:
+      "The precentral gyrus — the motor homunculus. Controls voluntary movement of the contralateral body, organized medial (leg) to lateral (face).",
+    clinical:
+      "Lesions cause contralateral spastic weakness; MCA territory infarcts spare the leg (supplied by ACA) but affect face/arm most.",
+  },
+  {
+    id: "sensory-strip",
+    name: "Primary Somatosensory Cortex",
+    group: "Sensorimotor Strip",
+    category: "sensorimotor",
+    pos: [0.5, 0.55, -0.11],
+    scale: [0.52, 0.09, 0.16],
+    brodmann: "1, 2, 3",
+    function:
+      "The postcentral gyrus — receives touch, pressure, vibration, and proprioceptive input from the contralateral body.",
+    clinical:
+      "Lesions cause contralateral cortical sensory loss: impaired two-point discrimination and stereognosis with preserved crude touch.",
+  },
+  {
+    id: "insula",
+    name: "Insula",
+    group: "Other",
+    category: "other",
+    pos: [0.66, -0.06, 0.2],
+    scale: [0.19, 0.19, 0.19],
+    brodmann: "13–16",
+    function:
+      "Interoception (internal body awareness), taste, pain processing, and emotional awareness/disgust.",
+    clinical:
+      "Implicated in addiction (craving states) and in autonomic changes seen after right insular strokes.",
+  },
+  {
+    id: "basal-ganglia",
+    name: "Basal Ganglia",
+    group: "Subcortical",
+    category: "subcortical",
+    pos: [0.26, 0.03, 0.2],
+    scale: [0.21, 0.19, 0.23],
+    brodmann: "—",
+    function:
+      "Caudate, putamen, and globus pallidus — action selection, procedural/habit learning, and movement modulation.",
+    clinical:
+      "Degeneration causes Parkinson's disease (bradykinesia, rigidity, tremor) or Huntington's disease (chorea), depending on the circuit affected.",
+  },
+];
 
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-init();
-
-function init() {
-  const container = document.getElementById('canvas-container');
-
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x020617);
-
-  camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 0, 7);
-
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
-  container.appendChild(renderer.domElement);
-
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-
-  // Lighting Setup
-  const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-  scene.add(ambient);
-
-  const dirLight = new THREE.DirectionalLight(0x6366f1, 1.2);
-  dirLight.position.set(5, 10, 7);
-  scene.add(dirLight);
-
-  const pointLight = new THREE.PointLight(0x38bdf8, 1);
-  pointLight.position.set(-5, -5, -5);
-  scene.add(pointLight);
-
-  // Load Anatomical Data
-  fetch('brainData.json')
-    .then(res => res.json())
-    .then(data => {
-      brainHierarchy = data.hierarchy;
-      buildMultiTierScene();
-    });
-
-  window.addEventListener('resize', onWindowResize);
-  window.addEventListener('click', onCanvasClick);
-
-  animate();
-}
-
-// Build 3D Nested Geometry
-function buildMultiTierScene() {
-  const group = new THREE.Group();
-
-  // TIER 1: Cranial Skull Shell
-  const skullGeo = new THREE.SphereGeometry(2.3, 64, 64);
-  skullGeo.scale(1, 1.1, 1.25);
-  const skullMat = new THREE.MeshStandardMaterial({
-    color: 0xe2e8f0,
-    roughness: 0.5,
-    transparent: true,
-    opacity: 0.45
-  });
-  skullMesh = new THREE.Mesh(skullGeo, skullMat);
-  skullMesh.userData = { depth: 1, name: "Cranial Skull", data: brainHierarchy };
-  group.add(skullMesh);
-
-  // TIER 2: Meninges Membrane Shell
-  const meningesGeo = new THREE.SphereGeometry(2.0, 64, 64);
-  meningesGeo.scale(0.98, 1.08, 1.2);
-  const meningesMat = new THREE.MeshStandardMaterial({
-    color: 0xf43f5e,
-    roughness: 0.3,
-    transparent: true,
-    opacity: 0.65
-  });
-  meningesMesh = new THREE.Mesh(meningesGeo, meningesMat);
-  meningesMesh.userData = { depth: 2, name: "Meninges Layer", data: brainHierarchy.children[0] };
-  group.add(meningesMesh);
-
-  // TIER 3 & 4: Cortical Lobes & Sub-regions
-  const lobesData = brainHierarchy.children[0].children[0].children; // Access lobes array
-
-  lobesData.forEach(lobe => {
-    // Tier 3 Lobe Mesh
-    const lobeGeo = new THREE.SphereGeometry(0.75, 32, 32);
-    const lobeMat = new THREE.MeshStandardMaterial({
-      color: parseInt(lobe.color),
-      transparent: true,
-      opacity: 0.85
-    });
-    const lobeMesh = new THREE.Mesh(lobeGeo, lobeMat);
-    lobeMesh.position.set(lobe.position.x, lobe.position.y, lobe.position.z);
-    lobeMesh.userData = { depth: 3, name: lobe.name, data: lobe };
-    group.add(lobeMesh);
-    lobeMeshes.push(lobeMesh);
-
-    // Tier 4 Sub-region Nodes
-    lobe.subRegions.forEach(sub => {
-      const subGeo = new THREE.SphereGeometry(0.22, 24, 24);
-      const subMat = new THREE.MeshStandardMaterial({
-        color: 0xfff176,
-        emissive: 0xf59e0b,
-        emissiveIntensity: 0.6
-      });
-      const subMesh = new THREE.Mesh(subGeo, subMat);
-      subMesh.position.set(sub.position.x, sub.position.y, sub.position.z);
-      subMesh.visible = false; // Hidden until Tier 3 zoom
-      subMesh.userData = { depth: 4, name: sub.name, data: sub };
-      group.add(subMesh);
-      subRegionMeshes.push(subMesh);
-    });
-  });
-
-  scene.add(group);
-}
-
-// Raycasting Click Drill-Down Logic
-function onCanvasClick(event) {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  raycaster.setFromCamera(mouse, camera);
-
-  let targetMeshes = [];
-  if (currentDepth === 1) targetMeshes = [skullMesh];
-  else if (currentDepth === 2) targetMeshes = [meningesMesh];
-  else if (currentDepth === 3) targetMeshes = lobeMeshes;
-  else if (currentDepth === 4) targetMeshes = subRegionMeshes;
-
-  const intersects = raycaster.intersectObjects(targetMeshes);
-
-  if (intersects.length > 0) {
-    const clicked = intersects[0].object;
-    drillDownToNextTier(clicked);
-  }
-}
-
-// Advance Depth Tier
-function drillDownToNextTier(clickedObject) {
-  const data = clickedObject.userData.data;
-
-  if (currentDepth === 1) {
-    // Skull -> Meninges
-    currentDepth = 2;
-    skullMesh.material.opacity = 0.08; // Peel Skull back
-    updateUI("Depth Tier 2: Protective Membranes", data.name, data.description, "Cranium > Meninges");
-  } 
-  else if (currentDepth === 2) {
-    // Meninges -> Cortical Lobes
-    currentDepth = 3;
-    meningesMesh.material.opacity = 0.08; // Peel Meninges back
-    updateUI("Depth Tier 3: Cortical Lobes", "Brain Parenchyma / Lobes", "Click a colored lobe (Frontal, Temporal) to drill into localized functional structures.", "Cranium > Meninges > Cortical Lobes");
-  } 
-  else if (currentDepth === 3) {
-    // Lobe -> Sub-regions (Broca's, Wernicke's, etc.)
-    currentDepth = 4;
-    
-    // Dim other lobes
-    lobeMeshes.forEach(m => {
-      if (m !== clickedObject) m.material.opacity = 0.15;
-      else m.material.opacity = 0.35;
-    });
-
-    // Reveal sub-region nodes
-    subRegionMeshes.forEach(s => s.visible = true);
-
-    zoomCameraTo(clickedObject.position.x * 1.4, clickedObject.position.y * 1.4, clickedObject.position.z + 2.2);
-    updateUI("Depth Tier 4: Internal Functional Circuitry", data.name, `${data.description} Click yellow nodes for DSM-5 and lesion profiles.`, `Cranium > Meninges > ${data.name}`);
-  } 
-  else if (currentDepth === 4) {
-    // Inspect Specific Sub-Region Node
-    showDeepSubDetails(data);
-  }
-
-  document.getElementById('back-btn').style.display = 'block';
-}
-
-// Display Specific Region Properties
-function showDeepSubDetails(sub) {
-  document.getElementById('layer-title').innerText = sub.name;
-  document.getElementById('sub-details').style.display = 'block';
-  document.getElementById('info-ba').innerText = sub.ba;
-  document.getElementById('info-func').innerText = sub.function;
-  document.getElementById('info-deficit').innerText = sub.deficit;
-  document.getElementById('info-dsm').innerText = sub.dsm5;
-}
-
-// Navigate Backward
-function navigateUpTier() {
-  if (currentDepth === 4) {
-    currentDepth = 3;
-    subRegionMeshes.forEach(s => s.visible = false);
-    lobeMeshes.forEach(m => m.material.opacity = 0.85);
-    document.getElementById('sub-details').style.display = 'none';
-    zoomCameraTo(0, 0, 7);
-    updateUI("Depth Tier 3: Cortical Lobes", "Cortical Lobes", "Select a lobe to drill into sub-structures.", "Cranium > Meninges > Cortical Lobes");
-  } 
-  else if (currentDepth === 3) {
-    currentDepth = 2;
-    meningesMesh.material.opacity = 0.65;
-    updateUI("Depth Tier 2: Protective Membranes", "Meninges Layer", "Click meninges to peel back membrane.", "Cranium > Meninges");
-  } 
-  else if (currentDepth === 2) {
-    currentDepth = 1;
-    skullMesh.material.opacity = 0.45;
-    document.getElementById('back-btn').style.display = 'none';
-    updateUI("Depth Tier 1: Outer Cranium", "Cranial Skull", "Click skull to peel outer bone.", "Cranium");
-  }
-}
-
-function updateUI(badge, title, desc, path) {
-  document.getElementById('tier-badge').innerText = badge;
-  document.getElementById('layer-title').innerText = title;
-  document.getElementById('layer-desc').innerText = desc;
-  document.getElementById('breadcrumb').innerText = `Path: ${path}`;
-}
-
-function zoomCameraTo(x, y, z) {
-  let steps = 0;
-  function anim() {
-    camera.position.x += (x - camera.position.x) * 0.1;
-    camera.position.y += (y - camera.position.y) * 0.1;
-    camera.position.z += (z - camera.position.z) * 0.1;
-    steps++;
-    if (steps < 25) requestAnimationFrame(anim);
-  }
-  anim();
-}
-
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
-
-  if (currentDepth === 4) {
-    subRegionMeshes.forEach(s => s.rotation.y += 0.03);
-  }
-
-  renderer.render(scene, camera);
-}
+/* Functional / anatomical links drawn as pulsing connective lines when a
+   region is selected — this is the atlas's signature interaction. */
+const CONNECTIONS = [
+  ["broca", "wernicke"],       // arcuate fasciculus
+  ["amygdala", "hippocampus"], // medial temporal limbic loop
+  ["thalamus", "frontal-l"],
+  ["thalamus", "frontal-r"],
+  ["thalamus", "parietal-l"],
+  ["thalamus", "parietal-r"],
+  ["thalamus", "occipital"],
+  ["thalamus", "hypothalamus"],
+  ["basal-ganglia", "thalamus"],
+  ["basal-ganglia", "motor-strip"],
+  ["motor-strip", "sensory-strip"],
+  ["cerebellum", "brainstem"],
+  ["brainstem", "thalamus"],
+  ["corpus-callosum", "frontal-l"],
+  ["corpus-callosum", "frontal-r"],
+  ["insula", "amygdala"],
+];
