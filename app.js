@@ -1,7 +1,11 @@
+// ==========================================
+// STATE & DATA MANAGEMENT
+// ==========================================
 let brainData = [];
 let currentMode = 'explore'; // 'explore' or 'quiz'
 let currentQuestionIndex = 0;
 let score = 0;
+let activeTab = 'explore'; // 'explore', 'diagnostic', or 'flashcards'
 
 // Clinical Case Study Questions for Quiz Mode
 const caseQuestions = [
@@ -31,15 +35,68 @@ const caseQuestions = [
   }
 ];
 
-// Fetch Brain Master Data
-fetch('brainData.json')
-  .then(response => response.json())
-  .then(data => {
-    brainData = data;
-    setupEventListeners();
-  })
-  .catch(err => console.error("Error loading brainData.json:", err));
+// ==========================================
+// INITIALIZATION & DATA FETCHING
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  fetch('brainData.json')
+    .then(response => response.json())
+    .then(data => {
+      brainData = data;
+      setupEventListeners();
+      renderTabNavigation();
+    })
+    .catch(err => console.error("Error loading brainData.json:", err));
+});
 
+// ==========================================
+// NAVIGATION & TAB SWITCHING ENGINE
+// ==========================================
+function renderTabNavigation() {
+  const navContainer = document.getElementById('tab-nav');
+  if (!navContainer) return; // Renders automatically if container exists in index.html
+
+  navContainer.innerHTML = `
+    <div style="display: flex; gap: 10px; background: #0f172a; padding: 8px; border-radius: 8px; border: 1px solid #1e293b; margin-bottom: 20px;">
+      <button id="tab-btn-explore" onclick="switchTab('explore')" style="${getTabStyle('explore')}">Brain Explorer & Quiz</button>
+      <button id="tab-btn-diagnostic" onclick="switchTab('diagnostic')" style="${getTabStyle('diagnostic')}">Symptom-to-Structure</button>
+      <button id="tab-btn-flashcards" onclick="switchTab('flashcards')" style="${getTabStyle('flashcards')}">Flashcards & Anki</button>
+    </div>
+  `;
+}
+
+function getTabStyle(tabId) {
+  const isActive = activeTab === tabId;
+  return `
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    background: ${isActive ? '#4f46e5' : 'transparent'};
+    color: ${isActive ? '#ffffff' : '#94a3b8'};
+  `;
+}
+
+function switchTab(tabId) {
+  activeTab = tabId;
+  renderTabNavigation();
+
+  // Hide or show relevant section containers in your index.html
+  const exploreSec = document.getElementById('explore-section');
+  const diagSec = document.getElementById('diagnostic-section');
+  const flashSec = document.getElementById('flashcards-section');
+
+  if (exploreSec) exploreSec.style.display = (tabId === 'explore') ? 'block' : 'none';
+  if (diagSec) diagSec.style.display = (tabId === 'diagnostic') ? 'block' : 'none';
+  if (flashSec) flashSec.style.display = (tabId === 'flashcards') ? 'block' : 'none';
+}
+
+// ==========================================
+// CORE BRAIN MAP & INTERACTIVITY LOGIC
+// ==========================================
 function setupEventListeners() {
   document.querySelectorAll('.brain-region').forEach(element => {
     element.addEventListener('click', (e) => {
@@ -51,6 +108,12 @@ function setupEventListeners() {
       }
     });
   });
+
+  // Attach search input listener if present
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', handleSearch);
+  }
 }
 
 function selectRegion(regionId) {
@@ -61,16 +124,25 @@ function selectRegion(regionId) {
 
   const regionInfo = brainData.find(item => item.id === regionId);
   if (regionInfo) {
-    document.getElementById('region-name').innerText = regionInfo.name;
-    document.getElementById('region-lobe').innerText = regionInfo.lobe;
-    document.getElementById('region-ba').innerText = regionInfo.broadmannArea;
-    document.getElementById('region-function').innerText = regionInfo.function;
-    document.getElementById('deficit-title').innerText = regionInfo.clinicalDeficit.condition;
-    document.getElementById('deficit-desc').innerText = regionInfo.clinicalDeficit.symptoms;
+    const elName = document.getElementById('region-name');
+    const elLobe = document.getElementById('region-lobe');
+    const elBa = document.getElementById('region-ba');
+    const elFunc = document.getElementById('region-function');
+    const elDefTitle = document.getElementById('deficit-title');
+    const elDefDesc = document.getElementById('deficit-desc');
+
+    if (elName) elName.innerText = regionInfo.name;
+    if (elLobe) elLobe.innerText = regionInfo.lobe;
+    if (elBa) elBa.innerText = regionInfo.broadmannArea;
+    if (elFunc) elFunc.innerText = regionInfo.function;
+    if (elDefTitle) elDefTitle.innerText = regionInfo.clinicalDeficit.condition;
+    if (elDefDesc) elDefDesc.innerText = regionInfo.clinicalDeficit.symptoms;
   }
 }
 
-// Search & Filter Logic
+// ==========================================
+// SEARCH & LAYER FILTERING
+// ==========================================
 function handleSearch() {
   const query = document.getElementById('search-input').value.toLowerCase().trim();
   if (!query) {
@@ -95,10 +167,9 @@ function handleSearch() {
   });
 }
 
-// Layer Toggle Filtering
 function filterLayer(layerClass, buttonEl) {
   document.querySelectorAll('.layer-btn').forEach(btn => btn.classList.remove('active'));
-  buttonEl.classList.add('active');
+  if (buttonEl) buttonEl.classList.add('active');
 
   document.querySelectorAll('.brain-region').forEach(el => {
     if (layerClass === 'all') {
@@ -113,29 +184,37 @@ function filterLayer(layerClass, buttonEl) {
   });
 }
 
-// Clinical Mode Switcher
+// ==========================================
+// CLINICAL CASE / QUIZ MODE LOGIC
+// ==========================================
 function toggleMode() {
+  const modeBtn = document.getElementById('mode-btn');
+  const quizBanner = document.getElementById('quiz-banner');
+
   if (currentMode === 'explore') {
     currentMode = 'quiz';
     score = 0;
     currentQuestionIndex = 0;
-    document.getElementById('mode-btn').innerText = "Exit Case Mode";
-    document.getElementById('quiz-banner').style.display = "block";
+    if (modeBtn) modeBtn.innerText = "Exit Case Mode";
+    if (quizBanner) quizBanner.style.display = "block";
     loadQuestion();
   } else {
     currentMode = 'explore';
-    document.getElementById('mode-btn').innerText = "Switch to Clinical Case Mode";
-    document.getElementById('quiz-banner').style.display = "none";
+    if (modeBtn) modeBtn.innerText = "Switch to Clinical Case Mode";
+    if (quizBanner) quizBanner.style.display = "none";
   }
 }
 
 function loadQuestion() {
+  const qQuestion = document.getElementById('quiz-question');
+  const qScore = document.getElementById('quiz-score');
+
   if (currentQuestionIndex < caseQuestions.length) {
     const q = caseQuestions[currentQuestionIndex];
-    document.getElementById('quiz-question').innerText = `PATIENT CASE: ${q.case}`;
-    document.getElementById('quiz-score').innerText = score;
+    if (qQuestion) qQuestion.innerText = `PATIENT CASE: ${q.case}`;
+    if (qScore) qScore.innerText = score;
   } else {
-    document.getElementById('quiz-question').innerText = `Case Exam Completed! Final Score: ${score}/${caseQuestions.length}`;
+    if (qQuestion) qQuestion.innerText = `Case Exam Completed! Final Score: ${score}/${caseQuestions.length}`;
   }
 }
 
@@ -151,7 +230,9 @@ function handleQuizAnswer(selectedId) {
   loadQuestion();
 }
 
-// Export Anki Deck (.txt format ready for Anki Import)
+// ==========================================
+// EXPORT ANKI DECK (.TXT FORMAT)
+// ==========================================
 function exportAnkiDeck() {
   if (!brainData.length) return alert("Data loading... please try again in a moment.");
   
@@ -171,5 +252,3 @@ function exportAnkiDeck() {
   link.click();
   document.body.removeChild(link);
 }
-
-
