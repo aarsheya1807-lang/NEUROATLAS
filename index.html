@@ -61,9 +61,11 @@
 
 </div>
 
+<!-- Three.js core + orbit controls, loaded before app.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script src="js/data.js"></script>
-<script src="js/main.js"></script>
+
+<!-- App logic — fetches brainData.json itself, no separate data script needed -->
+<script src="app.js"></script>
 </body>
 </html>
