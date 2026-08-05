@@ -1,0 +1,158 @@
+/**
+ * clinicalCulturalPanel.js
+ * ------------------------------------------------------------
+ * Add-on module for Neuromap: renders a DSM-5-TR / ICD-11 +
+ * sociocultural indicators panel for the currently selected
+ * brain region.
+ *
+ * INTEGRATION (one line needed in your existing app.js):
+ * Wherever you currently set the selected region (e.g. inside
+ * your click handler after determining `regionId`), add:
+ *
+ *     ClinicalPanel.showForRegion(regionId);
+ *
+ * That's it. Everything else is self-contained below.
+ * ------------------------------------------------------------
+ */
+
+const ClinicalPanel = (() => {
+  let data = null;
+  let dataLoaded = false;
+  let currentMode = "clinical"; // "clinical" | "cultural"
+
+  const DATA_URL = "clinicalCulturalData.json";
+
+  async function loadData() {
+    if (dataLoaded) return data;
+    try {
+      const res = await fetch(DATA_URL);
+      if (!res.ok) throw new Error(`Failed to load ${DATA_URL}: ${res.status}`);
+      data = await res.json();
+      dataLoaded = true;
+    } catch (err) {
+      console.error("ClinicalPanel: could not load data", err);
+      data = { regions: {} };
+      dataLoaded = true;
+    }
+    return data;
+  }
+
+  function ensurePanelExists() {
+    let panel = document.getElementById("clinical-cultural-panel");
+    if (panel) return panel;
+
+    panel = document.createElement("div");
+    panel.id = "clinical-cultural-panel";
+    panel.className = "ccp-panel ccp-hidden";
+    panel.innerHTML = `
+      <div class="ccp-header">
+        <span class="ccp-title">Clinical & Cultural Context</span>
+        <button class="ccp-close" aria-label="Close panel">&times;</button>
+      </div>
+      <div class="ccp-tabs">
+        <button class="ccp-tab ccp-tab-active" data-mode="clinical">DSM-5 / ICD-11</button>
+        <button class="ccp-tab" data-mode="cultural">Sociocultural</button>
+      </div>
+      <div class="ccp-body" id="ccp-body">
+        <p class="ccp-empty">Select a brain region to see linked disorders.</p>
+      </div>
+    `;
+    document.body.appendChild(panel);
+
+    panel.querySelector(".ccp-close").addEventListener("click", () => {
+      panel.classList.add("ccp-hidden");
+    });
+
+    panel.querySelectorAll(".ccp-tab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        panel.querySelectorAll(".ccp-tab").forEach((b) => b.classList.remove("ccp-tab-active"));
+        btn.classList.add("ccp-tab-active");
+        currentMode = btn.dataset.mode;
+        renderBody(panel.dataset.currentRegion);
+      });
+    });
+
+    return panel;
+  }
+
+  function escapeHTML(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function renderClinical(disorders) {
+    return disorders
+      .map((d) => {
+        const dsm = d.dsm5 || {};
+        const icd = d.icd11 || {};
+        return `
+          <div class="ccp-disorder">
+            <h4>${escapeHTML(d.name)}</h4>
+            <div class="ccp-code-row">
+              <span class="ccp-badge ccp-badge-dsm">DSM-5-TR ${escapeHTML(dsm.code || "—")}</span>
+              <span class="ccp-badge ccp-badge-icd">ICD-11 ${escapeHTML(icd.code || "—")}</span>
+            </div>
+            ${dsm.criteria_summary ? `<p class="ccp-label">DSM-5 criteria</p><p>${escapeHTML(dsm.criteria_summary)}</p>` : ""}
+            ${dsm.specifiers ? `<p class="ccp-label">Specifiers</p><p>${dsm.specifiers.map(escapeHTML).join(", ")}</p>` : ""}
+            ${icd.notes ? `<p class="ccp-label">ICD-11 vs DSM-5</p><p>${escapeHTML(icd.notes)}</p>` : ""}
+            ${d.evidence_strength ? `<p class="ccp-evidence">Evidence strength: ${escapeHTML(d.evidence_strength)}</p>` : ""}
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  function renderCultural(disorders) {
+    return disorders
+      .map((d) => {
+        const sc = d.sociocultural_notes || {};
+        const examples = (sc.regional_examples || [])
+          .map(
+            (r) => `<li><strong>${escapeHTML(r.region)}:</strong> ${escapeHTML(r.note)}</li>`
+          )
+          .join("");
+        return `
+          <div class="ccp-disorder">
+            <h4>${escapeHTML(d.name)}</h4>
+            ${sc.presentation_variation ? `<p class="ccp-label">Presentation variation</p><p>${escapeHTML(sc.presentation_variation)}</p>` : ""}
+            ${examples ? `<p class="ccp-label">Regional notes</p><ul class="ccp-region-list">${examples}</ul>` : ""}
+            ${sc.caveat ? `<p class="ccp-caveat">⚠ ${escapeHTML(sc.caveat)}</p>` : ""}
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  function renderBody(regionId) {
+    const panel = document.getElementById("clinical-cultural-panel");
+    const body = document.getElementById("ccp-body");
+    if (!panel || !body) return;
+
+    const regionData = data?.regions?.[regionId];
+    if (!regionData || !regionData.disorders || regionData.disorders.length === 0) {
+      body.innerHTML = `<p class="ccp-empty">No clinical/cultural data linked to this region yet.</p>`;
+      return;
+    }
+
+    body.innerHTML =
+      currentMode === "clinical"
+        ? renderClinical(regionData.disorders)
+        : renderCultural(regionData.disorders);
+  }
+
+  async function showForRegion(regionId) {
+    await loadData();
+    const panel = ensurePanelExists();
+    panel.dataset.currentRegion = regionId;
+    panel.classList.remove("ccp-hidden");
+    renderBody(regionId);
+  }
+
+  function hide() {
+    const panel = document.getElementById("clinical-cultural-panel");
+    if (panel) panel.classList.add("ccp-hidden");
+  }
+
+  return { showForRegion, hide };
+})();
