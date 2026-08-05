@@ -1,0 +1,172 @@
+/* clinicalCulturalPanel.css
+   Add-on styling for the DSM-5/ICD-11 + sociocultural panel.
+   Adjust the CSS variables below to match your existing palette. */
+
+:root {
+  --ccp-bg: #10141c;
+  --ccp-bg-elevated: #171c26;
+  --ccp-border: #2a3140;
+  --ccp-text: #e8ebf1;
+  --ccp-text-dim: #9aa3b5;
+  --ccp-accent-dsm: #5b8cff;
+  --ccp-accent-icd: #35c98a;
+  --ccp-accent-warn: #e0a94d;
+  --ccp-radius: 10px;
+}
+
+.ccp-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(380px, 100vw);
+  height: 100vh;
+  background: var(--ccp-bg);
+  border-left: 1px solid var(--ccp-border);
+  color: var(--ccp-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(0);
+  transition: transform 0.25s ease;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.35);
+}
+
+.ccp-panel.ccp-hidden {
+  transform: translateX(100%);
+  pointer-events: none;
+}
+
+.ccp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--ccp-border);
+}
+
+.ccp-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.ccp-close {
+  background: none;
+  border: none;
+  color: var(--ccp-text-dim);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.ccp-close:hover { background: var(--ccp-bg-elevated); color: var(--ccp-text); }
+
+.ccp-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ccp-border);
+}
+
+.ccp-tab {
+  flex: 1;
+  background: var(--ccp-bg-elevated);
+  border: 1px solid var(--ccp-border);
+  color: var(--ccp-text-dim);
+  padding: 8px 10px;
+  border-radius: var(--ccp-radius);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ccp-tab-active {
+  background: linear-gradient(135deg, var(--ccp-accent-dsm), var(--ccp-accent-icd));
+  color: #0a0c10;
+  font-weight: 600;
+  border-color: transparent;
+}
+
+.ccp-body {
+  overflow-y: auto;
+  padding: 16px 18px 32px;
+  flex: 1;
+}
+
+.ccp-empty {
+  color: var(--ccp-text-dim);
+  font-size: 13.5px;
+}
+
+.ccp-disorder {
+  background: var(--ccp-bg-elevated);
+  border: 1px solid var(--ccp-border);
+  border-radius: var(--ccp-radius);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.ccp-disorder h4 {
+  margin: 0 0 8px;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.ccp-code-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.ccp-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.ccp-badge-dsm { background: rgba(91, 140, 255, 0.15); color: var(--ccp-accent-dsm); }
+.ccp-badge-icd { background: rgba(53, 201, 138, 0.15); color: var(--ccp-accent-icd); }
+
+.ccp-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ccp-text-dim);
+  margin: 10px 0 3px;
+}
+
+.ccp-disorder p {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+  color: var(--ccp-text);
+}
+
+.ccp-evidence {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ccp-text-dim);
+  font-style: italic;
+}
+
+.ccp-region-list {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ccp-caveat {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ccp-accent-warn);
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .ccp-panel { width: 100vw; }
+}
