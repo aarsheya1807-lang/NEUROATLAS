@@ -1,0 +1,83 @@
+{
+  "_readme": "Merge this structure into your existing brainData.json, keyed by the same region IDs you already use (e.g. 'amygdala', 'hippocampus'). Each region can list multiple linked disorders. Extend freely — this is a starter set covering a few high-yield regions.",
+
+  "regions": {
+    "amygdala": {
+      "disorders": [
+        {
+          "name": "Post-Traumatic Stress Disorder",
+          "dsm5": {
+            "code": "309.81",
+            "criteria_summary": "Exposure to actual/threatened death, serious injury, or sexual violence; intrusion symptoms; avoidance; negative alterations in cognition/mood; marked alterations in arousal/reactivity, lasting >1 month.",
+            "specifiers": ["With dissociative symptoms", "With delayed expression"]
+          },
+          "icd11": {
+            "code": "6B40",
+            "notes": "ICD-11 requires only 3 symptom clusters (re-experiencing, avoidance, sense of current threat) vs DSM-5's broader 4-cluster, 20-symptom model. ICD-11 also has a separate diagnosis, Complex PTSD (6B41), which DSM-5 does not formally distinguish."
+          },
+          "evidence_strength": "strong — consistent hyperactivation on fMRI, lesion and stimulation studies",
+          "sociocultural_notes": {
+            "presentation_variation": "Somatic symptoms (headaches, fatigue, unexplained pain) are frequently the primary presenting complaint in South Asian, East Asian, and many African clinical settings, sometimes with underreporting of psychological symptoms due to stigma.",
+            "regional_examples": [
+              { "region": "South Asia", "note": "Trauma often disclosed through physical complaints first; family/community context shapes whether formal diagnosis is sought." },
+              { "region": "Sub-Saharan Africa", "note": "Community and religious frameworks often mediate help-seeking; local idioms of distress may not map cleanly onto DSM/ICD categories." },
+              { "region": "North America/Western Europe", "note": "More direct psychological symptom reporting; higher rates of formal diagnosis and treatment-seeking relative to global average." }
+            ],
+            "caveat": "Differences reflect variation in presentation, stigma, and healthcare access/reporting infrastructure — not differences in underlying prevalence, which is hard to compare cross-nationally due to inconsistent measurement."
+          }
+        }
+      ]
+    },
+
+    "hippocampus": {
+      "disorders": [
+        {
+          "name": "Major Neurocognitive Disorder (Alzheimer's type)",
+          "dsm5": {
+            "code": "331.0 / F02.8x (etiological subtype coding)",
+            "criteria_summary": "Significant decline in one or more cognitive domains interfering with independence; insidious onset, gradual progression."
+          },
+          "icd11": {
+            "code": "6D80 / 8A20 (dual coding: dementia + underlying disease)",
+            "notes": "ICD-11 uses a 'dual parenting' structure requiring both a mental/behavioral code and a neurological disease code, reflecting its more integrated medical framework compared to DSM-5's single mental-disorder code."
+          },
+          "evidence_strength": "strong — well-established hippocampal atrophy on MRI, correlates with memory staging",
+          "sociocultural_notes": {
+            "presentation_variation": "Cognitive decline may be normalized as 'expected aging' in some cultural contexts, delaying diagnosis; family-based caregiving norms strongly affect when/whether formal evaluation is sought.",
+            "regional_examples": [
+              { "region": "East Asia", "note": "Strong filial caregiving norms can delay institutional diagnosis; symptoms may first be noticed and managed within the family." },
+              { "region": "Latin America", "note": "Lower formal diagnosis rates linked to healthcare access rather than lower prevalence." }
+            ],
+            "caveat": "Global prevalence comparisons are heavily confounded by diagnostic infrastructure and average life expectancy differences."
+          }
+        }
+      ]
+    },
+
+    "prefrontal_cortex": {
+      "disorders": [
+        {
+          "name": "Major Depressive Disorder",
+          "dsm5": {
+            "code": "296.2x / 296.3x",
+            "criteria_summary": "≥5 symptoms over 2 weeks including depressed mood or anhedonia, causing clinically significant distress/impairment."
+          },
+          "icd11": {
+            "code": "6A70",
+            "notes": "ICD-11 drops DSM-5's symptom-count checklist in favor of a more holistic clinical description, and separates single vs recurrent episodes with clearer severity staging."
+          },
+          "evidence_strength": "moderate — reduced dlPFC activity/connectivity is a consistent but non-diagnostic finding",
+          "sociocultural_notes": {
+            "presentation_variation": "Affective language ('I feel sad/empty') dominates presentation in Western contexts; somatic language ('my heart is heavy', 'my body is tired') is more common in many Asian and African cultural contexts.",
+            "regional_examples": [
+              { "region": "China", "note": "Historically higher rates of somatic presentation in clinical settings; evolving with urbanization and mental health literacy campaigns." },
+              { "region": "Nigeria", "note": "Distress often expressed through bodily and spiritual/religious framing; community and faith leaders are frequently first points of contact." },
+              { "region": "Scandinavia", "note": "High mental health literacy and low stigma correlate with earlier self-reported affective symptom disclosure." }
+            ],
+            "caveat": "This is about presentation and pathways to care, not about whether depression 'exists differently' biologically — treat all regional notes as culturally-mediated expression, not biological variation."
+          }
+        }
+      ]
+    }
+  }
+}
