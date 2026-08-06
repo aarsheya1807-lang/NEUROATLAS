@@ -6,16 +6,19 @@
 <title>Neuromap — Interactive Brain Atlas</title>
 <meta name="description" content="Neuromap: an interactive 3D brain atlas bridging spatial anatomy with psychological and clinical function." />
 <link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/clinicalCulturalPanel.css" />
+<link rel="stylesheet" href="css/enhancements.css" />
 </head>
 <body>
-
 <div id="app">
-
   <header>
     <div class="wordmark">NEURO<span class="dot">MAP</span><span class="tag">interactive atlas</span></div>
+    <div class="header-credit">
+      <span class="credit-name">Your Name</span>
+      <span class="credit-tagline">Your tagline here</span>
+    </div>
     <button id="sidebar-toggle" aria-label="Toggle region list">☰</button>
   </header>
-
   <aside id="sidebar">
     <div class="search-wrap">
       <input id="search" type="text" placeholder="Search a structure, function, or syndrome…" autocomplete="off" />
@@ -26,17 +29,14 @@
       <span>rotate · scroll · click</span>
     </div>
   </aside>
-
   <main id="viewport">
     <div id="canvas-host"></div>
-
     <div class="hint">drag to rotate · scroll to zoom · click a structure</div>
-
     <div class="viewport-controls">
       <button class="vc-btn" id="btn-reset">↺ reset view</button>
       <button class="vc-btn" id="btn-quiz">◎ pinpoint mode</button>
+      <button class="vc-btn" id="btn-clinical">◈ DSM-5 / ICD-11</button>
     </div>
-
     <div id="quiz-bar">
       <span id="quiz-prompt">Click on: <strong>—</strong></span>
       <span id="quiz-timer">5.0s</span>
@@ -44,7 +44,6 @@
       <button id="quiz-end-btn">end</button>
     </div>
     <div id="quiz-feedback"></div>
-
     <section id="info-panel" aria-live="polite">
       <button id="info-close" aria-label="Close">✕</button>
       <div class="info-eyebrow" id="info-category">—</div>
@@ -55,17 +54,16 @@
       <div class="info-section-label">Clinical Correlation</div>
       <p class="info-clinical" id="info-clinical"></p>
     </section>
-
     <div id="toast"></div>
   </main>
-
 </div>
-
 <!-- Three.js core + orbit controls, loaded before app.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
 <!-- App logic — fetches brainData.json itself, no separate data script needed -->
 <script src="app.js"></script>
+<!-- Add-on modules: DSM-5/ICD-11 + sociocultural panel, and the vascular/lesion/network/quiz toolbar -->
+<script src="clinicalCulturalPanel.js"></script>
+<script src="enhancements.js"></script>
 </body>
 </html>
