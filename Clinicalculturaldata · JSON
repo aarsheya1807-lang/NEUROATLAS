@@ -1,5 +1,5 @@
 {
-  "_readme": "Merge this structure into your existing brainData.json, keyed by the same region IDs you already use (e.g. 'amygdala', 'hippocampus'). Each region can list multiple linked disorders. Extend freely — this is a starter set covering a few high-yield regions.",
+  "_readme": "Keys below match your actual brainData.json region IDs exactly (frontal-l, hippocampus, amygdala, broca, wernicke, cerebellum). Extend by copying the pattern for any other region id in brainData.json.",
 
   "regions": {
     "amygdala": {
@@ -13,7 +13,7 @@
           },
           "icd11": {
             "code": "6B40",
-            "notes": "ICD-11 requires only 3 symptom clusters (re-experiencing, avoidance, sense of current threat) vs DSM-5's broader 4-cluster, 20-symptom model. ICD-11 also has a separate diagnosis, Complex PTSD (6B41), which DSM-5 does not formally distinguish."
+            "notes": "ICD-11 requires only 3 symptom clusters vs DSM-5's broader 4-cluster model, and has a separate Complex PTSD diagnosis (6B41) that DSM-5 does not formally distinguish."
           },
           "evidence_strength": "strong — consistent hyperactivation on fMRI, lesion and stimulation studies",
           "sociocultural_notes": {
@@ -21,9 +21,9 @@
             "regional_examples": [
               { "region": "South Asia", "note": "Trauma often disclosed through physical complaints first; family/community context shapes whether formal diagnosis is sought." },
               { "region": "Sub-Saharan Africa", "note": "Community and religious frameworks often mediate help-seeking; local idioms of distress may not map cleanly onto DSM/ICD categories." },
-              { "region": "North America/Western Europe", "note": "More direct psychological symptom reporting; higher rates of formal diagnosis and treatment-seeking relative to global average." }
+              { "region": "North America/Western Europe", "note": "More direct psychological symptom reporting; higher rates of formal diagnosis-seeking relative to global average." }
             ],
-            "caveat": "Differences reflect variation in presentation, stigma, and healthcare access/reporting infrastructure — not differences in underlying prevalence, which is hard to compare cross-nationally due to inconsistent measurement."
+            "caveat": "Differences reflect variation in presentation, stigma, and healthcare access/reporting infrastructure — not differences in underlying prevalence."
           }
         }
       ]
@@ -34,27 +34,27 @@
         {
           "name": "Major Neurocognitive Disorder (Alzheimer's type)",
           "dsm5": {
-            "code": "331.0 / F02.8x (etiological subtype coding)",
+            "code": "331.0 / F02.8x",
             "criteria_summary": "Significant decline in one or more cognitive domains interfering with independence; insidious onset, gradual progression."
           },
           "icd11": {
-            "code": "6D80 / 8A20 (dual coding: dementia + underlying disease)",
-            "notes": "ICD-11 uses a 'dual parenting' structure requiring both a mental/behavioral code and a neurological disease code, reflecting its more integrated medical framework compared to DSM-5's single mental-disorder code."
+            "code": "6D80 / 8A20 (dual coding)",
+            "notes": "ICD-11 requires both a mental/behavioral code and a neurological disease code, unlike DSM-5's single combined code."
           },
           "evidence_strength": "strong — well-established hippocampal atrophy on MRI, correlates with memory staging",
           "sociocultural_notes": {
-            "presentation_variation": "Cognitive decline may be normalized as 'expected aging' in some cultural contexts, delaying diagnosis; family-based caregiving norms strongly affect when/whether formal evaluation is sought.",
+            "presentation_variation": "Cognitive decline may be normalized as 'expected aging' in some cultural contexts, delaying diagnosis; family caregiving norms strongly affect when formal evaluation is sought.",
             "regional_examples": [
-              { "region": "East Asia", "note": "Strong filial caregiving norms can delay institutional diagnosis; symptoms may first be noticed and managed within the family." },
+              { "region": "East Asia", "note": "Strong filial caregiving norms can delay institutional diagnosis." },
               { "region": "Latin America", "note": "Lower formal diagnosis rates linked to healthcare access rather than lower prevalence." }
             ],
-            "caveat": "Global prevalence comparisons are heavily confounded by diagnostic infrastructure and average life expectancy differences."
+            "caveat": "Global prevalence comparisons are heavily confounded by diagnostic infrastructure and life-expectancy differences."
           }
         }
       ]
     },
 
-    "prefrontal_cortex": {
+    "frontal-l": {
       "disorders": [
         {
           "name": "Major Depressive Disorder",
@@ -64,17 +64,111 @@
           },
           "icd11": {
             "code": "6A70",
-            "notes": "ICD-11 drops DSM-5's symptom-count checklist in favor of a more holistic clinical description, and separates single vs recurrent episodes with clearer severity staging."
+            "notes": "ICD-11 drops DSM-5's symptom-count checklist for a more holistic clinical description, with clearer single vs recurrent episode staging."
           },
           "evidence_strength": "moderate — reduced dlPFC activity/connectivity is a consistent but non-diagnostic finding",
           "sociocultural_notes": {
-            "presentation_variation": "Affective language ('I feel sad/empty') dominates presentation in Western contexts; somatic language ('my heart is heavy', 'my body is tired') is more common in many Asian and African cultural contexts.",
+            "presentation_variation": "Affective language ('I feel sad/empty') dominates presentation in Western contexts; somatic language ('my heart is heavy') is more common in many Asian and African cultural contexts.",
             "regional_examples": [
-              { "region": "China", "note": "Historically higher rates of somatic presentation in clinical settings; evolving with urbanization and mental health literacy campaigns." },
-              { "region": "Nigeria", "note": "Distress often expressed through bodily and spiritual/religious framing; community and faith leaders are frequently first points of contact." },
-              { "region": "Scandinavia", "note": "High mental health literacy and low stigma correlate with earlier self-reported affective symptom disclosure." }
+              { "region": "China", "note": "Historically higher somatic presentation in clinical settings; evolving with mental health literacy campaigns." },
+              { "region": "Nigeria", "note": "Distress often expressed through bodily and spiritual framing; community/faith leaders are frequent first contacts." },
+              { "region": "Scandinavia", "note": "High mental health literacy correlates with earlier affective symptom disclosure." }
             ],
-            "caveat": "This is about presentation and pathways to care, not about whether depression 'exists differently' biologically — treat all regional notes as culturally-mediated expression, not biological variation."
+            "caveat": "This concerns presentation and pathways to care, not biological variation in the disorder itself."
+          }
+        },
+        {
+          "name": "Personality Change Due to Another Medical Condition (frontal lobe / disinhibited type)",
+          "dsm5": {
+            "code": "310.1 (F07.0)",
+            "criteria_summary": "Persistent personality disturbance representing a change from baseline, judged a direct physiological consequence of a medical condition (e.g. TBI)."
+          },
+          "icd11": {
+            "code": "6E67",
+            "notes": "ICD-11 codes this as 'Secondary personality change,' embedded in its broader 'secondary syndromes' framework rather than a standalone personality-disorder chapter."
+          },
+          "evidence_strength": "strong — classic lesion-behavior correlation (e.g. Phineas Gage pattern)",
+          "sociocultural_notes": {
+            "presentation_variation": "Family tolerance for behavioral change and access to neurorehabilitation strongly shape whether this is formally diagnosed vs managed informally at home.",
+            "regional_examples": [
+              { "region": "High-income settings", "note": "Access to formal neuropsychological testing and rehab is more available, leading to earlier formal diagnosis." },
+              { "region": "Low-resource settings", "note": "Behavioral changes post-TBI may be attributed to injury generally without formal personality-change diagnosis." }
+            ],
+            "caveat": "Diagnostic rate differences here largely reflect access to neuropsychological assessment, not differences in true incidence."
+          }
+        }
+      ]
+    },
+
+    "broca": {
+      "disorders": [
+        {
+          "name": "Broca's (non-fluent/expressive) Aphasia",
+          "dsm5": {
+            "code": "784.3 (R47.01) — coded as symptom/general medical condition, not a standalone DSM-5 entity",
+            "criteria_summary": "DSM-5 has no dedicated aphasia category; documented under Neurocognitive Disorder Due to Vascular Disease or as a medical symptom code."
+          },
+          "icd11": {
+            "code": "MB4Y (Aphasia), paired with 8B11 (Cerebral infarction)",
+            "notes": "ICD-11 gives aphasia its own discrete symptom code in the neurology chapter — a useful contrast to DSM-5's broader neurocognitive framing."
+          },
+          "evidence_strength": "strong — classic stroke lesion-symptom correlation",
+          "sociocultural_notes": {
+            "presentation_variation": "Access to speech-language pathology varies hugely by country, directly affecting recovery trajectory and how long the deficit is documented as clinically significant.",
+            "regional_examples": [
+              { "region": "Well-resourced healthcare systems", "note": "Early, intensive speech-language therapy is standard, improving outcomes." },
+              { "region": "Under-resourced healthcare systems", "note": "Limited access to speech-language pathology can leave the deficit under-treated regardless of rehabilitation potential." }
+            ],
+            "caveat": "Outcome variation here reflects healthcare access, not differences in the underlying neurological deficit."
+          }
+        }
+      ]
+    },
+
+    "wernicke": {
+      "disorders": [
+        {
+          "name": "Wernicke's (fluent/receptive) Aphasia",
+          "dsm5": {
+            "code": "784.3 (R47.01) — symptom/general medical condition code",
+            "criteria_summary": "As with Broca's aphasia, documented under Neurocognitive Disorder Due to Vascular Disease or as a medical symptom code."
+          },
+          "icd11": {
+            "code": "MB4Y (Aphasia), paired with 8B11 (Cerebral infarction)",
+            "notes": "Same discrete ICD-11 code as Broca's aphasia (MB4Y); ICD relies on clinical description to distinguish fluent vs non-fluent subtype."
+          },
+          "evidence_strength": "strong — classic stroke lesion-symptom correlation",
+          "sociocultural_notes": {
+            "presentation_variation": "Reduced insight (anosognosia) common in this presentation can affect family/caregiver interpretation of the patient's behavior across cultural contexts — sometimes mistaken for confusion or psychiatric illness rather than a language deficit.",
+            "regional_examples": [
+              { "region": "Settings with limited stroke/aphasia awareness", "note": "Family members may misattribute fluent-but-meaningless speech to cognitive decline or mental illness rather than seeking aphasia-specific care." }
+            ],
+            "caveat": "Community awareness of aphasia as a distinct condition (not 'confusion') meaningfully affects care-seeking speed."
+          }
+        }
+      ]
+    },
+
+    "cerebellum": {
+      "disorders": [
+        {
+          "name": "Ataxia due to cerebellar disease",
+          "dsm5": {
+            "code": "Not independently coded in DSM-5",
+            "criteria_summary": "Relevant to DSM-5 only if secondary cognitive/behavioral sequelae meet Neurocognitive Disorder criteria."
+          },
+          "icd11": {
+            "code": "8A03.2 (Cerebellar ataxia)",
+            "notes": "Coded cleanly as a neurological diagnosis in ICD-11 — illustrates that not every neurological presentation fits a DSM-5 mental-disorder framework."
+          },
+          "evidence_strength": "strong — classic ipsilateral motor coordination deficit pattern",
+          "sociocultural_notes": {
+            "presentation_variation": "Access to physical/occupational therapy and fall-prevention resources varies widely, affecting functional outcomes more than the underlying lesion severity.",
+            "regional_examples": [
+              { "region": "Higher-resource rehab systems", "note": "Structured balance/vestibular rehab programs are standard." },
+              { "region": "Lower-resource settings", "note": "Rehab access gaps can leave patients with higher fall risk and slower functional recovery." }
+            ],
+            "caveat": "Outcome differences reflect rehabilitation access, not differences in cerebellar pathology itself."
           }
         }
       ]
