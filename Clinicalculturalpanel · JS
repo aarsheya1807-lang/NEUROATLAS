@@ -1,158 +1,172 @@
-/**
- * clinicalCulturalPanel.js
- * ------------------------------------------------------------
- * Add-on module for Neuromap: renders a DSM-5-TR / ICD-11 +
- * sociocultural indicators panel for the currently selected
- * brain region.
- *
- * INTEGRATION (one line needed in your existing app.js):
- * Wherever you currently set the selected region (e.g. inside
- * your click handler after determining `regionId`), add:
- *
- *     ClinicalPanel.showForRegion(regionId);
- *
- * That's it. Everything else is self-contained below.
- * ------------------------------------------------------------
- */
+/* clinicalCulturalPanel.css
+   Uses the SAME CSS variables already defined in your style.css
+   (--bg, --surface, --line, --text, --muted, --synapse, --clinical, --mono, --sans)
+   so this panel matches your existing look with zero extra variables. */
 
-const ClinicalPanel = (() => {
-  let data = null;
-  let dataLoaded = false;
-  let currentMode = "clinical"; // "clinical" | "cultural"
+.ccp-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(380px, 100vw);
+  height: 100vh;
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  color: var(--text);
+  font-family: var(--sans);
+  z-index: 30; /* above info-panel (which has no explicit z-index) and quiz-bar (14) */
+  display: flex;
+  flex-direction: column;
+  transform: translateX(0);
+  transition: transform 0.25s ease;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.35);
+}
 
-  const DATA_URL = "clinicalCulturalData.json";
+.ccp-panel.ccp-hidden {
+  transform: translateX(100%);
+  pointer-events: none;
+}
 
-  async function loadData() {
-    if (dataLoaded) return data;
-    try {
-      const res = await fetch(DATA_URL);
-      if (!res.ok) throw new Error(`Failed to load ${DATA_URL}: ${res.status}`);
-      data = await res.json();
-      dataLoaded = true;
-    } catch (err) {
-      console.error("ClinicalPanel: could not load data", err);
-      data = { regions: {} };
-      dataLoaded = true;
-    }
-    return data;
-  }
+.ccp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
 
-  function ensurePanelExists() {
-    let panel = document.getElementById("clinical-cultural-panel");
-    if (panel) return panel;
+.ccp-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
-    panel = document.createElement("div");
-    panel.id = "clinical-cultural-panel";
-    panel.className = "ccp-panel ccp-hidden";
-    panel.innerHTML = `
-      <div class="ccp-header">
-        <span class="ccp-title">Clinical & Cultural Context</span>
-        <button class="ccp-close" aria-label="Close panel">&times;</button>
-      </div>
-      <div class="ccp-tabs">
-        <button class="ccp-tab ccp-tab-active" data-mode="clinical">DSM-5 / ICD-11</button>
-        <button class="ccp-tab" data-mode="cultural">Sociocultural</button>
-      </div>
-      <div class="ccp-body" id="ccp-body">
-        <p class="ccp-empty">Select a brain region to see linked disorders.</p>
-      </div>
-    `;
-    document.body.appendChild(panel);
+.ccp-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.ccp-close:hover { background: var(--surface-2); color: var(--text); }
 
-    panel.querySelector(".ccp-close").addEventListener("click", () => {
-      panel.classList.add("ccp-hidden");
-    });
+.ccp-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
 
-    panel.querySelectorAll(".ccp-tab").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        panel.querySelectorAll(".ccp-tab").forEach((b) => b.classList.remove("ccp-tab-active"));
-        btn.classList.add("ccp-tab-active");
-        currentMode = btn.dataset.mode;
-        renderBody(panel.dataset.currentRegion);
-      });
-    });
+.ccp-tab {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--mono);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.ccp-tab:hover { border-color: var(--synapse); }
 
-    return panel;
-  }
+.ccp-tab-active {
+  background: rgba(71, 224, 176, 0.12);
+  color: var(--synapse);
+  border-color: var(--synapse);
+  font-weight: 600;
+}
 
-  function escapeHTML(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-  }
+.ccp-body {
+  overflow-y: auto;
+  padding: 16px 18px 32px;
+  flex: 1;
+}
+.ccp-body::-webkit-scrollbar { width: 6px; }
+.ccp-body::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
 
-  function renderClinical(disorders) {
-    return disorders
-      .map((d) => {
-        const dsm = d.dsm5 || {};
-        const icd = d.icd11 || {};
-        return `
-          <div class="ccp-disorder">
-            <h4>${escapeHTML(d.name)}</h4>
-            <div class="ccp-code-row">
-              <span class="ccp-badge ccp-badge-dsm">DSM-5-TR ${escapeHTML(dsm.code || "—")}</span>
-              <span class="ccp-badge ccp-badge-icd">ICD-11 ${escapeHTML(icd.code || "—")}</span>
-            </div>
-            ${dsm.criteria_summary ? `<p class="ccp-label">DSM-5 criteria</p><p>${escapeHTML(dsm.criteria_summary)}</p>` : ""}
-            ${dsm.specifiers ? `<p class="ccp-label">Specifiers</p><p>${dsm.specifiers.map(escapeHTML).join(", ")}</p>` : ""}
-            ${icd.notes ? `<p class="ccp-label">ICD-11 vs DSM-5</p><p>${escapeHTML(icd.notes)}</p>` : ""}
-            ${d.evidence_strength ? `<p class="ccp-evidence">Evidence strength: ${escapeHTML(d.evidence_strength)}</p>` : ""}
-          </div>
-        `;
-      })
-      .join("");
-  }
+.ccp-empty {
+  color: var(--muted);
+  font-size: 13.5px;
+}
 
-  function renderCultural(disorders) {
-    return disorders
-      .map((d) => {
-        const sc = d.sociocultural_notes || {};
-        const examples = (sc.regional_examples || [])
-          .map(
-            (r) => `<li><strong>${escapeHTML(r.region)}:</strong> ${escapeHTML(r.note)}</li>`
-          )
-          .join("");
-        return `
-          <div class="ccp-disorder">
-            <h4>${escapeHTML(d.name)}</h4>
-            ${sc.presentation_variation ? `<p class="ccp-label">Presentation variation</p><p>${escapeHTML(sc.presentation_variation)}</p>` : ""}
-            ${examples ? `<p class="ccp-label">Regional notes</p><ul class="ccp-region-list">${examples}</ul>` : ""}
-            ${sc.caveat ? `<p class="ccp-caveat">⚠ ${escapeHTML(sc.caveat)}</p>` : ""}
-          </div>
-        `;
-      })
-      .join("");
-  }
+.ccp-disorder {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
 
-  function renderBody(regionId) {
-    const panel = document.getElementById("clinical-cultural-panel");
-    const body = document.getElementById("ccp-body");
-    if (!panel || !body) return;
+.ccp-disorder h4 {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
 
-    const regionData = data?.regions?.[regionId];
-    if (!regionData || !regionData.disorders || regionData.disorders.length === 0) {
-      body.innerHTML = `<p class="ccp-empty">No clinical/cultural data linked to this region yet.</p>`;
-      return;
-    }
+.ccp-code-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
 
-    body.innerHTML =
-      currentMode === "clinical"
-        ? renderClinical(regionData.disorders)
-        : renderCultural(regionData.disorders);
-  }
+.ccp-badge {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.ccp-badge-dsm { background: rgba(71, 224, 176, 0.12); color: var(--synapse); }
+.ccp-badge-icd { background: rgba(232, 162, 61, 0.14); color: var(--clinical); }
 
-  async function showForRegion(regionId) {
-    await loadData();
-    const panel = ensurePanelExists();
-    panel.dataset.currentRegion = regionId;
-    panel.classList.remove("ccp-hidden");
-    renderBody(regionId);
-  }
+.ccp-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 10px 0 3px;
+}
 
-  function hide() {
-    const panel = document.getElementById("clinical-cultural-panel");
-    if (panel) panel.classList.add("ccp-hidden");
-  }
+.ccp-disorder p {
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+  color: var(--text);
+}
 
-  return { showForRegion, hide };
-})();
+.ccp-evidence {
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.ccp-region-list {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.ccp-caveat {
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: var(--clinical);
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .ccp-panel { width: 100vw; }
+}
