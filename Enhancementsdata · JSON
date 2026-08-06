@@ -1,0 +1,87 @@
+{
+  "_readme": "Region IDs match your real brainData.json exactly. Vascular/network groupings are pedagogical simplifications given lobe-level (not gyral-level) granularity — noted in each 'caveat' field.",
+
+  "vascular": {
+    "mca": {
+      "name": "Middle Cerebral Artery (MCA)",
+      "color": "#E8A23D",
+      "territory": ["frontal-l", "frontal-r", "parietal-l", "parietal-r", "temporal-l", "temporal-r", "broca", "wernicke", "insula", "motor-strip", "sensory-strip", "basal-ganglia"],
+      "syndromes": [
+        { "occlusion": "Left MCA — superior division", "presentation": "Broca's aphasia + contralateral face/arm-predominant weakness (leg relatively spared, since the leg is ACA territory)." },
+        { "occlusion": "Left MCA — inferior division", "presentation": "Wernicke's aphasia + contralateral superior quadrantanopia; often little to no weakness." },
+        { "occlusion": "Right MCA — main trunk", "presentation": "Left hemispatial neglect, left face/arm weakness, anosognosia (denial of deficit)." }
+      ],
+      "caveat": "MCA territory is broader and more gyrus-specific in reality than lobe-level regions can show — this is a teaching approximation."
+    },
+    "aca": {
+      "name": "Anterior Cerebral Artery (ACA)",
+      "color": "#47E0B0",
+      "territory": ["frontal-l", "frontal-r", "corpus-callosum"],
+      "syndromes": [
+        { "occlusion": "ACA occlusion", "presentation": "Contralateral leg-predominant weakness (leg/foot motor cortex is on the medial surface, ACA territory), abulia, and gait apraxia if bilateral." }
+      ],
+      "caveat": "The leg-predominant weakness pattern relies on the medial motor strip, which this atlas represents at lobe level only."
+    },
+    "pca": {
+      "name": "Posterior Cerebral Artery (PCA)",
+      "color": "#8B6FD6",
+      "territory": ["occipital", "temporal-l", "temporal-r", "thalamus"],
+      "syndromes": [
+        { "occlusion": "Unilateral PCA", "presentation": "Contralateral homonymous hemianopia, often with macular sparing." },
+        { "occlusion": "Bilateral PCA", "presentation": "Cortical blindness, sometimes with denial of blindness (Anton syndrome)." },
+        { "occlusion": "Thalamic (PCA-perforator) branch", "presentation": "Central post-stroke pain (Dejerine–Roussy syndrome) — severe contralateral burning pain." }
+      ],
+      "caveat": "Thalamic perforators are a small subset of PCA branches; this atlas groups the whole thalamus for simplicity."
+    },
+    "vertebrobasilar": {
+      "name": "Vertebrobasilar / PICA System",
+      "color": "#D9607A",
+      "territory": ["cerebellum", "brainstem"],
+      "syndromes": [
+        { "occlusion": "PICA (lateral medullary / Wallenberg)", "presentation": "Crossed sensory loss (ipsilateral face, contralateral body), Horner's syndrome, dysphagia, ipsilateral ataxia." },
+        { "occlusion": "Cerebellar branch occlusion", "presentation": "Ipsilateral ataxia, dysmetria, intention tremor, scanning speech." }
+      ],
+      "caveat": "The brainstem contains many distinct nuclei with different vascular supply; this atlas represents it as one structure."
+    }
+  },
+
+  "networks": {
+    "dmn": {
+      "name": "Default Mode Network",
+      "color": "#5B7FBD",
+      "members": ["frontal-l", "frontal-r", "parietal-l", "parietal-r", "temporal-l", "temporal-r"],
+      "description": "Active during rest, self-referential thought, and mind-wandering; deactivates during externally-focused tasks. Core hubs include medial prefrontal cortex and posterior cingulate/precuneus.",
+      "clinical_note": "DMN connectivity is disrupted in Alzheimer's disease (overlapping with early amyloid deposition sites) and altered in depression (excessive DMN activity linked to rumination).",
+      "caveat": "True DMN hubs (mPFC, PCC, precuneus, angular gyrus) are sub-regions of the lobes shown here — this highlights the containing lobes as a teaching approximation, not precise DMN topology."
+    },
+    "salience": {
+      "name": "Salience Network",
+      "color": "#E8A23D",
+      "members": ["insula", "amygdala", "frontal-l", "frontal-r"],
+      "description": "Detects behaviorally relevant stimuli and coordinates switching between the Default Mode and Central Executive networks. Core hubs: dorsal anterior insula and dorsal anterior cingulate cortex.",
+      "clinical_note": "Salience network dysfunction is implicated in anxiety disorders (hyperresponsivity to threat) and frontotemporal dementia (early insular atrophy).",
+      "caveat": "dACC is part of the frontal lobe in this atlas's granularity, not a separately modeled structure."
+    },
+    "cen": {
+      "name": "Central Executive Network",
+      "color": "#47E0B0",
+      "members": ["frontal-l", "frontal-r", "parietal-l", "parietal-r"],
+      "description": "Supports working memory, planning, and goal-directed decision-making. Core hubs: dorsolateral prefrontal cortex and posterior parietal cortex.",
+      "clinical_note": "CEN engagement is reduced in ADHD and in the depressive rumination state (in favor of DMN dominance).",
+      "caveat": "dlPFC and posterior parietal cortex are sub-regions of the frontal/parietal lobes shown here, not separately modeled."
+    }
+  },
+
+  "vignettes": [
+    { "id": "v1", "text": "A 62-year-old presents with intention tremor, dysmetria, and scanning speech, with no weakness on exam.", "correctRegion": "cerebellum", "explanation": "Coordination deficits without weakness point to the cerebellum — weakness would suggest a corticospinal (pyramidal) lesion instead." },
+    { "id": "v2", "text": "A patient produces fluent, grammatically well-formed but largely meaningless speech, and cannot follow simple spoken commands.", "correctRegion": "wernicke", "explanation": "Fluent but meaningless ('word salad') speech with impaired comprehension is the hallmark of Wernicke's (receptive) aphasia." },
+    { "id": "v3", "text": "Sudden onset of non-fluent, effortful, telegraphic speech with preserved comprehension, plus right-sided facial and arm weakness.", "correctRegion": "broca", "explanation": "Non-fluent speech with intact comprehension is classic Broca's aphasia; the co-occurring face/arm weakness reflects the nearby motor strip, both in left MCA superior division territory." },
+    { "id": "v4", "text": "After bilateral medial temporal lobe surgery, a patient can no longer form new memories, but recalls childhood events normally.", "correctRegion": "hippocampus", "explanation": "This is the classic H.M. pattern — anterograde amnesia with preserved remote memory points to bilateral hippocampal damage." },
+    { "id": "v5", "text": "A patient shows a reduced fear response and cannot recognize fear in others' facial expressions, following bilateral temporal lobe calcification.", "correctRegion": "amygdala", "explanation": "Selective impairment in fear processing and recognition, with cognition otherwise intact, is the classic bilateral amygdala damage pattern (patient S.M.)." },
+    { "id": "v6", "text": "Following a right-sided stroke, a patient ignores objects and people on their left side and denies anything is wrong.", "correctRegion": "parietal-r", "explanation": "Left hemispatial neglect with anosognosia localizes to the right posterior parietal cortex." },
+    { "id": "v7", "text": "After a metal rod pierced the front of the skull, a previously mild-mannered patient becomes impulsive, profane, and unable to hold a job.", "correctRegion": "frontal-l", "explanation": "This is the Phineas Gage pattern — frontal lobe damage causing profound personality change with relatively preserved basic cognition." },
+    { "id": "v8", "text": "A patient develops excessive thirst, dilute urine output, and temperature dysregulation after a pituitary-region tumor.", "correctRegion": "hypothalamus", "explanation": "Diabetes insipidus and temperature dysregulation point to hypothalamic involvement, which controls the pituitary/endocrine axis and homeostasis." },
+    { "id": "v9", "text": "A patient has crossed sensory loss (face on one side, body on the other), drooping eyelid on one side, and difficulty swallowing after a posterior circulation stroke.", "correctRegion": "brainstem", "explanation": "This crossed pattern plus Horner's syndrome and dysphagia is classic lateral medullary (Wallenberg) syndrome from a brainstem/PICA territory infarct." },
+    { "id": "v10", "text": "A patient with a strong family history develops involuntary, dance-like movements and progressive cognitive decline in their 40s.", "correctRegion": "basal-ganglia", "explanation": "Chorea with a hereditary pattern points to Huntington's disease, a basal ganglia (striatal) degeneration." }
+  ]
+}
