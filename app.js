@@ -217,6 +217,9 @@
     showInfoPanel(regionId);
     setActiveListItem(regionId);
     if (fromUser && window.__quizActive) checkQuizAnswer(regionId);
+
+    // Keep the DSM-5/ICD-11 + sociocultural panel in sync (add-on module).
+    if (window.ClinicalPanel) window.ClinicalPanel.setCurrentRegion(regionId);
   }
 
   function deselect() {
@@ -225,6 +228,9 @@
     connectionGroup.clear();
     hideInfoPanel();
     setActiveListItem(null);
+
+    // Close the clinical panel too so it doesn't show stale data (add-on module).
+    if (window.ClinicalPanel) window.ClinicalPanel.hide();
   }
 
   renderer.domElement.addEventListener("pointermove", (e) => {
@@ -367,6 +373,20 @@
   });
 
   /* ---------------------------------------------------------------------
+     ADD-ON: Clinical / Cultural panel toggle button
+     --------------------------------------------------------------------- */
+  const clinicalBtn = document.getElementById("btn-clinical");
+  if (clinicalBtn) {
+    clinicalBtn.addEventListener("click", () => {
+      if (!selectedId) {
+        showToast("Select a region first");
+        return;
+      }
+      if (window.ClinicalPanel) window.ClinicalPanel.toggle(selectedId);
+    });
+  }
+
+  /* ---------------------------------------------------------------------
      6) QUIZ MODE ("Pinpoint")
      --------------------------------------------------------------------- */
   const quizBtn = document.getElementById("btn-quiz");
@@ -488,4 +508,15 @@
     renderer.render(scene, camera);
   }
   requestAnimationFrame(animate);
+
+  /* ---------------------------------------------------------------------
+     ADD-ON: expose core pieces for enhancements.js
+     (vascular territory / lesion tool / network highlighter / case quiz)
+     --------------------------------------------------------------------- */
+  window.NeuromapCore = {
+    scene, camera, renderer, controls, brainGroup,
+    meshesById, regionsById, REGIONS, REGION_CATEGORIES, CONNECTIONS,
+    selectRegion, deselect, highlight, focusCameraOn, showToast, pickRegion
+  };
+  window.dispatchEvent(new Event("neuromap:ready"));
 })();
