@@ -1,18 +1,7 @@
 /* clinicalCulturalPanel.css
-   Add-on styling for the DSM-5/ICD-11 + sociocultural panel.
-   Adjust the CSS variables below to match your existing palette. */
-
-:root {
-  --ccp-bg: #10141c;
-  --ccp-bg-elevated: #171c26;
-  --ccp-border: #2a3140;
-  --ccp-text: #e8ebf1;
-  --ccp-text-dim: #9aa3b5;
-  --ccp-accent-dsm: #5b8cff;
-  --ccp-accent-icd: #35c98a;
-  --ccp-accent-warn: #e0a94d;
-  --ccp-radius: 10px;
-}
+   Uses the SAME CSS variables already defined in your style.css
+   (--bg, --surface, --line, --text, --muted, --synapse, --clinical, --mono, --sans)
+   so this panel matches your existing look with zero extra variables. */
 
 .ccp-panel {
   position: fixed;
@@ -20,11 +9,11 @@
   right: 0;
   width: min(380px, 100vw);
   height: 100vh;
-  background: var(--ccp-bg);
-  border-left: 1px solid var(--ccp-border);
-  color: var(--ccp-text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  z-index: 9999;
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  color: var(--text);
+  font-family: var(--sans);
+  z-index: 30; /* above info-panel (which has no explicit z-index) and quiz-bar (14) */
   display: flex;
   flex-direction: column;
   transform: translateX(0);
@@ -42,51 +31,56 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px;
-  border-bottom: 1px solid var(--ccp-border);
+  border-bottom: 1px solid var(--line);
 }
 
 .ccp-title {
-  font-size: 15px;
+  font-family: var(--mono);
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .ccp-close {
   background: none;
   border: none;
-  color: var(--ccp-text-dim);
-  font-size: 20px;
+  color: var(--muted);
+  font-size: 18px;
   line-height: 1;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
 }
-.ccp-close:hover { background: var(--ccp-bg-elevated); color: var(--ccp-text); }
+.ccp-close:hover { background: var(--surface-2); color: var(--text); }
 
 .ccp-tabs {
   display: flex;
   gap: 4px;
   padding: 10px 14px;
-  border-bottom: 1px solid var(--ccp-border);
+  border-bottom: 1px solid var(--line);
 }
 
 .ccp-tab {
   flex: 1;
-  background: var(--ccp-bg-elevated);
-  border: 1px solid var(--ccp-border);
-  color: var(--ccp-text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--mono);
   padding: 8px 10px;
-  border-radius: var(--ccp-radius);
-  font-size: 12.5px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease;
 }
+.ccp-tab:hover { border-color: var(--synapse); }
 
 .ccp-tab-active {
-  background: linear-gradient(135deg, var(--ccp-accent-dsm), var(--ccp-accent-icd));
-  color: #0a0c10;
+  background: rgba(71, 224, 176, 0.12);
+  color: var(--synapse);
+  border-color: var(--synapse);
   font-weight: 600;
-  border-color: transparent;
 }
 
 .ccp-body {
@@ -94,24 +88,28 @@
   padding: 16px 18px 32px;
   flex: 1;
 }
+.ccp-body::-webkit-scrollbar { width: 6px; }
+.ccp-body::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
 
 .ccp-empty {
-  color: var(--ccp-text-dim);
+  color: var(--muted);
   font-size: 13.5px;
 }
 
 .ccp-disorder {
-  background: var(--ccp-bg-elevated);
-  border: 1px solid var(--ccp-border);
-  border-radius: var(--ccp-radius);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
   padding: 14px;
   margin-bottom: 14px;
 }
 
 .ccp-disorder h4 {
   margin: 0 0 8px;
-  font-size: 14.5px;
+  font-family: var(--mono);
+  font-size: 14px;
   font-weight: 600;
+  color: var(--text);
 }
 
 .ccp-code-row {
@@ -122,34 +120,36 @@
 }
 
 .ccp-badge {
-  font-size: 11px;
+  font-family: var(--mono);
+  font-size: 10.5px;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 999px;
   letter-spacing: 0.02em;
 }
-.ccp-badge-dsm { background: rgba(91, 140, 255, 0.15); color: var(--ccp-accent-dsm); }
-.ccp-badge-icd { background: rgba(53, 201, 138, 0.15); color: var(--ccp-accent-icd); }
+.ccp-badge-dsm { background: rgba(71, 224, 176, 0.12); color: var(--synapse); }
+.ccp-badge-icd { background: rgba(232, 162, 61, 0.14); color: var(--clinical); }
 
 .ccp-label {
-  font-size: 11px;
+  font-family: var(--mono);
+  font-size: 10.5px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ccp-text-dim);
+  letter-spacing: 0.08em;
+  color: var(--muted);
   margin: 10px 0 3px;
 }
 
 .ccp-disorder p {
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
   margin: 0;
-  color: var(--ccp-text);
+  color: var(--text);
 }
 
 .ccp-evidence {
   margin-top: 10px;
-  font-size: 12px;
-  color: var(--ccp-text-dim);
+  font-size: 11.5px;
+  color: var(--muted);
   font-style: italic;
 }
 
@@ -157,13 +157,13 @@
   margin: 4px 0 0;
   padding-left: 18px;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .ccp-caveat {
   margin-top: 10px;
-  font-size: 12px;
-  color: var(--ccp-accent-warn);
+  font-size: 11.5px;
+  color: var(--clinical);
   line-height: 1.5;
 }
 
