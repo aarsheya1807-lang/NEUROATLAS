@@ -96,6 +96,69 @@
             ],
             "caveat": "Diagnostic rate differences here largely reflect access to neuropsychological assessment, not differences in true incidence."
           }
+        },
+        {
+          "name": "Attention-Deficit/Hyperactivity Disorder (ADHD)",
+          "dsm5": {
+            "code": "314.01 (F90.x)",
+            "criteria_summary": "Persistent pattern of inattention and/or hyperactivity-impulsivity interfering with functioning, with several symptoms present before age 12, across ≥2 settings.",
+            "specifiers": ["Predominantly inattentive", "Predominantly hyperactive-impulsive", "Combined presentation"]
+          },
+          "icd11": {
+            "code": "6A05",
+            "notes": "ICD-11 dropped the DSM-IV-era age-12 cutoff's strictness slightly and aligned more closely with DSM-5's current criteria than earlier ICD-10 did — the two systems are now fairly convergent for ADHD, unlike for many other disorders."
+          },
+          "evidence_strength": "moderate-strong — consistent findings of reduced dlPFC/striatal volume and altered fronto-striatal connectivity, though no single biomarker is diagnostic",
+          "sociocultural_notes": {
+            "presentation_variation": "Diagnosis rates vary dramatically by country — driven heavily by differing school systems' behavioral expectations, teacher referral patterns, and access to evaluation, not by true prevalence differences.",
+            "regional_examples": [
+              { "region": "United States", "note": "Among the highest diagnosis and stimulant-prescription rates globally, partly linked to structured school referral pathways." },
+              { "region": "France", "note": "Historically lower diagnosis rates, partly attributed to a differing psychodynamic clinical tradition alongside behavioral models." },
+              { "region": "Many low- and middle-income countries", "note": "Under-diagnosis is common due to limited pediatric mental health infrastructure, not lower true prevalence." }
+            ],
+            "caveat": "Cross-country ADHD prevalence comparisons are among the most confounded in psychiatry — treat rate differences as largely artifactual, reflecting healthcare/educational systems rather than biology."
+          }
+        },
+        {
+          "name": "Autism Spectrum Disorder",
+          "dsm5": {
+            "code": "299.00 (F84.0)",
+            "criteria_summary": "Persistent deficits in social communication/interaction across contexts, plus restricted/repetitive behaviors or interests, present from early development.",
+            "specifiers": ["Severity levels 1–3, based on support needs", "With/without intellectual impairment", "With/without language impairment"]
+          },
+          "icd11": {
+            "code": "6A02",
+            "notes": "ICD-11 merged what were previously separate ICD-10 categories (childhood autism, Asperger syndrome, atypical autism) into one spectrum diagnosis with severity qualifiers — mirroring DSM-5's 2013 shift away from subtypes, though ICD only made this change with ICD-11 in 2019/2022."
+          },
+          "evidence_strength": "moderate — no single brain region is 'the' autism region; frontal, temporal, and amygdala involvement is consistently reported but as part of distributed network differences, not focal damage",
+          "sociocultural_notes": {
+            "presentation_variation": "What counts as 'atypical' social communication is itself culturally shaped (eye contact norms, directness of speech, play styles), which affects both parent recognition and clinician diagnostic thresholds.",
+            "regional_examples": [
+              { "region": "High-income, English-speaking countries", "note": "Earlier average diagnosis age and more standardized screening tools (e.g. routine pediatric ASD screening)." },
+              { "region": "Many lower-resource settings", "note": "Later diagnosis is common, often not until school-entry behavioral difficulties emerge, due to limited early screening infrastructure." },
+              { "region": "Cultures with strong collectivist child-rearing norms", "note": "Some socially atypical behaviors may be reframed as shyness or family-specific temperament rather than flagged for evaluation." }
+            ],
+            "caveat": "This region entry reflects a distributed network association, not a focal lesion — autism is not caused by frontal lobe damage; it's a neurodevelopmental difference involving many interconnected regions."
+          }
+        },
+        {
+          "name": "Behavioral variant Frontotemporal Dementia (bvFTD)",
+          "dsm5": {
+            "code": "331.19 (G31.09) — coded as Major/Mild Neurocognitive Disorder Due to Frontotemporal Lobar Degeneration",
+            "criteria_summary": "Early, prominent behavioral disinhibition or apathy, loss of empathy, compulsive/ritualistic behavior, and executive dysfunction, with relatively preserved memory early on — the opposite early-symptom pattern from Alzheimer's."
+          },
+          "icd11": {
+            "code": "6D82 / 8A20.2",
+            "notes": "ICD-11 again uses dual coding (behavioral syndrome + frontotemporal lobar degeneration as the neurological cause), same structure as its Alzheimer's coding."
+          },
+          "evidence_strength": "strong — progressive frontal (and often anterior temporal) atrophy is well-documented on structural MRI, distinguishing it from Alzheimer's hippocampal-predominant pattern",
+          "sociocultural_notes": {
+            "presentation_variation": "Because early symptoms look like personality/behavior change rather than memory loss, bvFTD is frequently misdiagnosed as a primary psychiatric disorder (depression, bipolar disorder) or even relationship/marital conflict before neurological evaluation occurs — a pattern reported across many healthcare systems, not just lower-resource ones.",
+            "regional_examples": [
+              { "region": "Global pattern", "note": "Average diagnostic delay is commonly reported as 3-4 years from symptom onset across multiple countries, largely due to the behavioral (not memory) presentation being missed as neurological." }
+            ],
+            "caveat": "This diagnostic-delay pattern is more a feature of the disease's atypical early presentation than of any single country's healthcare system."
+          }
         }
       ]
     },
@@ -149,6 +212,31 @@
       ]
     },
 
+    "temporal-l": {
+      "disorders": [
+        {
+          "name": "Temporal Lobe Epilepsy (focal seizures with impaired awareness)",
+          "dsm5": {
+            "code": "Not a DSM-5 diagnosis — epilepsy is classified as a neurological condition; DSM-5 is used only if a co-occurring psychiatric condition (e.g. interictal mood/psychotic symptoms) meets separate criteria",
+            "criteria_summary": "DSM-5 deliberately excludes epilepsy itself, reflecting the broader principle that DSM covers mental disorders, not neurological disease — an important distinction for students to internalize early."
+          },
+          "icd11": {
+            "code": "8A61.1 (Focal epilepsy with impaired awareness)",
+            "notes": "ICD-11, as a general medical classification, codes epilepsy directly in its neurology chapter with detailed seizure-type subclassification — something DSM-5 has no equivalent for, reinforcing that ICD and DSM serve different scopes, not just different criteria for the same conditions."
+          },
+          "evidence_strength": "strong — mesial temporal sclerosis (often involving the hippocampus) is the most common identifiable structural cause of temporal lobe epilepsy",
+          "sociocultural_notes": {
+            "presentation_variation": "Epilepsy carries significant stigma in many cultural contexts, sometimes attributed to spiritual causes (possession, curses) rather than a neurological condition, which profoundly affects care-seeking, marriage prospects, and social inclusion.",
+            "regional_examples": [
+              { "region": "Parts of Sub-Saharan Africa and South Asia", "note": "Epilepsy-related stigma remains a documented barrier to treatment-seeking and social participation in some communities, alongside growing public health education efforts to counter it." },
+              { "region": "High-income countries with established epilepsy care", "note": "Better access to EEG/MRI and anti-seizure medication generally shortens the gap between seizure onset and diagnosis." }
+            ],
+            "caveat": "Stigma patterns are shifting with public health education globally and vary enormously even within the same country — avoid treating any region as monolithic on this point."
+          }
+        }
+      ]
+    },
+
     "cerebellum": {
       "disorders": [
         {
@@ -170,8 +258,29 @@
             ],
             "caveat": "Outcome differences reflect rehabilitation access, not differences in cerebellar pathology itself."
           }
+        },
+        {
+          "name": "Posterior Fossa Brain Tumor (e.g., medulloblastoma, pilocytic astrocytoma)",
+          "dsm5": {
+            "code": "Not a DSM-5 diagnosis — brain tumors are neuro-oncological conditions; DSM-5 applies only to secondary psychiatric/cognitive symptoms if criteria are separately met",
+            "criteria_summary": "As with epilepsy, DSM-5 has no tumor category; this reinforces the same core lesson — DSM-5 covers mental disorders, ICD-11 covers the full scope of medical/neurological disease."
+          },
+          "icd11": {
+            "code": "2A00.Y (Malignant neoplasm of brain) or 2E82 (Benign neoplasm of brain), depending on tumor type",
+            "notes": "ICD-11's oncology chapter codes tumors by histology and behavior (malignant/benign), paired with the neurological deficit code if relevant — a good example of ICD-11 functioning as a general medical classification rather than a psychiatric one."
+          },
+          "evidence_strength": "strong — posterior fossa tumors are the most common pediatric brain tumor location, classically presenting with ataxia, headache, and signs of raised intracranial pressure",
+          "sociocultural_notes": {
+            "presentation_variation": "Access to pediatric neuro-oncology, MRI availability, and timely referral vary enormously by country, directly affecting how early these tumors are caught — this is one of the starkest global health disparities in neuropsychology-adjacent care.",
+            "regional_examples": [
+              { "region": "High-income countries with pediatric neuro-oncology centers", "note": "Routine MRI access allows earlier detection, often before severe neurological deficits develop." },
+              { "region": "Low- and middle-income countries", "note": "Limited MRI/CT access and fewer pediatric neurosurgical centers commonly mean later-stage presentation with more advanced symptoms at diagnosis." }
+            ],
+            "caveat": "Survival outcome gaps for pediatric brain tumors between high- and low-resource settings are large and well-documented — a genuine health equity issue, not just a diagnostic curiosity."
+          }
         }
       ]
     }
   }
 }
+        
