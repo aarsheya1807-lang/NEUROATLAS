@@ -72,6 +72,49 @@
     }
   },
 
+  "brainBehaviorLinks": {
+    "memory": {
+      "label": "Memory",
+      "color": "#5B7FBD",
+      "regions": ["hippocampus", "amygdala", "thalamus", "frontal-l"],
+      "summary": "Memory isn't stored in one place — it's a system. The hippocampus binds together the different elements of an experience into a coherent memory trace and is essential for forming NEW declarative memories. The amygdala tags memories with emotional significance (why emotionally charged events are remembered more vividly). The thalamus relays sensory information into memory-forming circuits. The prefrontal cortex (frontal lobe) handles working memory — holding and manipulating information moment-to-moment — and retrieval strategy."
+    },
+    "language": {
+      "label": "Language",
+      "color": "#E8A23D",
+      "regions": ["broca", "wernicke", "temporal-l", "frontal-l"],
+      "summary": "Language relies on a left-hemisphere-dominant network (in ~95% of right-handed people). Broca's area plans speech production and grammatical structure. Wernicke's area decodes meaning from spoken/written language. The two are structurally connected by a white matter tract (the arcuate fasciculus), so damage to the connection itself — not just either endpoint — can also cause language deficits (conduction aphasia)."
+    },
+    "problem_solving": {
+      "label": "Problem-Solving & Executive Function",
+      "color": "#47E0B0",
+      "regions": ["frontal-l", "frontal-r", "parietal-l", "parietal-r", "basal-ganglia"],
+      "summary": "Problem-solving draws on the Central Executive Network: the dorsolateral prefrontal cortex (frontal lobes) for planning, cognitive flexibility, and inhibitory control, working together with the posterior parietal cortex for manipulating information spatially and numerically. The basal ganglia contribute action selection — choosing which response to execute among competing options."
+    }
+  },
+
+  "nervousSystemOverview": {
+    "sections": [
+      {
+        "title": "CNS vs. PNS",
+        "body": "The brain and spinal cord are protected by bone (skull and vertebrae respectively) and together form the Central Nervous System (CNS). A key distinguishing feature: CNS tissue does not regenerate after damage — this is why recovery from stroke or TBI plateaus rather than fully reversing. The Peripheral Nervous System (PNS) — all the nerve fibers connecting the CNS to the rest of the body — CAN regrow after damage, a fundamental asymmetry in how these two systems handle injury."
+      },
+      {
+        "title": "Sensory & Motor Pathways",
+        "body": "Nerve fibers bringing information TO the CNS form sensory pathways, organized by system (vision, hearing, touch, etc.). Nerve fibers carrying commands FROM the CNS to muscles form motor pathways. A critical organizing principle: most sensory and motor pathways are contralateral — information from one side of the body is processed mainly by the opposite hemisphere, and movement on one side of the body is controlled mainly by the opposite hemisphere. This is why a right-hemisphere stroke classically causes left-sided weakness and left visual field neglect."
+      },
+      {
+        "title": "Somatic Nervous System (SNS)",
+        "body": "The subdivision of the PNS that carries sensory information to the CNS and motor commands to skeletal (voluntary) muscles — everything from reading these words (eye movements) to turning a page. The SNS is under voluntary control."
+      },
+      {
+        "title": "Autonomic Nervous System (ANS)",
+        "body": "The subdivision of the PNS that controls internal organs largely outside conscious control — heart rate, digestion (stomach contractions), and breathing (diaphragm movement). The ANS further divides into sympathetic (fight-or-flight activation) and parasympathetic (rest-and-digest) branches, which typically act in opposition to maintain homeostasis."
+      }
+    ],
+    "caveat": "This is foundational neuroanatomical organization, not a substitute for a full neuroanatomy course — treat it as the scaffold that the rest of this atlas's region-specific content sits on top of."
+  },
+
   "vignettes": [
     { "id": "v1", "text": "A 62-year-old presents with intention tremor, dysmetria, and scanning speech, with no weakness on exam.", "correctRegion": "cerebellum", "explanation": "Coordination deficits without weakness point to the cerebellum — weakness would suggest a corticospinal (pyramidal) lesion instead." },
     { "id": "v2", "text": "A patient produces fluent, grammatically well-formed but largely meaningless speech, and cannot follow simple spoken commands.", "correctRegion": "wernicke", "explanation": "Fluent but meaningless ('word salad') speech with impaired comprehension is the hallmark of Wernicke's (receptive) aphasia." },
