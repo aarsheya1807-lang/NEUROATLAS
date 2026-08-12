@@ -1,69 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-<title>Neuromap — Interactive Brain Atlas</title>
-<meta name="description" content="Neuromap: an interactive 3D brain atlas bridging spatial anatomy with psychological and clinical function." />
-<link rel="stylesheet" href="css/style.css" />
-<link rel="stylesheet" href="css/clinicalCulturalPanel.css" />
-<link rel="stylesheet" href="css/enhancements.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEUROMAP | Interactive Neuroscience Atlas</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Importmap for Three.js ES Modules -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
 </head>
 <body>
-<div id="app">
-  <header>
-    <div class="wordmark">NEURO<span class="dot">MAP</span><span class="tag">interactive atlas</span></div>
-    <div class="header-credit">
-      <span class="credit-name">Your Name</span>
-      <span class="credit-tagline">Your tagline here</span>
-    </div>
-    <button id="sidebar-toggle" aria-label="Toggle region list">☰</button>
-  </header>
-  <aside id="sidebar">
-    <div class="search-wrap">
-      <input id="search" type="text" placeholder="Search a structure, function, or syndrome…" autocomplete="off" />
-    </div>
-    <nav class="region-list" id="region-list" aria-label="Brain regions"></nav>
-    <div class="sidebar-footer">
-      <span id="region-count">— regions</span>
-      <span>rotate · scroll · click</span>
-    </div>
-  </aside>
-  <main id="viewport">
-    <div id="canvas-host"></div>
-    <div class="hint">drag to rotate · scroll to zoom · click a structure</div>
-    <div class="viewport-controls">
-      <button class="vc-btn" id="btn-reset">↺ reset view</button>
-      <button class="vc-btn" id="btn-quiz">◎ pinpoint mode</button>
-      <button class="vc-btn" id="btn-clinical">◈ DSM-5 / ICD-11</button>
-    </div>
-    <div id="quiz-bar">
-      <span id="quiz-prompt">Click on: <strong>—</strong></span>
-      <span id="quiz-timer">5.0s</span>
-      <span id="quiz-score">0 / 0</span>
-      <button id="quiz-end-btn">end</button>
-    </div>
-    <div id="quiz-feedback"></div>
-    <section id="info-panel" aria-live="polite">
-      <button id="info-close" aria-label="Close">✕</button>
-      <div class="info-eyebrow" id="info-category">—</div>
-      <h2 class="info-title" id="info-name">—</h2>
-      <div class="info-brodmann" id="info-brodmann"></div>
-      <div class="info-section-label">Function</div>
-      <p class="info-body" id="info-function"></p>
-      <div class="info-section-label">Clinical Correlation</div>
-      <p class="info-clinical" id="info-clinical"></p>
-    </section>
-    <div id="toast"></div>
-  </main>
-</div>
-<!-- Three.js core + orbit controls, loaded before app.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<!-- App logic — fetches brainData.json itself, no separate data script needed -->
-<script src="app.js"></script>
-<!-- Add-on modules: DSM-5/ICD-11 + sociocultural panel, and the vascular/lesion/network/quiz toolbar -->
-<script src="clinicalCulturalPanel.js"></script>
-<script src="enhancements.js"></script>
+
+  <div id="canvas-container"></div>
+  <div id="hover-tooltip">Structure Name</div>
+
+  <div class="ui-overlay">
+    <header class="interactive">
+      <div class="brand">NEURO<span>MAP</span> <small style="font-size: 0.6em; opacity: 0.6;">v2.0 PRO</small></div>
+      <div class="nav-controls">
+        <button class="btn active" id="btn-explore">Explore Mode</button>
+        <button class="btn danger-mode" id="btn-lesion">Virtual Lesion Mode</button>
+        <button class="btn" id="btn-game">Neuro-Detective Game</button>
+      </div>
+    </header>
+
+    <!-- Left Controls Sidebar -->
+    <aside class="interactive">
+      <div class="panel-title">Tractography & Controls</div>
+      
+      <div class="control-group">
+        <label><span>Mesolimbic Pathway</span> <input type="checkbox" id="toggle-pathway" checked></label>
+      </div>
+
+      <div class="control-group">
+        <label><span>Signal Speed</span> <span id="speed-val">1.0x</span></label>
+        <input type="range" id="speed-slider" min="0.1" max="3" step="0.1" value="1">
+      </div>
+
+      <hr style="border-color: var(--border);">
+
+      <div class="panel-title">Cross-Section (Clipping)</div>
+      <div class="control-group">
+        <label><span>Axial Plane Cut</span></label>
+        <input type="range" id="clip-slider" min="-3" max="3" step="0.1" value="3">
+      </div>
+    </aside>
+
+    <!-- Center Canvas Spacer -->
+    <div></div>
+
+    <!-- Right Data Sidebar -->
+    <aside class="interactive" id="right-panel">
+      <div class="panel-title">Structure Inspector</div>
+      <div id="info-content" class="info-card">
+        <span class="badge badge-normal" id="status-badge">Healthy State</span>
+        <h2 id="struct-name">Select a Structure</h2>
+        <p style="font-size: 0.85rem; color: var(--text-dim);" id="struct-desc">
+          Click on any brain region in the 3D viewport to inspect its functional neuroanatomy, tract links, and clinical significance.
+        </p>
+        <div id="clinical-block" style="display: none; margin-top: 10px;">
+          <div class="panel-title" style="color: var(--danger);">Acute Functional Deficits</div>
+          <p style="font-size: 0.85rem; color: #ff9ff3; margin-top: 4px;" id="struct-clinical"></p>
+        </div>
+      </div>
+
+      <!-- Case Game Module -->
+      <div id="game-panel" style="display: none;" class="info-card">
+        <div class="panel-title" style="color: var(--accent);">Diagnostic Vignette</div>
+        <div class="case-box" id="case-description">Loading clinical scenario...</div>
+        <button class="btn" id="btn-skip-case" style="margin-top: 8px;">Skip Case</button>
+      </div>
+    </aside>
+  </div>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>
