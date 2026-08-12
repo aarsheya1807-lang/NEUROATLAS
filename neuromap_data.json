@@ -1,0 +1,90 @@
+{
+  "networks": [
+    {
+      "id": "dmn",
+      "name": "Default Mode Network (DMN)",
+      "color": "#FF5555",
+      "description": "Active during inward-focused thought, self-referential processing, and rumination.",
+      "nodes": ["mPFC", "PCC", "precuneus", "angular_gyrus_L", "angular_gyrus_R"]
+    },
+    {
+      "id": "salience",
+      "name": "Salience Network",
+      "color": "#FFB86C",
+      "description": "Detects biologically and behaviorally relevant stimuli; switches between CEN and DMN.",
+      "nodes": ["dACC", "anterior_insula_L", "anterior_insula_R", "amygdala_L", "amygdala_R"]
+    },
+    {
+      "id": "cen",
+      "name": "Central Executive Network (CEN)",
+      "color": "#8BE9FD",
+      "description": "Engaged during goal-directed, task-positive cognitive control and working memory operations.",
+      "nodes": ["dlPFC_L", "dlPFC_R", "PPC_L", "PPC_R"]
+    }
+  ],
+
+  "symptoms": [
+    {
+      "id": "expressive_aphasia",
+      "label": "Broca's (Expressive) Aphasia",
+      "category": "Cognitive / Language",
+      "description": "Non-fluent, effortful speech output with preserved comprehension.",
+      "primaryRegions": ["broca_area"],
+      "secondaryRegions": ["premoter_cortex", "insula_anterior"],
+      "associatedNetworks": [],
+      "vascularTerritory": "Left Middle Cerebral Artery (MCA) - Superior Division",
+      "dsm5": "6A01.0 (Neurodevelopmental speech impairment) / Major Neurocognitive Disorder due to Stroke",
+      "icd11": "MA80.0 (Aphasia)"
+    },
+    {
+      "id": "prosopagnosia",
+      "label": "Prosopagnosia (Face Blindness)",
+      "category": "Visual / Perceptual",
+      "description": "Inability to recognize familiar faces despite intact elementary visual processing.",
+      "primaryRegions": ["fusiform_gyrus_R"],
+      "secondaryRegions": ["fusiform_gyrus_L", "inferior_occipital_gyrus"],
+      "associatedNetworks": [],
+      "vascularTerritory": "Right Posterior Cerebral Artery (PCA)",
+      "dsm5": "Visual Agnosia sub-category under Major Neurocognitive Disorder",
+      "icd11": "MB4B.0 (Visual Agnosia)"
+    },
+    {
+      "id": "depressive_rumination",
+      "label": "Depressive Rumination & Deficit in Task Switching",
+      "category": "Psychiatric / Affective",
+      "description": "Persistent hyper-connectivity in self-referential circuits paired with CEN hypo-activation.",
+      "primaryRegions": ["mPFC", "subgenual_ACC"],
+      "secondaryRegions": ["dlPFC_L"],
+      "associatedNetworks": ["dmn"],
+      "dsm5": "296.23 (Major Depressive Disorder)",
+      "icd11": "6A70 (Single episode depressive disorder)"
+    }
+  ],
+
+  "regions": [
+    {
+      "id": "broca_area",
+      "meshId": "Mesh_BrocaArea_L",
+      "name": "Broca's Area (Pars Opercularis & Triangularis)",
+      "hemisphere": "Left",
+      "mniCoords": [-48, 16, 18],
+      "functions": ["Speech production", "Syntactic processing", "Motor planning of articulation"]
+    },
+    {
+      "id": "mPFC",
+      "meshId": "Mesh_MedialPFC",
+      "name": "Medial Prefrontal Cortex",
+      "hemisphere": "Bilateral",
+      "mniCoords": [0, 52, 12],
+      "functions": ["Self-referential cognition", "Mentalizing / Theory of Mind", "Affect regulation"]
+    },
+    {
+      "id": "fusiform_gyrus_R",
+      "meshId": "Mesh_Fusiform_R",
+      "name": "Fusiform Face Area (FFA)",
+      "hemisphere": "Right",
+      "mniCoords": [40, -55, -10],
+      "functions": ["Facial identity recognition", "Expert visual category discrimination"]
+    }
+  ]
+}
