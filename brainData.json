@@ -46,5 +46,67 @@
     ["corpus-callosum", "frontal-l"],
     ["corpus-callosum", "frontal-r"],
     ["insula", "amygdala"]
+    export const BRAIN_REGIONS = [
+  {
+    id: 'cortex',
+    name: 'Cerebral Cortex',
+    pos: [0, 1.2, 0],
+    scale: [2.2, 1.2, 2.6],
+    color: 0x8899a6,
+    function: 'Higher-level executive functioning, sensory processing, decision making, and voluntary motor action.',
+    lesionDeficit: 'Contralateral hemiparesis, cognitive impairment, executive dysfunction, executive planning deficits.'
+  },
+  {
+    id: 'thalamus',
+    name: 'Thalamus',
+    pos: [0, 0.2, 0],
+    scale: [0.8, 0.6, 0.9],
+    color: 0xf39c12,
+    function: 'Relay station for all sensory inputs (except olfactory) heading to the cortex; regulates consciousness and sleep.',
+    lesionDeficit: 'Dejerine-Roussy syndrome (thalamic pain syndrome), sensory loss, severe alterations in arousal.'
+  },
+  {
+    id: 'amygdala',
+    name: 'Amygdala',
+    pos: [-0.7, -0.2, 0.4],
+    scale: [0.4, 0.4, 0.4],
+    color: 0xe74c3c,
+    function: 'Key component of the limbic system processing emotional memory, fear conditioning, and threat detection.',
+    lesionDeficit: 'Klüver-Bucy syndrome (hyperorality, docility, hypersexuality, loss of fear responses).'
+  },
+  {
+    id: 'substantia_nigra',
+    name: 'Substantia Nigra',
+    pos: [0.3, -0.4, -0.2],
+    scale: [0.35, 0.35, 0.35],
+    color: 0x9b59b6,
+    function: 'Dopaminergic powerhouse driving the basal ganglia pathway for smooth motor control initiation.',
+    lesionDeficit: 'Parkinsonian symptoms: Resting tremor, bradykinesia, rigidity, and postural instability.'
+  },
+  {
+    id: 'hippocampus',
+    name: 'Hippocampus',
+    pos: [0.7, -0.2, 0.2],
+    scale: [0.4, 0.3, 0.7],
+    color: 0x2ecc71,
+    function: 'Essential structure for consolidating short-term memory into long-term memory and spatial navigation.',
+    lesionDeficit: 'Severe anterograde amnesia (inability to form new declarative memories).'
+  }
+];
+
+export const GAME_CASES = [
+  {
+    caseText: "A 62-year-old patient presents with a resting pill-rolling tremor, extreme difficulty initiating movements (bradykinesia), and muscle rigidity. Which dopaminergic region is suffering cell loss?",
+    targetId: 'substantia_nigra'
+  },
+  {
+    caseText: "A patient exhibits profound hyperorality, hypersexuality, docility, and a complete absence of fear responses following encephalitis. Which limbic structure is damaged?",
+    targetId: 'amygdala'
+  },
+  {
+    caseText: "Following a traumatic brain injury, a patient can remember past childhood events clearly but cannot consolidate any new memory events after the accident. Which structure is affected?",
+    targetId: 'hippocampus'
+  }
+];
   ]
 }
