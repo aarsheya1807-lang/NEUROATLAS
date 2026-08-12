@@ -3,10 +3,135 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NEUROMAP | Interactive Neuroscience Atlas</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>NEUROMAP | Next-Gen Interactive Brain Atlas</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --panel-bg: rgba(15, 23, 42, 0.75);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent: #00f2fe;
+      --danger: #ff4757;
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+    }
 
-  <!-- Importmap for Three.js ES Modules -->
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
+
+    #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+
+    /* UI Overlay Grid */
+    .ui-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: grid;
+      grid-template-columns: 320px 1fr 380px;
+      grid-template-rows: 70px 1fr;
+      padding: 20px;
+      gap: 20px;
+    }
+
+    .interactive { pointer-events: auto; }
+
+    header {
+      grid-column: 1 / -1;
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+
+    .brand { font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; color: var(--text); }
+    .brand span { color: var(--accent); }
+
+    .nav-controls { display: flex; gap: 12px; }
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .btn:hover, .btn.active {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+    }
+    .btn.danger-mode.active {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+      box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
+    }
+
+    /* Sidebars */
+    aside {
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .panel-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); }
+
+    /* Control Sliders */
+    .control-group { display: flex; flex-direction: column; gap: 8px; }
+    .control-group label { font-size: 0.8rem; color: var(--text-dim); display: flex; justify-content: space-between; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+
+    /* Info Panel */
+    .info-card { display: flex; flex-direction: column; gap: 12px; }
+    .info-card h2 { font-size: 1.4rem; color: var(--accent); }
+    .badge {
+      display: inline-block; padding: 4px 8px; border-radius: 4px;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; width: fit-content;
+    }
+    .badge-normal { background: rgba(0, 242, 254, 0.15); color: var(--accent); }
+    .badge-lesion { background: rgba(255, 71, 87, 0.2); color: var(--danger); }
+
+    /* Case Game Box */
+    .case-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px dashed var(--accent);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    /* Tooltip */
+    #hover-tooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.85);
+      border: 1px solid var(--accent);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      pointer-events: none;
+      display: none;
+      z-index: 100;
+      transform: translate(-50%, -120%);
+    }
+  </style>
+
+  <!-- Import Three.js via ES Modules -->
   <script type="importmap">
     {
       "imports": {
@@ -25,13 +150,13 @@
     <header class="interactive">
       <div class="brand">NEURO<span>MAP</span> <small style="font-size: 0.6em; opacity: 0.6;">v2.0 PRO</small></div>
       <div class="nav-controls">
-        <button class="btn active" id="btn-explore">Explore Mode</button>
-        <button class="btn danger-mode" id="btn-lesion">Virtual Lesion Mode</button>
-        <button class="btn" id="btn-game">Neuro-Detective Game</button>
+        <button class="btn active" id="btn-explore" onclick="setMode('explore')">Explore Mode</button>
+        <button class="btn danger-mode" id="btn-lesion" onclick="setMode('lesion')">Virtual Lesion Mode</button>
+        <button class="btn" id="btn-game" onclick="setMode('game')">Neuro-Detective Game</button>
       </div>
     </header>
 
-    <!-- Left Controls Sidebar -->
+    <!-- Left Toolbar -->
     <aside class="interactive">
       <div class="panel-title">Tractography & Controls</div>
       
@@ -53,10 +178,10 @@
       </div>
     </aside>
 
-    <!-- Center Canvas Spacer -->
+    <!-- Center Space (Empty for Canvas view) -->
     <div></div>
 
-    <!-- Right Data Sidebar -->
+    <!-- Right Data Panel -->
     <aside class="interactive" id="right-panel">
       <div class="panel-title">Structure Inspector</div>
       <div id="info-content" class="info-card">
@@ -75,11 +200,374 @@
       <div id="game-panel" style="display: none;" class="info-card">
         <div class="panel-title" style="color: var(--accent);">Diagnostic Vignette</div>
         <div class="case-box" id="case-description">Loading clinical scenario...</div>
-        <button class="btn" id="btn-skip-case" style="margin-top: 8px;">Skip Case</button>
+        <button class="btn" onclick="nextCase()" style="margin-top: 8px;">Skip Case</button>
       </div>
     </aside>
   </div>
 
-  <script type="module" src="app.js"></script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // --- DATA & CLINICAL DATABASE ---
+    const BRAIN_REGIONS = [
+      {
+        id: 'cortex',
+        name: 'Cerebral Cortex',
+        pos: [0, 1.2, 0],
+        scale: [2.2, 1.2, 2.6],
+        color: 0x8899a6,
+        function: 'Higher-level executive functioning, sensory processing, decision making, and voluntary motor action.',
+        lesionDeficit: 'Contralateral hemiparesis, cognitive impairment, executive dysfunction, executive planning deficits.'
+      },
+      {
+        id: 'thalamus',
+        name: 'Thalamus',
+        pos: [0, 0.2, 0],
+        scale: [0.8, 0.6, 0.9],
+        color: 0xf39c12,
+        function: 'Relay station for all sensory inputs (except olfactory) heading to the cortex; regulates consciousness and sleep.',
+        lesionDeficit: 'Dejerine-Roussy syndrome (thalamic pain syndrome), sensory loss, severe alterations in arousal.'
+      },
+      {
+        id: 'amygdala',
+        name: 'Amygdala',
+        pos: [-0.7, -0.2, 0.4],
+        scale: [0.4, 0.4, 0.4],
+        color: 0xe74c3c,
+        function: 'Key component of the limbic system processing emotional memory, fear conditioning, and threat detection.',
+        lesionDeficit: 'Klüver-Bucy syndrome (hyperorality, docility, hypersexuality, loss of fear responses).'
+      },
+      {
+        id: 'substantia_nigra',
+        name: 'Substantia Nigra',
+        pos: [0.3, -0.4, -0.2],
+        scale: [0.35, 0.35, 0.35],
+        color: 0x9b59b6,
+        function: 'Dopaminergic powerhouse driving the basal ganglia pathway for smooth motor control initiation.',
+        lesionDeficit: 'Parkinsonian symptoms: Resting tremor, bradykinesia, rigidity, and postural instability.'
+      },
+      {
+        id: 'hippocampus',
+        name: 'Hippocampus',
+        pos: [0.7, -0.2, 0.2],
+        scale: [0.4, 0.3, 0.7],
+        color: 0x2ecc71,
+        function: 'Essential structure for consolidating short-term memory into long-term memory and spatial navigation.',
+        lesionDeficit: 'Severe anterograde amnesia (inability to form new declarative memories).'
+      }
+    ];
+
+    const GAME_CASES = [
+      {
+        caseText: "A 62-year-old patient presents with a resting pill-rolling tremor, extreme difficulty initiating movements (bradykinesia), and muscle rigidity. Which dopaminergic region is suffering cell loss?",
+        targetId: 'substantia_nigra'
+      },
+      {
+        caseText: "A patient exhibits profound hyperorality, hypersexuality, docility, and an complete absence of fear responses following encephalitis. Which limbic structure is damaged?",
+        targetId: 'amygdala'
+      },
+      {
+        caseText: "Following a traumatic brain injury, a patient can remember past childhood events clearly but cannot consolidate any new memory events after the accident. Which structure is affected?",
+        targetId: 'hippocampus'
+      }
+    ];
+
+    // --- GLOBAL ENGINE STATE ---
+    let scene, camera, renderer, controls, raycaster, mouse;
+    let regionMeshes = [];
+    let signalParticles = [];
+    let pathwayCurve;
+    let clipPlane;
+    
+    let currentMode = 'explore'; // 'explore', 'lesion', 'game'
+    let currentCaseIdx = 0;
+    let pulseSpeed = 1.0;
+
+    // --- INITIALIZATION ---
+    function init() {
+      const container = document.getElementById('canvas-container');
+
+      // Scene Setup
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x090d16);
+
+      // Camera
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(4, 3, 6);
+
+      // Renderer & Clipping Setup
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.localClippingEnabled = true;
+      container.appendChild(renderer.domElement);
+
+      // Controls
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+      scene.add(ambientLight);
+
+      const dirLight1 = new THREE.DirectionalLight(0x00f2fe, 1.5);
+      dirLight1.position.set(5, 10, 7);
+      scene.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0xff007f, 0.8);
+      dirLight2.position.set(-5, -5, -5);
+      scene.add(dirLight2);
+
+      // Clipping Plane Setup (Axial Cut plane)
+      clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 3);
+
+      // Raycasting setup
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      // Build Brain Structures & Pathways
+      buildBrainStructures();
+      buildNeuralPathways();
+
+      // Event Listeners
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('mousemove', onMouseMove);
+      renderer.domElement.addEventListener('click', onPointerClick);
+
+      setupUIEvents();
+
+      // Start Loop
+      animate();
+    }
+
+    // --- 3D MESH BUILDER ---
+    function buildBrainStructures() {
+      BRAIN_REGIONS.forEach((data) => {
+        // Procedural Ellipsoid Shapes representing regions
+        const geometry = new THREE.SphereGeometry(1, 32, 32);
+        const material = new THREE.MeshStandardMaterial({
+          color: data.color,
+          roughness: 0.3,
+          metalness: 0.1,
+          transparent: true,
+          opacity: 0.85,
+          clippingPlanes: [clipPlane],
+          clipShadows: true
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(...data.pos);
+        mesh.scale.set(...data.scale);
+
+        // Store Custom Metadata directly on object
+        mesh.userData = {
+          ...data,
+          originalColor: data.color,
+          isLesioned: false
+        };
+
+        scene.add(mesh);
+        regionMeshes.push(mesh);
+      });
+    }
+
+    // --- TRACTOGRAPHY / PATHWAY ANIMATION ---
+    function buildNeuralPathways() {
+      // Create CatmullRom Curve representing Dopamine Tract (Substantia Nigra -> Thalamus -> Cortex)
+      pathwayCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0.3, -0.4, -0.2), // Substantia Nigra
+        new THREE.Vector3(0, 0.2, 0),       // Thalamus
+        new THREE.Vector3(0, 1.2, 0.5)      // Cortex
+      ]);
+
+      // Tube Mesh for Pathway
+      const tubeGeom = new THREE.TubeGeometry(pathwayCurve, 64, 0.03, 8, false);
+      const tubeMat = new THREE.MeshBasicMaterial({
+        color: 0x00f2fe,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.3,
+        clippingPlanes: [clipPlane]
+      });
+      const tubeMesh = new THREE.Mesh(tubeGeom, tubeMat);
+      tubeMesh.name = "pathway-tube";
+      scene.add(tubeMesh);
+
+      // Create glowing pulses moving along the curve
+      const particleGeom = new THREE.SphereGeometry(0.06, 16, 16);
+      const particleMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+
+      for (let i = 0; i < 5; i++) {
+        const p = new THREE.Mesh(particleGeom, particleMat);
+        scene.add(p);
+        signalParticles.push({
+          mesh: p,
+          progress: i * 0.2
+        });
+      }
+    }
+
+    // --- INTERACTION & RAYCASTING ---
+    function onMouseMove(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      // Tooltip logic
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(regionMeshes);
+
+      const tooltip = document.getElementById('hover-tooltip');
+      if (intersects.length > 0) {
+        const obj = intersects[0].object;
+        tooltip.style.display = 'block';
+        tooltip.style.left = event.clientX + 'px';
+        tooltip.style.top = event.clientY + 'px';
+        tooltip.innerText = obj.userData.name + (obj.userData.isLesioned ? ' [LESIONED]' : '');
+      } else {
+        tooltip.style.display = 'none';
+      }
+    }
+
+    function onPointerClick() {
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(regionMeshes);
+
+      if (intersects.length === 0) return;
+
+      const selected = intersects[0].object;
+
+      if (currentMode === 'explore') {
+        displayStructureInfo(selected.userData);
+      } else if (currentMode === 'lesion') {
+        toggleLesionState(selected);
+      } else if (currentMode === 'game') {
+        evaluateGameAnswer(selected.userData.id);
+      }
+    }
+
+    // --- LESION SIMULATOR LOGIC ---
+    function toggleLesionState(mesh) {
+      mesh.userData.isLesioned = !mesh.userData.isLesioned;
+
+      if (mesh.userData.isLesioned) {
+        // Change material to charred lesion look
+        mesh.material.color.setHex(0xff4757);
+        mesh.material.wireframe = true;
+      } else {
+        mesh.material.color.setHex(mesh.userData.originalColor);
+        mesh.material.wireframe = false;
+      }
+
+      displayStructureInfo(mesh.userData);
+    }
+
+    // --- UI DISPLAY ENGINE ---
+    function displayStructureInfo(data) {
+      document.getElementById('struct-name').innerText = data.name;
+      document.getElementById('struct-desc').innerText = data.function;
+
+      const badge = document.getElementById('status-badge');
+      const clinicalBlock = document.getElementById('clinical-block');
+
+      if (data.isLesioned) {
+        badge.className = "badge badge-lesion";
+        badge.innerText = "LESION ACTIVE";
+        clinicalBlock.style.display = "block";
+        document.getElementById('struct-clinical').innerText = data.lesionDeficit;
+      } else {
+        badge.className = "badge badge-normal";
+        badge.innerText = "Healthy State";
+        clinicalBlock.style.display = "none";
+      }
+    }
+
+    // --- NEURO-DETECTIVE GAME LOGIC ---
+    window.setMode = function(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.nav-controls .btn').forEach(b => b.classList.remove('active'));
+
+      if (mode === 'explore') {
+        document.getElementById('btn-explore').classList.add('active');
+        document.getElementById('info-content').style.display = 'flex';
+        document.getElementById('game-panel').style.display = 'none';
+      } else if (mode === 'lesion') {
+        document.getElementById('btn-lesion').classList.add('active');
+        document.getElementById('info-content').style.display = 'flex';
+        document.getElementById('game-panel').style.display = 'none';
+      } else if (mode === 'game') {
+        document.getElementById('btn-game').classList.add('active');
+        document.getElementById('info-content').style.display = 'none';
+        document.getElementById('game-panel').style.display = 'flex';
+        loadCase(currentCaseIdx);
+      }
+    };
+
+    function loadCase(idx) {
+      const activeCase = GAME_CASES[idx];
+      document.getElementById('case-description').innerText = activeCase.caseText;
+    }
+
+    function evaluateGameAnswer(selectedId) {
+      const activeCase = GAME_CASES[currentCaseIdx];
+      if (selectedId === activeCase.targetId) {
+        alert("Correct Diagnosis! Target structure successfully localized.");
+        nextCase();
+      } else {
+        alert("Incorrect region selected. Re-evaluate clinical presentation symptoms.");
+      }
+    }
+
+    window.nextCase = function() {
+      currentCaseIdx = (currentCaseIdx + 1) % GAME_CASES.length;
+      loadCase(currentCaseIdx);
+    };
+
+    // --- UI EVENT BINDINGS ---
+    function setupUIEvents() {
+      document.getElementById('speed-slider').addEventListener('input', (e) => {
+        pulseSpeed = parseFloat(e.target.value);
+        document.getElementById('speed-val').innerText = pulseSpeed.toFixed(1) + 'x';
+      });
+
+      document.getElementById('clip-slider').addEventListener('input', (e) => {
+        clipPlane.constant = parseFloat(e.target.value);
+      });
+
+      document.getElementById('toggle-pathway').addEventListener('change', (e) => {
+        const visible = e.target.checked;
+        scene.getObjectByName('pathway-tube').visible = visible;
+        signalParticles.forEach(p => p.mesh.visible = visible);
+      });
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // --- ANIMATION LOOP ---
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Animate signal pulses along curve
+      if (pathwayCurve && signalParticles.length > 0) {
+        signalParticles.forEach((particle) => {
+          particle.progress += 0.005 * pulseSpeed;
+          if (particle.progress > 1) particle.progress = 0;
+          const pos = pathwayCurve.getPoint(particle.progress);
+          particle.mesh.position.copy(pos);
+        });
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // Start App
+    init();
+  </script>
 </body>
 </html>
