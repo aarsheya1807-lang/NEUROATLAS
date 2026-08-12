@@ -520,3 +520,278 @@
   };
   window.dispatchEvent(new Event("neuromap:ready"));
 })();
+
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { BRAIN_REGIONS, GAME_CASES } from './brainData.js';
+
+let scene, camera, renderer, controls, raycaster, mouse;
+let regionMeshes = [];
+let signalParticles = [];
+let pathwayCurve;
+let clipPlane;
+
+let currentMode = 'explore';
+let currentCaseIdx = 0;
+let pulseSpeed = 1.0;
+
+function init() {
+  const container = document.getElementById('canvas-container');
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x090d16);
+
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(4, 3, 6);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.localClippingEnabled = true;
+  container.appendChild(renderer.domElement);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+  scene.add(ambientLight);
+
+  const dirLight1 = new THREE.DirectionalLight(0x00f2fe, 1.5);
+  dirLight1.position.set(5, 10, 7);
+  scene.add(dirLight1);
+
+  const dirLight2 = new THREE.DirectionalLight(0xff007f, 0.8);
+  dirLight2.position.set(-5, -5, -5);
+  scene.add(dirLight2);
+
+  clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 3);
+
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  buildBrainStructures();
+  buildNeuralPathways();
+
+  window.addEventListener('resize', onWindowResize);
+  window.addEventListener('mousemove', onMouseMove);
+  renderer.domElement.addEventListener('click', onPointerClick);
+
+  setupUIEvents();
+  animate();
+}
+
+function buildBrainStructures() {
+  BRAIN_REGIONS.forEach((data) => {
+    const geometry = new THREE.SphereGeometry(1, 32, 32);
+    const material = new THREE.MeshStandardMaterial({
+      color: data.color,
+      roughness: 0.3,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.85,
+      clippingPlanes: [clipPlane],
+      clipShadows: true
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(...data.pos);
+    mesh.scale.set(...data.scale);
+
+    mesh.userData = {
+      ...data,
+      originalColor: data.color,
+      isLesioned: false
+    };
+
+    scene.add(mesh);
+    regionMeshes.push(mesh);
+  });
+}
+
+function buildNeuralPathways() {
+  pathwayCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.3, -0.4, -0.2),
+    new THREE.Vector3(0, 0.2, 0),
+    new THREE.Vector3(0, 1.2, 0.5)
+  ]);
+
+  const tubeGeom = new THREE.TubeGeometry(pathwayCurve, 64, 0.03, 8, false);
+  const tubeMat = new THREE.MeshBasicMaterial({
+    color: 0x00f2fe,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.3,
+    clippingPlanes: [clipPlane]
+  });
+  const tubeMesh = new THREE.Mesh(tubeGeom, tubeMat);
+  tubeMesh.name = "pathway-tube";
+  scene.add(tubeMesh);
+
+  const particleGeom = new THREE.SphereGeometry(0.06, 16, 16);
+  const particleMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+
+  for (let i = 0; i < 5; i++) {
+    const p = new THREE.Mesh(particleGeom, particleMat);
+    scene.add(p);
+    signalParticles.push({
+      mesh: p,
+      progress: i * 0.2
+    });
+  }
+}
+
+function onMouseMove(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(regionMeshes);
+
+  const tooltip = document.getElementById('hover-tooltip');
+  if (intersects.length > 0) {
+    const obj = intersects[0].object;
+    tooltip.style.display = 'block';
+    tooltip.style.left = event.clientX + 'px';
+    tooltip.style.top = event.clientY + 'px';
+    tooltip.innerText = obj.userData.name + (obj.userData.isLesioned ? ' [LESIONED]' : '');
+  } else {
+    tooltip.style.display = 'none';
+  }
+}
+
+function onPointerClick() {
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(regionMeshes);
+
+  if (intersects.length === 0) return;
+
+  const selected = intersects[0].object;
+
+  if (currentMode === 'explore') {
+    displayStructureInfo(selected.userData);
+  } else if (currentMode === 'lesion') {
+    toggleLesionState(selected);
+  } else if (currentMode === 'game') {
+    evaluateGameAnswer(selected.userData.id);
+  }
+}
+
+function toggleLesionState(mesh) {
+  mesh.userData.isLesioned = !mesh.userData.isLesioned;
+
+  if (mesh.userData.isLesioned) {
+    mesh.material.color.setHex(0xff4757);
+    mesh.material.wireframe = true;
+  } else {
+    mesh.material.color.setHex(mesh.userData.originalColor);
+    mesh.material.wireframe = false;
+  }
+
+  displayStructureInfo(mesh.userData);
+}
+
+function displayStructureInfo(data) {
+  document.getElementById('struct-name').innerText = data.name;
+  document.getElementById('struct-desc').innerText = data.function;
+
+  const badge = document.getElementById('status-badge');
+  const clinicalBlock = document.getElementById('clinical-block');
+
+  if (data.isLesioned) {
+    badge.className = "badge badge-lesion";
+    badge.innerText = "LESION ACTIVE";
+    clinicalBlock.style.display = "block";
+    document.getElementById('struct-clinical').innerText = data.lesionDeficit;
+  } else {
+    badge.className = "badge badge-normal";
+    badge.innerText = "Healthy State";
+    clinicalBlock.style.display = "none";
+  }
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.nav-controls .btn').forEach(b => b.classList.remove('active'));
+
+  if (mode === 'explore') {
+    document.getElementById('btn-explore').classList.add('active');
+    document.getElementById('info-content').style.display = 'flex';
+    document.getElementById('game-panel').style.display = 'none';
+  } else if (mode === 'lesion') {
+    document.getElementById('btn-lesion').classList.add('active');
+    document.getElementById('info-content').style.display = 'flex';
+    document.getElementById('game-panel').style.display = 'none';
+  } else if (mode === 'game') {
+    document.getElementById('btn-game').classList.add('active');
+    document.getElementById('info-content').style.display = 'none';
+    document.getElementById('game-panel').style.display = 'flex';
+    loadCase(currentCaseIdx);
+  }
+}
+
+function loadCase(idx) {
+  const activeCase = GAME_CASES[idx];
+  document.getElementById('case-description').innerText = activeCase.caseText;
+}
+
+function evaluateGameAnswer(selectedId) {
+  const activeCase = GAME_CASES[currentCaseIdx];
+  if (selectedId === activeCase.targetId) {
+    alert("Correct Diagnosis! Target structure successfully localized.");
+    nextCase();
+  } else {
+    alert("Incorrect region selected. Re-evaluate clinical presentation symptoms.");
+  }
+}
+
+function nextCase() {
+  currentCaseIdx = (currentCaseIdx + 1) % GAME_CASES.length;
+  loadCase(currentCaseIdx);
+}
+
+function setupUIEvents() {
+  document.getElementById('btn-explore').addEventListener('click', () => setMode('explore'));
+  document.getElementById('btn-lesion').addEventListener('click', () => setMode('lesion'));
+  document.getElementById('btn-game').addEventListener('click', () => setMode('game'));
+  document.getElementById('btn-skip-case').addEventListener('click', () => nextCase());
+
+  document.getElementById('speed-slider').addEventListener('input', (e) => {
+    pulseSpeed = parseFloat(e.target.value);
+    document.getElementById('speed-val').innerText = pulseSpeed.toFixed(1) + 'x';
+  });
+
+  document.getElementById('clip-slider').addEventListener('input', (e) => {
+    clipPlane.constant = parseFloat(e.target.value);
+  });
+
+  document.getElementById('toggle-pathway').addEventListener('change', (e) => {
+    const visible = e.target.checked;
+    scene.getObjectByName('pathway-tube').visible = visible;
+    signalParticles.forEach(p => p.mesh.visible = visible);
+  });
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (pathwayCurve && signalParticles.length > 0) {
+    signalParticles.forEach((particle) => {
+      particle.progress += 0.005 * pulseSpeed;
+      if (particle.progress > 1) particle.progress = 0;
+      const pos = pathwayCurve.getPoint(particle.progress);
+      particle.mesh.position.copy(pos);
+    });
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+init();
