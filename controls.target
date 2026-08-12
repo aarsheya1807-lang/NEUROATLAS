@@ -1,0 +1,90 @@
+import * as THREE from 'three';
+import { gsap } from 'gsap';
+
+/**
+ * Focuses the Three.js camera on a specific mesh or array of meshes.
+ * 
+ * @param {THREE.PerspectiveCamera} camera 
+ * @param {OrbitControls} controls 
+ * @param {THREE.Mesh | THREE.Mesh[]} targetMeshes - Single mesh or array of meshes (for network nodes)
+ * @param {Object} options 
+ * @param {number} [options.duration=1.5] - Animation duration in seconds
+ * @param {number} [options.offsetMultiplier=2.2] - Distance multiplier from object bounding sphere radius
+ * @param {string} [options.ease="power2.inOut"] - GSAP easing curve
+ */
+export function focusOnRegions(camera, controls, targetMeshes, options = {}) {
+  const {
+    duration = 1.5,
+    offsetMultiplier = 2.2,
+    ease = "power2.inOut"
+  } = options;
+
+  const meshes = Array.isArray(targetMeshes) ? targetMeshes : [targetMeshes];
+  
+  // Filter out invalid or hidden meshes
+  const validMeshes = meshes.filter(m => m && m instanceof THREE.Mesh);
+  if (validMeshes.length === 0) return;
+
+  // 1. Calculate combined bounding box across all target meshes
+  const combinedBox = new THREE.Box3();
+  validMeshes.forEach(mesh => {
+    mesh.geometry.computeBoundingBox();
+    const meshBox = mesh.geometry.boundingBox.clone();
+    meshBox.applyMatrix4(mesh.matrixWorld);
+    combinedBox.union(meshBox);
+  });
+
+  // 2. Find target center point and bounding sphere radius
+  const targetCenter = new THREE.Vector3();
+  combinedBox.getCenter(targetCenter);
+
+  const sphere = new THREE.Sphere();
+  combinedBox.getBoundingSphere(sphere);
+  const radius = Math.max(sphere.radius, 15); // Safeguard minimum distance
+
+  // 3. Compute desired new camera position along the current viewing vector
+  const cameraDir = new THREE.Vector3()
+    .subVectors(camera.position, controls.target)
+    .normalize();
+
+  const targetCameraPos = new THREE.Vector3()
+    .copy(targetCenter)
+    .addScaledVector(cameraDir, radius * offsetMultiplier);
+
+  // 4. Kill any active camera tweens to prevent stutter on fast selection
+  gsap.killTweensOf(camera.position);
+  gsap.killTweensOf(controls.target);
+
+  // Disable controls during camera transition
+  controls.enabled = false;
+
+  // 5. Animate camera position and OrbitControls target concurrently
+  const timeline = gsap.timeline({
+    onUpdate: () => {
+      controls.update(); // Recalculate camera transform matrix
+    },
+    onComplete: () => {
+      controls.enabled = true; // Re-enable user interaction
+    }
+  });
+
+  // Animate target focus point (where camera looks)
+  timeline.to(controls.target, {
+    x: targetCenter.x,
+    y: targetCenter.y,
+    z: targetCenter.z,
+    duration: duration,
+    ease: ease
+  }, 0);
+
+  // Animate physical camera position
+  timeline.to(camera.position, {
+    x: targetCameraPos.x,
+    y: targetCameraPos.y,
+    z: targetCameraPos.z,
+    duration: duration,
+    ease: ease
+  }, 0);
+
+  return timeline;
+}
