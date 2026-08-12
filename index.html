@@ -571,3 +571,722 @@
   </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroMap 3D | Interactive Brain Explorer</title>
+  
+  <!-- Importmap for Three.js ES Modules -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --panel-bg: rgba(30, 41, 59, 0.85);
+      --panel-border: rgba(255, 255, 255, 0.1);
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --danger: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* Overlay UI Panels */
+    .ui-panel {
+      position: absolute;
+      z-index: 10;
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    /* Header Controls Panel */
+    #top-bar {
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-selector {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+
+    button.active {
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+    }
+
+    /* Inspector Panel (Right) */
+    #inspector {
+      top: 90px;
+      right: 20px;
+      width: 360px;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+    }
+
+    .struct-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .badge-normal { background: rgba(56, 189, 248, 0.2); color: var(--accent); }
+    .badge-lesion { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+    .section-desc {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .clinical-box {
+      background: rgba(239, 68, 68, 0.1);
+      border-left: 3px solid var(--danger);
+      padding: 12px;
+      border-radius: 0 6px 6px 0;
+      margin-top: 12px;
+      font-size: 0.85rem;
+    }
+
+    /* Game Mode Banner */
+    #game-banner {
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      max-width: 90vw;
+      text-align: center;
+      display: none;
+    }
+
+    #game-banner.active {
+      display: block;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    /* Custom Scrollbar */
+    #inspector::-webkit-scrollbar {
+      width: 6px;
+    }
+    #inspector::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <!-- Top Navigation Bar -->
+  <div id="top-bar" class="ui-panel">
+    <div class="brand">🧠 NeuroMap 3D</div>
+    <div class="mode-selector">
+      <button id="btn-explore" class="active" onclick="setMode('explore')">Explore Mode</button>
+      <button id="btn-lesion" onclick="setMode('lesion')">Virtual Lesion Mode</button>
+      <button id="btn-game" onclick="setMode('game')">Neuro-Detective Game</button>
+    </div>
+  </div>
+
+  <!-- Inspector Sidebar -->
+  <div id="inspector" class="ui-panel">
+    <div id="struct-name" class="struct-title">Select a Region</div>
+    <div id="status-badge" class="badge badge-normal">Healthy State</div>
+    <div id="struct-desc" class="section-desc">Click on any 3D brain region to view anatomical functions, DSM-5 associations, and clinical diagnostic correlations.</div>
+    
+    <div id="clinical-block" class="clinical-box" style="display: none;">
+      <strong>Lesion Deficit & DSM-5 Link:</strong>
+      <p id="struct-clinical" style="margin-top: 4px;"></p>
+    </div>
+
+    <div id="action-controls" style="margin-top: 16px; display: none;">
+      <button id="btn-toggle-lesion" class="btn-danger" style="width: 100%;" onclick="toggleCurrentLesion()">Apply Virtual Lesion</button>
+    </div>
+  </div>
+
+  <!-- Game Overlay Panel -->
+  <div id="game-banner" class="ui-panel">
+    <h3 style="color: var(--accent); margin-bottom: 6px;">Neuro-Detective Clinical Case</h3>
+    <p id="game-case-text" style="font-size: 0.95rem; margin-bottom: 12px; color: var(--text-muted);"></p>
+    <div id="game-feedback" style="font-weight: 600; margin-bottom: 8px; min-height: 20px;"></div>
+    <button onclick="nextGameCase()">Next Case</button>
+  </div>
+
+  <!-- Three.js Logic -->
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // =========================================================================
+    // 1. DATASET: 20+ BRAIN REGIONS WITH DSM-5 CORRELATIONS & CLINICAL CASES
+    // =========================================================================
+    const BRAIN_REGIONS = [
+      {
+        id: 'dorsolateral_pfc',
+        name: 'Dorsolateral Prefrontal Cortex (dlPFC)',
+        pos: [0.6, 1.6, 1.0],
+        scale: [0.5, 0.4, 0.5],
+        color: 0x3498db,
+        function: 'Executive functions, working memory, cognitive flexibility, abstract reasoning, and top-down attentional control.',
+        lesionDeficit: 'Dysexecutive syndrome, severe impairment in goal-directed behavior, impaired working memory.',
+        dsmCorrelation: 'DSM-5 Major Neurocognitive Disorder / ADHD (executive dysfunction domains).'
+      },
+      {
+        id: 'ventromedial_pfc',
+        name: 'Ventromedial Prefrontal Cortex (vmPFC)',
+        pos: [0.0, 1.1, 1.2],
+        scale: [0.5, 0.35, 0.45],
+        color: 0x2ecc71,
+        function: 'Processing risk, fear conditioning, moral decision-making, and emotional regulation.',
+        lesionDeficit: 'Phineas Gage phenotype: impulsivity, social disinhibition, impaired moral judgment despite intact IQ.',
+        dsmCorrelation: 'DSM-5 Antisocial Personality Disorder / Conduct Disorder.'
+      },
+      {
+        id: 'brocas_area',
+        name: "Broca's Area (Inferior Frontal Gyrus)",
+        pos: [-1.1, 1.0, 0.8],
+        scale: [0.35, 0.35, 0.35],
+        color: 0xe67e22,
+        function: 'Speech production, motor encoding of language, and syntactic processing.',
+        lesionDeficit: "Broca's (Expressive) Aphasia: Non-fluent, halting speech with preserved comprehension.",
+        dsmCorrelation: 'DSM-5 Expressive Language Disorder / Neurogenic Communication Disorders.'
+      },
+      {
+        id: 'wernickes_area',
+        name: "Wernicke's Area (Posterior Superior Temporal Gyrus)",
+        pos: [-1.2, 0.6, -0.4],
+        scale: [0.35, 0.35, 0.35],
+        color: 0x9b59b6,
+        function: 'Language comprehension, processing of semantic spoken and written input.',
+        lesionDeficit: "Wernicke's (Receptive) Aphasia: Fluent but meaningless ('word salad') speech with severe comprehension loss.",
+        dsmCorrelation: 'DSM-5 Receptive Language Impairment.'
+      },
+      {
+        id: 'amygdala',
+        name: 'Amygdala (Basolateral & Central Nuclei)',
+        pos: [-0.7, -0.2, 0.4],
+        scale: [0.35, 0.35, 0.35],
+        color: 0xe74c3c,
+        function: 'Threat detection, emotional memory consolidation, fear conditioning, and salient valence processing.',
+        lesionDeficit: 'Klüver-Bucy syndrome (hyperorality, docility, hypersexuality, absence of fear responses).',
+        dsmCorrelation: 'DSM-5 Post-Traumatic Stress Disorder (PTSD) / Generalized Anxiety Disorder (hyperactive state).'
+      },
+      {
+        id: 'hippocampus',
+        name: 'Hippocampus (CA1-CA3 & Dentate Gyrus)',
+        pos: [0.7, -0.2, 0.2],
+        scale: [0.4, 0.3, 0.7],
+        color: 0x1abc9c,
+        function: 'Consolidation of explicit declarative (episodic/semantic) memory and spatial mapping.',
+        lesionDeficit: 'Dense anterograde amnesia (inability to form new declarative memories, e.g., Patient H.M.).',
+        dsmCorrelation: 'DSM-5 Major Neurocognitive Disorder due to Alzheimer’s Disease.'
+      },
+      {
+        id: 'nucleus_accumbens',
+        name: 'Nucleus Accumbens (Ventral Striatum)',
+        pos: [0.2, 0.0, 0.6],
+        scale: [0.3, 0.3, 0.3],
+        color: 0xf1c40f,
+        function: 'Central reward hub, prediction error processing, motivation, and reinforcement learning.',
+        lesionDeficit: 'Anhedonia, avolition, reduced motivational drive.',
+        dsmCorrelation: 'DSM-5 Substance Use Disorders / Behavioral Addictions / Major Depressive Disorder.'
+      },
+      {
+        id: 'substantia_nigra',
+        name: 'Substantia Nigra (Pars Compacta)',
+        pos: [0.3, -0.4, -0.2],
+        scale: [0.3, 0.3, 0.3],
+        color: 0x8e44ad,
+        function: 'Dopaminergic supply to the dorsal striatum for motor loop initiation and fluid movement control.',
+        lesionDeficit: 'Parkinsonian triad: Resting tremor, bradykinesia, rigidity, postural instability.',
+        dsmCorrelation: 'DSM-5 Major Neurocognitive Disorder due to Parkinson’s Disease.'
+      },
+      {
+        id: 'thalamus',
+        name: 'Thalamus',
+        pos: [0.0, 0.2, 0.0],
+        scale: [0.7, 0.5, 0.8],
+        color: 0xf39c12,
+        function: 'Relay station for all sensory modalities (except olfactory); cortical gating and arousal regulation.',
+        lesionDeficit: 'Thalamic pain syndrome (Dejerine-Roussy), sensory loss, coma/altered consciousness.',
+        dsmCorrelation: 'DSM-5 Disorders of Sleep-Wake / Consciousness Alterations.'
+      },
+      {
+        id: 'hypothalamus',
+        name: 'Hypothalamus',
+        pos: [0.0, -0.2, 0.3],
+        scale: [0.35, 0.3, 0.35],
+        color: 0xd35400,
+        function: 'Homeostatic control (HPA axis): neuroendocrine regulation, circadian rhythm, hunger, thirst, temperature.',
+        lesionDeficit: 'Endocrine dysregulation, poikilothermia, hyperphagia or anorexia, sleep disturbance.',
+        dsmCorrelation: 'DSM-5 Anorexia Nervosa / Insomnia Disorder / Major Depression (vegetative features).'
+      },
+      {
+        id: 'anterior_cingulate',
+        name: 'Anterior Cingulate Cortex (ACC)',
+        pos: [0.0, 0.8, 0.6],
+        scale: [0.3, 0.5, 0.8],
+        color: 0x16a085,
+        function: 'Conflict monitoring, error detection, pain processing (affective dimension), and autonomic regulation.',
+        lesionDeficit: 'Akinetic mutism (severe loss of emotional/motor drive), impaired error awareness.',
+        dsmCorrelation: 'DSM-5 Obsessive-Compulsive Disorder (OCD) / Unipolar Depression.'
+      },
+      {
+        id: 'fusiform_gyrus',
+        name: 'Fusiform Face Area (FFA)',
+        pos: [0.8, -0.8, -0.4],
+        scale: [0.4, 0.25, 0.6],
+        color: 0x27ae60,
+        function: 'High-level visual perception, facial recognition, and expertise categorization.',
+        lesionDeficit: 'Prosopagnosia (face blindness - inability to recognize familiar faces visually).',
+        dsmCorrelation: 'DSM-5 Neurodevelopmental Visual Agnosias / Autism Spectrum Disorder facial processing features.'
+      },
+      {
+        id: 'cerebellum',
+        name: 'Cerebellum (Lateral Hemispheres)',
+        pos: [0.0, -1.0, -1.0],
+        scale: [1.4, 0.8, 1.0],
+        color: 0xc0392b,
+        function: 'Motor coordination, error-correction learning, posture, balance, and cognitive timing.',
+        lesionDeficit: 'Cerebellar ataxia, dysmetria (past-pointing), intention tremor, dysdiadochokinesia.',
+        dsmCorrelation: 'DSM-5 Substance-Induced Ataxia / Cerebellar Cognitive Affective Syndrome.'
+      },
+      {
+        id: 'primary_motor_cortex',
+        name: 'Primary Motor Cortex (M1 / Precentral Gyrus)',
+        pos: [0.5, 1.4, -0.2],
+        scale: [0.4, 0.5, 1.0],
+        color: 0x2980b9,
+        function: 'Execution of voluntary motor movements (organized via motor homunculus).',
+        lesionDeficit: 'Contralateral spastic paresis/paralysis, hyperreflexia, Babinski sign present.',
+        dsmCorrelation: 'DSM-5 Functional Neurological Symptom Disorder (Conversion Disorder motor presentations).'
+      },
+      {
+        id: 'primary_somatosensory',
+        name: 'Primary Somatosensory Cortex (S1 / Postcentral Gyrus)',
+        pos: [0.5, 1.4, -0.6],
+        scale: [0.4, 0.5, 1.0],
+        color: 0x8e44ad,
+        function: 'Processing tactile, proprioceptive, nociceptive, and thermal inputs.',
+        lesionDeficit: 'Contralateral loss of fine touch, two-point discrimination, and stereognosis.',
+        dsmCorrelation: 'DSM-5 Somatic Symptom Disorder.'
+      },
+      {
+        id: 'insula',
+        name: 'Insular Cortex (Insula)',
+        pos: [-0.8, 0.3, 0.1],
+        scale: [0.3, 0.4, 0.5],
+        color: 0x00cec9,
+        function: 'Interoception (sensing internal bodily states), visceral processing, disgust, and empathetic pain.',
+        lesionDeficit: 'Impaired interoceptive awareness, loss of disgust responses, altered pain processing.',
+        dsmCorrelation: 'DSM-5 Panic Disorder / Somatic Symptom Disorder / Anorexia Nervosa.'
+      },
+      {
+        id: 'basal_ganglia_caudate',
+        name: 'Caudate Nucleus',
+        pos: [0.4, 0.4, 0.3],
+        scale: [0.35, 0.5, 0.4],
+        color: 0xfdcb6e,
+        function: 'Motor loop regulation, procedural learning, associative learning, and goal-directed actions.',
+        lesionDeficit: 'Choreiform involuntary movements, cognitive decline, executive slowing.',
+        dsmCorrelation: 'DSM-5 Major Neurocognitive Disorder due to Huntington’s Disease / OCD.'
+      },
+      {
+        id: 'locus_coeruleus',
+        name: 'Locus Coeruleus',
+        pos: [0.1, -0.7, -0.5],
+        scale: [0.2, 0.2, 0.2],
+        color: 0x6c5ce7,
+        function: 'Principal site for norepinephrine synthesis in the brain; regulates arousal, vigilance, and stress reactivity.',
+        lesionDeficit: 'Impaired hyperarousal, profound drowsiness, inability to focus under stress.',
+        dsmCorrelation: 'DSM-5 Anxiety Disorders / PTSD hyperarousal sub-criteria.'
+      },
+      {
+        id: 'raphe_nuclei',
+        name: 'Raphe Nuclei',
+        pos: [0.0, -0.6, -0.4],
+        scale: [0.2, 0.3, 0.2],
+        color: 0xfd79a8,
+        function: 'Primary serotonin synthesis hub regulating mood, sleep-wake cycles, aggression, and satiety.',
+        lesionDeficit: 'Severe mood dysregulation, insomnia, heightened impulsive aggression.',
+        dsmCorrelation: 'DSM-5 Major Depressive Episode / Impulsive Control Disorders.'
+      },
+      {
+        id: 'suprachiasmatic_nucleus',
+        name: 'Suprachiasmatic Nucleus (SCN)',
+        pos: [0.0, -0.3, 0.4],
+        scale: [0.15, 0.15, 0.15],
+        color: 0x00b894,
+        function: 'Master circadian pacemaker driven by light input from retinohypothalamic tract.',
+        lesionDeficit: 'Complete loss of endogenous 24-hour circadian rhythmicity.',
+        dsmCorrelation: 'DSM-5 Circadian Rhythm Sleep-Wake Disorders.'
+      }
+    ];
+
+    const GAME_CASES = [
+      {
+        caseText: "A 62-year-old patient presents with a resting pill-rolling tremor, severe bradykinesia, and muscle rigidity. Which dopaminergic region is undergoing neurodegeneration?",
+        targetId: 'substantia_nigra'
+      },
+      {
+        caseText: "A patient exhibits profound hyperorality, hypersexuality, docility, and loss of fear conditioning following viral encephalitis. Which limbic structure is damaged?",
+        targetId: 'amygdala'
+      },
+      {
+        caseText: "Following anoxia, a patient cannot consolidate any new declarative memories despite intact short-term working memory. Identify the affected medial temporal lobe structure.",
+        targetId: 'hippocampus'
+      },
+      {
+        caseText: "A patient speaks fluently with normal rhythm but produces completely nonsensical sentences ('word salad') and cannot follow verbal commands. Which auditory-association region is lesioned?",
+        targetId: 'wernickes_area'
+      },
+      {
+        caseText: "Following a traumatic stroke, a patient can understand written and spoken language perfectly but produces non-fluent, painful, halting speech. Identify the region involved.",
+        targetId: 'brocas_area'
+      },
+      {
+        caseText: "A patient involved in a construction injury exhibits drastic personality changes: profound disinhibition, poor social decision-making, and impulsivity, while intelligence remains intact. Which prefrontal cortex region was damaged?",
+        targetId: 'ventromedial_pfc'
+      },
+      {
+        caseText: "A stroke patient can see perfectly fine but is completely unable to recognize the faces of close family members visually (Prosopagnosia). Which ventral stream region is damaged?",
+        targetId: 'fusiform_gyrus'
+      }
+    ];
+
+    // =========================================================================
+    // 2. SCENE, CAMERA, & RENDERER SETUP
+    // =========================================================================
+    let scene, camera, renderer, controls;
+    let regionMeshes = [];
+    let selectedRegion = null;
+    let currentMode = 'explore';
+    let currentCaseIndex = 0;
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function init() {
+      const container = document.getElementById('canvas-container');
+
+      // Scene
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0f172a);
+
+      // Camera
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 2, 7);
+
+      // Renderer
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(renderer.domElement);
+
+      // Controls
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+
+      // Lights
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambientLight);
+
+      const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight1.position.set(5, 10, 7);
+      scene.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 0.4);
+      dirLight2.position.set(-5, -5, -5);
+      scene.add(dirLight2);
+
+      // Build Brain Geometry
+      buildBrainCortexMesh();
+      buildBrainRegions();
+
+      // Event Listeners
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('click', onPointerClick);
+
+      // Start Animation Loop
+      animate();
+    }
+
+    // Semi-transparent outer cortex shell for context
+    function buildBrainCortexMesh() {
+      const geo = new THREE.SphereGeometry(2.0, 32, 32);
+      geo.scale(1.0, 0.8, 1.2);
+      const mat = new THREE.MeshPhongMaterial({
+        color: 0x475569,
+        transparent: true,
+        opacity: 0.12,
+        wireframe: true
+      });
+      const cortex = new THREE.Mesh(geo, mat);
+      scene.add(cortex);
+    }
+
+    // Build interactive 3D structures
+    function buildBrainRegions() {
+      BRAIN_REGIONS.forEach(data => {
+        const geo = new THREE.SphereGeometry(0.5, 24, 24);
+        geo.scale(data.scale[0], data.scale[1], data.scale[2]);
+
+        const mat = new THREE.MeshStandardMaterial({
+          color: data.color,
+          roughness: 0.3,
+          metalness: 0.1,
+          transparent: true,
+          opacity: 0.85
+        });
+
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(...data.pos);
+        mesh.userData = { ...data, isLesioned: false, originalColor: data.color };
+
+        scene.add(mesh);
+        regionMeshes.push(mesh);
+      });
+    }
+
+    // =========================================================================
+    // 3. INTERACTION & LOGIC
+    // =========================================================================
+    function onPointerClick(event) {
+      if (event.clientY < 80 && event.clientX < 400) return; // ignore clicks on top header
+
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(regionMeshes);
+
+      if (intersects.length > 0) {
+        const hitMesh = intersects[0].object;
+        selectRegionMesh(hitMesh);
+      }
+    }
+
+    function selectRegionMesh(mesh) {
+      // Reset previous highlight
+      if (selectedRegion && !selectedRegion.userData.isLesioned) {
+        selectedRegion.material.color.setHex(selectedRegion.userData.originalColor);
+      }
+
+      selectedRegion = mesh;
+
+      // Highlight selected mesh
+      if (!selectedRegion.userData.isLesioned) {
+        selectedRegion.material.color.setHex(0xffffff);
+      }
+
+      displayStructureInfo(selectedRegion.userData);
+
+      if (currentMode === 'game') {
+        checkGameAnswer(selectedRegion.userData.id);
+      }
+    }
+
+    function displayStructureInfo(data) {
+      document.getElementById('struct-name').innerText = data.name;
+      document.getElementById('struct-desc').innerText = data.function;
+
+      const badge = document.getElementById('status-badge');
+      const clinicalBlock = document.getElementById('clinical-block');
+      const actionControls = document.getElementById('action-controls');
+      const btnLesion = document.getElementById('btn-toggle-lesion');
+
+      let dsmHtml = data.dsmCorrelation ? `<br><br><strong>DSM-5 Diagnostic Links:</strong> ${data.dsmCorrelation}` : '';
+
+      if (data.isLesioned) {
+        badge.className = "badge badge-lesion";
+        badge.innerText = "LESION ACTIVE";
+        clinicalBlock.style.display = "block";
+        document.getElementById('struct-clinical').innerHTML = data.lesionDeficit + dsmHtml;
+        btnLesion.innerText = "Heal / Remove Lesion";
+      } else {
+        badge.className = "badge badge-normal";
+        badge.innerText = "Healthy State";
+        clinicalBlock.style.display = currentMode === 'lesion' ? "block" : "none";
+        document.getElementById('struct-clinical').innerHTML = "<em>Apply a virtual lesion to observe functional deficits and DSM-5 diagnostic implications.</em>";
+        btnLesion.innerText = "Apply Virtual Lesion";
+      }
+
+      actionControls.style.display = currentMode === 'lesion' ? "block" : "none";
+    }
+
+    // Apply or remove virtual lesion state
+    window.toggleCurrentLesion = function() {
+      if (!selectedRegion) return;
+      
+      const isLesioned = !selectedRegion.userData.isLesioned;
+      selectedRegion.userData.isLesioned = isLesioned;
+
+      if (isLesioned) {
+        selectedRegion.material.color.setHex(0x333333); // dark gray for damaged tissue
+        selectedRegion.material.opacity = 0.4;
+      } else {
+        selectedRegion.material.color.setHex(selectedRegion.userData.originalColor);
+        selectedRegion.material.opacity = 0.85;
+      }
+
+      displayStructureInfo(selectedRegion.userData);
+    };
+
+    // Mode Controller
+    window.setMode = function(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-selector button').forEach(b => b.classList.remove('active'));
+      document.getElementById(`btn-${mode}`).classList.add('active');
+
+      document.getElementById('game-banner').classList.toggle('active', mode === 'game');
+
+      if (selectedRegion) {
+        displayStructureInfo(selectedRegion.userData);
+      }
+
+      if (mode === 'game') {
+        currentCaseIndex = 0;
+        loadGameCase();
+      }
+    };
+
+    // Neuro-Detective Game Engine
+    function loadGameCase() {
+      const c = GAME_CASES[currentCaseIndex];
+      document.getElementById('game-case-text').innerText = `Case #${currentCaseIndex + 1}: ${c.caseText}`;
+      document.getElementById('game-feedback').innerText = "";
+    }
+
+    function checkGameAnswer(clickedId) {
+      const c = GAME_CASES[currentCaseIndex];
+      const feedback = document.getElementById('game-feedback');
+
+      if (clickedId === c.targetId) {
+        feedback.style.color = "#2ecc71";
+        feedback.innerText = "✓ Correct Diagnosis! Target structure identified.";
+      } else {
+        feedback.style.color = "#ef4444";
+        feedback.innerText = "✗ Incorrect region. Review symptoms and try again.";
+      }
+    }
+
+    window.nextGameCase = function() {
+      currentCaseIndex = (currentCaseIndex + 1) % GAME_CASES.length;
+      loadGameCase();
+    };
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+
+      // Subtle ambient motion
+      regionMeshes.forEach(mesh => {
+        if (mesh === selectedRegion) {
+          mesh.rotation.y += 0.01;
+        }
+      });
+
+      renderer.render(scene, camera);
+    }
+
+    // Launch Application
+    init();
+  </script>
+</body>
+</html>
