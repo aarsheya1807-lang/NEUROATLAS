@@ -1051,3 +1051,86 @@
   <script src="./script.js"></script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroMap 3D Explorer</title>
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- CDNs for Three.js, Controls, Loader, and GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+
+  <!-- HERO LANDING COVER PAGE -->
+  <header class="neuromap-hero" id="hero-cover">
+    <div class="hero-content">
+      <span class="badge-pill">Neuroanatomy & Diagnostic Atlas</span>
+      <h1 class="hero-title">NeuroMap <span>3D</span></h1>
+      <p class="hero-subtitle">
+        Explore interactive 3D human brain anatomy mapped to clinical lesion profiles, 
+        DSM-5-TR & ICD-11 classifications, and functional neural networks.
+      </p>
+
+      <div class="hero-actions">
+        <button class="btn-launch" id="btn-launch-explorer">
+          Launch 3D Explorer 🚀
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 3D CANVAS CONTAINER -->
+  <div id="canvas-container"></div>
+
+  <!-- TOP CONTROL BAR -->
+  <nav id="top-bar" class="ui-panel hidden">
+    <div class="brand">🧠 NeuroMap 3D</div>
+    <select id="region-dropdown">
+      <option value="">-- Choose a Region --</option>
+      <option value="frontal">Frontal Lobe / Prefrontal Cortex</option>
+      <option value="broca">Broca's Area</option>
+      <option value="temporal">Temporal Lobe / Wernicke's Area</option>
+      <option value="parietal">Parietal Lobe</option>
+      <option value="occipital">Occipital Lobe</option>
+      <option value="hippocampus">Hippocampus</option>
+      <option value="amygdala">Amygdala</option>
+      <option value="cerebellum">Cerebellum</option>
+      <option value="brainstem">Brainstem</option>
+    </select>
+  </nav>
+
+  <!-- CLINICAL INFORMATION SIDE PANEL -->
+  <aside id="clinical-panel" class="ui-panel hidden">
+    <div class="card">
+      <span id="region-tag" class="region-badge">Anatomical Region</span>
+      <h2 id="region-name">Select a Region</h2>
+      <p id="region-desc" class="desc-text">
+        Click on any 3D brain region or pick one from the top menu to analyze its clinical function, DSM-5-TR, and ICD-11 classifications.
+      </p>
+
+      <div class="code-box">
+        <header>DSM-5-TR Diagnostic Code</header>
+        <div id="dsm-code" class="code-value">--</div>
+      </div>
+
+      <div class="code-box">
+        <header>ICD-11 Classification</header>
+        <div id="icd-code" class="code-value">--</div>
+      </div>
+
+      <div class="lesion-box">
+        <strong>Lesion Deficit Profile:</strong>
+        <p id="lesion-profile">Select an anatomical structure to view lesion manifestations.</p>
+      </div>
+    </div>
+  </aside>
+
+  <script src="./script.js"></script>
+</body>
+</html>
