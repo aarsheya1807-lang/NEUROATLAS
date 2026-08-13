@@ -994,3 +994,60 @@
   <script src="script.js"></script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroMap 3D Explorer</title>
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- Libraries via CDN (No Build Tools Required) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+
+  <!-- HERO LANDING COVER PAGE OVERLAY -->
+  <header class="neuromap-hero" id="hero-cover">
+    <div class="hero-content">
+      <span class="badge-pill">Neuroanatomy & Diagnostic Atlas</span>
+      <h1 class="hero-title">NeuroMap <span>3D</span></h1>
+      <p class="hero-subtitle">
+        Explore interactive 3D human brain anatomy mapped to clinical lesion profiles, 
+        DSM-5-TR & ICD-11 classifications, and functional neural networks.
+      </p>
+
+      <div class="feature-tags">
+        <span class="tag">🧠 3D Brain Viewer</span>
+        <span class="tag">📑 DSM-5-TR / ICD-11</span>
+        <span class="tag">⚡ Network Dynamics</span>
+      </div>
+
+      <div class="hero-actions">
+        <button class="btn-launch" id="btn-launch-explorer">
+          Launch 3D Explorer 🚀
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 3D CANVAS CONTAINER -->
+  <div id="canvas-container"></div>
+
+  <!-- CLINICAL INFO SIDE PANEL -->
+  <aside id="info-panel" class="hidden">
+    <div class="card">
+      <h2 id="region-title">🧠 Interactive Brain Atlas</h2>
+      <p id="region-desc">
+        Click or drag to rotate the 3D model. Select any anatomical region to inspect clinical functions, lesion profiles, and diagnostic classifications.
+      </p>
+      <div id="classification-tags" class="tags-container"></div>
+    </div>
+  </aside>
+
+  <script src="./script.js"></script>
+</body>
+</html>
