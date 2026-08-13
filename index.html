@@ -951,3 +951,46 @@
   </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroMap 3D Explorer</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Libraries via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+
+  <!-- HERO COVER OVERLAY -->
+  <header class="neuromap-hero" id="hero-cover">
+    <div class="hero-content">
+      <span class="badge">Clinical Neuroanatomy & Atlas</span>
+      <h1>NeuroMap <span>3D</span></h1>
+      <p>Interactive brain anatomy mapped to clinical lesion profiles, DSM-5-TR, ICD-11, and functional networks.</p>
+      
+      <div class="hero-actions">
+        <button class="btn-launch" id="btn-launch-explorer">Launch 3D Explorer</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 3D CANVAS CONTAINER -->
+  <div id="canvas-container"></div>
+
+  <!-- CLINICAL INFORMATION OVERLAY -->
+  <div id="info-overlay" class="hidden">
+    <div class="card">
+      <h2 id="region-title">Select a Region</h2>
+      <p id="region-description">Click on any 3D brain region to view anatomical functions and clinical classifications.</p>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
