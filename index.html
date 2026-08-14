@@ -1134,3 +1134,750 @@
   <script src="./script.js"></script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroMap Extensions — Feature Module</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#0A0E16;
+    --panel:#121826;
+    --panel-raised:#182136;
+    --border:#232B3D;
+    --signal:#45E0C4;
+    --signal-dim:#2A6E63;
+    --lesion:#E8734A;
+    --lesion-dim:#5A3324;
+    --text:#E8ECF4;
+    --muted:#7C8AA8;
+    --focus:#8FF0DE;
+    --radius:10px;
+  }
+  [data-a11y="true"]{
+    --signal:#4EA8FF;
+    --signal-dim:#1F4A75;
+    --lesion:#FFB454;
+    --lesion-dim:#5C4720;
+    --focus:#FFD866;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; margin:0 0 6px; font-weight:600; }
+  code, .mono{ font-family:'IBM Plex Mono', monospace; }
+  button{ font-family:inherit; cursor:pointer; }
+  *:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+
+  /* ---------- shell ---------- */
+  .app{ display:flex; min-height:100vh; }
+  .rail{
+    width:230px; flex-shrink:0; background:var(--panel);
+    border-right:1px solid var(--border); padding:20px 12px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .rail-header{ padding:8px 10px 18px; }
+  .rail-header .dot{
+    width:8px; height:8px; border-radius:50%; background:var(--signal);
+    display:inline-block; margin-right:8px; box-shadow:0 0 8px var(--signal);
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  .rail-header h1{ font-size:15px; letter-spacing:.02em; }
+  .rail-header p{ font-size:11px; color:var(--muted); margin:4px 0 0; }
+
+  .tab{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px; border-radius:8px; border:1px solid transparent;
+    background:none; color:var(--muted); text-align:left; font-size:13px;
+    font-weight:500; position:relative;
+  }
+  .tab .n{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); width:16px; }
+  .tab:hover{ background:var(--panel-raised); color:var(--text); }
+  .tab.active{ background:var(--panel-raised); color:var(--signal); border-color:var(--signal-dim); }
+  .tab.active .n{ color:var(--signal); }
+  .tab.active::before{
+    content:''; position:absolute; left:-13px; top:50%; width:6px; height:6px;
+    border-radius:50%; background:var(--signal); transform:translateY(-50%);
+    box-shadow:0 0 6px var(--signal);
+  }
+
+  .rail-foot{ margin-top:auto; display:flex; flex-direction:column; gap:8px; padding-top:12px; border-top:1px solid var(--border); }
+  .ghost-btn{
+    background:none; border:1px solid var(--border); color:var(--muted);
+    padding:8px 10px; border-radius:8px; font-size:11.5px; text-align:left;
+  }
+  .ghost-btn:hover{ color:var(--text); border-color:var(--signal-dim); }
+  .ghost-btn.on{ color:var(--signal); border-color:var(--signal-dim); background:rgba(69,224,196,0.06); }
+
+  .main{ flex:1; padding:28px 36px 60px; max-width:1000px; }
+  .panel-title{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px; }
+  .panel-title p{ color:var(--muted); font-size:13px; margin:4px 0 0; max-width:640px; }
+  .badge{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--signal);
+    border:1px solid var(--signal-dim); padding:3px 8px; border-radius:20px;
+    text-transform:uppercase; letter-spacing:.06em;
+  }
+
+  .card{
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; margin-bottom:14px;
+  }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
+  .chip{
+    background:var(--panel-raised); border:1px solid var(--border); border-radius:8px;
+    padding:10px 12px; font-size:12.5px; color:var(--text); text-align:left;
+  }
+  .chip:hover{ border-color:var(--signal-dim); }
+  .chip.selected{ border-color:var(--signal); box-shadow:0 0 0 1px var(--signal); }
+  .chip.wrong{ border-color:var(--lesion); box-shadow:0 0 0 1px var(--lesion); }
+  .chip small{ display:block; color:var(--muted); margin-top:3px; font-size:10.5px; }
+
+  .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .primary-btn{
+    background:var(--signal); color:#06231E; border:none; padding:10px 18px;
+    border-radius:8px; font-weight:600; font-size:13px;
+  }
+  .primary-btn:hover{ filter:brightness(1.08); }
+  .primary-btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .code-pill{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--panel-raised);
+    border:1px solid var(--border); padding:3px 8px; border-radius:6px; color:var(--signal);
+  }
+
+  .deficit-list{ list-style:none; margin:8px 0 0; padding:0; font-size:12.5px; }
+  .deficit-list li{ padding:5px 0 5px 16px; position:relative; color:var(--text); }
+  .deficit-list li::before{ content:'—'; position:absolute; left:0; color:var(--lesion); }
+
+  .slider-row{ display:flex; align-items:center; gap:12px; margin:10px 0; }
+  .slider-row input[type=range]{ flex:1; accent-color:var(--signal); }
+  .slider-val{ font-family:'IBM Plex Mono',monospace; font-size:13px; width:44px; text-align:right; color:var(--signal); }
+
+  .timer{ font-family:'IBM Plex Mono',monospace; font-size:28px; color:var(--lesion); }
+  .stat{ text-align:center; }
+  .stat .num{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; color:var(--signal); }
+  .stat .lbl{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+
+  .feedback{ margin-top:12px; padding:12px 14px; border-radius:8px; font-size:12.5px; }
+  .feedback.correct{ background:rgba(69,224,196,0.08); border:1px solid var(--signal-dim); color:var(--signal); }
+  .feedback.incorrect{ background:rgba(232,115,74,0.08); border:1px solid var(--lesion-dim); color:var(--lesion); }
+
+  .compare-cols{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .compare-col h3{ font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
+
+  .case-vignette{ font-size:13px; line-height:1.6; color:var(--text); }
+  .case-meta{ font-size:11px; color:var(--muted); margin-top:8px; }
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(4,6,10,0.72); display:none;
+    align-items:center; justify-content:center; z-index:50; padding:24px;
+  }
+  .overlay.show{ display:flex; }
+  .overlay-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    max-width:560px; width:100%; padding:26px 28px; max-height:80vh; overflow:auto;
+  }
+  .overlay-card h2{ font-size:16px; margin-bottom:4px; }
+  .overlay-card .close{ float:right; background:none; border:none; color:var(--muted); font-size:18px; }
+  .devnote{ margin:14px 0; font-size:12.5px; color:var(--text); line-height:1.55; }
+  .devnote strong{ color:var(--signal); display:block; margin-bottom:3px; font-size:12px; }
+
+  .calib-bar-row{ display:flex; align-items:center; gap:10px; margin:6px 0; font-size:11.5px; }
+  .calib-bar-row .bucket{ width:64px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
+  .calib-track{ flex:1; height:8px; background:var(--panel-raised); border-radius:4px; overflow:hidden; }
+  .calib-fill{ height:100%; background:var(--signal); }
+
+  @media (max-width:760px){
+    .app{ flex-direction:column; }
+    .rail{ width:100%; flex-direction:row; overflow-x:auto; padding:10px; gap:6px; }
+    .rail-header{ display:none; }
+    .rail-foot{ display:none; }
+    .main{ padding:20px 16px 50px; }
+    .compare-cols{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" data-a11y="false" id="appRoot">
+
+  <!-- ============ LEFT RAIL / MODE NAV ============ -->
+  <nav class="rail" id="rail">
+    <div class="rail-header">
+      <h1><span class="dot"></span>NEUROMAP</h1>
+      <p>Extension module · 7 modes</p>
+    </div>
+    <!-- tabs injected by JS -->
+    <div id="tabList"></div>
+    <div class="rail-foot">
+      <button class="ghost-btn" id="btnDevNotes">📝 Dev notes</button>
+      <button class="ghost-btn" id="btnA11y">♿ Accessibility mode</button>
+      <button class="ghost-btn" id="btnExport">⬇ Export dataset (JSON)</button>
+    </div>
+  </nav>
+
+  <!-- ============ MAIN CONTENT ============ -->
+  <main class="main" id="mainContent"></main>
+</div>
+
+<!-- ============ DEV NOTES OVERLAY ============ -->
+<div class="overlay" id="devOverlay">
+  <div class="overlay-card">
+    <button class="close" id="closeDevNotes">✕</button>
+    <h2>Design &amp; build notes</h2>
+    <p style="color:var(--muted);font-size:12px;">Why this module is built the way it is.</p>
+
+    <div class="devnote">
+      <strong>Data model</strong>
+      Every mode reads from one shared array (<code>REGIONS</code>) instead of maintaining
+      separate copies. Add a region once — DSM-5-TR code, ICD-11 code, function, deficits — and
+      it's automatically available in Explore, Reverse Diagnosis, Lesion Stacking, and Split Compare.
+    </div>
+    <div class="devnote">
+      <strong>Why in-memory state, not localStorage</strong>
+      Scores, streaks, and calibration history live in a JS object for this session only. If you want
+      persistence across visits, use the site's proper storage layer (a small backend, or the
+      artifact/app storage API) rather than browser storage, which isn't reliable across all embedding
+      contexts.
+    </div>
+    <div class="devnote">
+      <strong>Confidence calibration</strong>
+      Before revealing the answer in Reverse Diagnosis and Timed Triage, we ask "how confident are you?"
+      (0–100%). Over many rounds we bucket guesses by confidence and plot accuracy per bucket — a
+      well-calibrated user should be right ~70% of the time when they said "70% confident."
+    </div>
+    <div class="devnote">
+      <strong>Accessibility mode</strong>
+      Swaps the signal/lesion palette to a colorblind-safer blue/amber pairing (avoids red-green
+      reliance) and is meant to sit alongside — not replace — full keyboard navigation, which every
+      chip/tab already supports via native <code>button</code> elements and visible focus rings.
+    </div>
+    <div class="devnote">
+      <strong>What's sample data vs. what you own</strong>
+      The 10 regions and 4 historical cases here are placeholders with real, sourced clinical
+      information — but you should replace them with your existing 20-region dataset and cite your
+      actual references (DSM-5-TR, ICD-11, a neuroanatomy text) in a visible sources section.
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   DATA — replace with your real 20-region dataset. This is a 10-region
+   sample with sourced-style clinical detail so the logic below is testable.
+   ========================================================================= */
+const REGIONS = [
+  { id:'broca',   name:"Broca's Area",        lobe:'Frontal',
+    dsm5:'Language deficits reference criteria under Neurocognitive Disorders',
+    icd11:'MB4A (spoken language)',
+    deficits:['Non-fluent, effortful speech','Preserved comprehension','Awareness of own errors (frustration)'],
+    pathologyColor:'#E8734A' },
+  { id:'wernicke', name:"Wernicke's Area",     lobe:'Temporal',
+    dsm5:'Language deficits reference criteria under Neurocognitive Disorders',
+    icd11:'MB4A (spoken language)',
+    deficits:['Fluent but nonsensical speech','Impaired comprehension','Lack of awareness of deficit'],
+    pathologyColor:'#4EA8FF' },
+  { id:'hippocampus', name:'Hippocampus',      lobe:'Temporal (medial)',
+    dsm5:'Major/Mild Neurocognitive Disorder — amnestic profile',
+    icd11:'6D80–6D8Z (Neurocognitive disorders)',
+    deficits:['Anterograde amnesia (new memory formation)','Relatively preserved procedural memory','Preserved remote memories'],
+    pathologyColor:'#B98CF2' },
+  { id:'amygdala', name:'Amygdala',            lobe:'Temporal (medial)',
+    dsm5:'Relevant to fear-processing components of anxiety disorders',
+    icd11:'6B00–6B0Z (Anxiety or fear-related disorders, associated circuitry)',
+    deficits:['Blunted fear response','Impaired threat recognition in faces','Reduced emotional memory salience'],
+    pathologyColor:'#FFC857' },
+  { id:'prefrontal', name:'Prefrontal Cortex', lobe:'Frontal',
+    dsm5:'Executive dysfunction seen across ADHD and Neurocognitive Disorders',
+    icd11:'6A05 (ADHD), 6D80 (Neurocognitive)',
+    deficits:['Impaired planning and judgment','Disinhibition / impulsivity','Difficulty with working memory tasks'],
+    pathologyColor:'#45E0C4' },
+  { id:'basalganglia', name:'Basal Ganglia',   lobe:'Subcortical',
+    dsm5:'Movement-disorder-related; relevant to differential of catatonia',
+    icd11:'8A00–8A0Z (Movement disorders)',
+    deficits:['Bradykinesia / rigidity','Resting tremor','Difficulty initiating movement'],
+    pathologyColor:'#E8734A' },
+  { id:'cerebellum', name:'Cerebellum',        lobe:'Hindbrain',
+    dsm5:'Not primary DSM target; relevant to motor-coordination comorbidities',
+    icd11:'8A04 (Ataxia)',
+    deficits:['Ataxia (uncoordinated movement)','Intention tremor','Impaired balance / gait'],
+    pathologyColor:'#4EA8FF' },
+  { id:'occipital', name:'Occipital Lobe',     lobe:'Occipital',
+    dsm5:'Not a primary DSM target; relevant to visual-perceptual comorbidities',
+    icd11:'9D00–9D3Z (Visual disturbances)',
+    deficits:['Visual field cuts','Difficulty recognizing objects (visual agnosia)','Preserved verbal ability'],
+    pathologyColor:'#B98CF2' },
+  { id:'thalamus', name:'Thalamus',            lobe:'Subcortical (relay)',
+    dsm5:'Relevant to attention and consciousness-related presentations',
+    icd11:'8A00 (broad sensorimotor relay disruption)',
+    deficits:['Sensory processing disruption','Reduced arousal / attention','Possible thalamic pain syndrome'],
+    pathologyColor:'#FFC857' },
+  { id:'insula', name:'Insular Cortex',        lobe:'Deep within lateral sulcus',
+    dsm5:'Implicated in interoception relevant to anxiety and eating-related disorders',
+    icd11:'6B0Z (Anxiety, associated circuitry)',
+    deficits:['Impaired interoceptive awareness','Altered risk perception','Disrupted taste/disgust processing'],
+    pathologyColor:'#45E0C4' },
+];
+
+/* Historical cases — factual summaries in original wording, not quoted text. */
+const CASES = [
+  { id:'gage', name:'Patient — 1848, railroad construction foreman', correctRegionId:'prefrontal',
+    vignette:'An iron rod was driven through the front of the skull during a workplace accident. The patient survived, but colleagues described a marked change in temperament afterward — impulsive, profane, and unable to stick to plans he had previously been diligent about. Basic movement, speech, and memory were largely unaffected.',
+    explanation:'Classic teaching case for prefrontal-cortex damage: executive function and personality regulation impaired while motor and language systems stayed intact.' },
+  { id:'hm', name:'Patient — bilateral medial temporal lobe resection, 1950s', correctRegionId:'hippocampus',
+    vignette:'Following surgery intended to control severe seizures, the patient could no longer form new long-term memories, though memories from before the operation, and the ability to learn new physical skills, remained intact.',
+    explanation:'The single most cited case for the hippocampus\'s role in converting short-term experience into long-term declarative memory.' },
+  { id:'tan', name:"Patient known by the syllable he could still say, 1861", correctRegionId:'broca',
+    vignette:'The patient understood spoken language well and could follow conversation, but had lost almost all ability to produce fluent speech, able to reliably utter only a single repeated syllable.',
+    explanation:'Foundational case linking a left frontal lobe lesion to expressive (non-fluent) aphasia.' },
+  { id:'wernickecase', name:'Patient described in 1874 case reports', correctRegionId:'wernicke',
+    vignette:'The patient spoke fluently and with normal rhythm, but the sentences were largely meaningless strings of real and invented words, and the patient struggled to understand what was said to them.',
+    explanation:'Foundational case for receptive aphasia, localizing language comprehension to the posterior superior temporal lobe.' },
+];
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+const state = {
+  mode: 'explore',
+  a11y: false,
+  lesionStack: new Set(),
+  splitLeft: null,
+  splitRight: null,
+  triage: { active:false, score:0, streak:0, timeLeft:20, timerId:null, current:null, confidence:50, revealed:false },
+  reverseDx: { current:null, guess:null, confidence:50, revealed:false },
+  historical: { current:null, guess:null, revealed:false },
+  calibration: [], // {confidence, correct}
+};
+
+const TABS = [
+  { id:'explore',    label:'Explore',              n:'01' },
+  { id:'reverseDx',  label:'Reverse Diagnosis',    n:'02' },
+  { id:'lesionStack',label:'Lesion Stacking',      n:'03' },
+  { id:'splitCompare',label:'Split-Brain Compare', n:'04' },
+  { id:'triage',     label:'Timed Triage',         n:'05' },
+  { id:'historical', label:'Historical Cases',     n:'06' },
+  { id:'calibration',label:'Calibration Stats',    n:'07' },
+];
+
+/* =========================================================================
+   RENDER: RAIL
+   ========================================================================= */
+function renderTabs(){
+  const el = document.getElementById('tabList');
+  el.innerHTML = TABS.map(t => `
+    <button class="tab ${state.mode===t.id?'active':''}" data-mode="${t.id}">
+      <span class="n">${t.n}</span>${t.label}
+    </button>`).join('');
+  el.querySelectorAll('.tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ state.mode = btn.dataset.mode; renderAll(); });
+  });
+}
+
+/* =========================================================================
+   RENDER: MAIN — dispatches to each mode's render function
+   ========================================================================= */
+function renderMain(){
+  const main = document.getElementById('mainContent');
+  const renderers = {
+    explore: renderExplore,
+    reverseDx: renderReverseDx,
+    lesionStack: renderLesionStack,
+    splitCompare: renderSplitCompare,
+    triage: renderTriage,
+    historical: renderHistorical,
+    calibration: renderCalibration,
+  };
+  main.innerHTML = renderers[state.mode]();
+  wireMode(state.mode);
+}
+
+/* ---- 01 Explore (baseline region browser — swap for your real 3D viewer) ---- */
+function renderExplore(){
+  return `
+    <div class="panel-title">
+      <div><h2>Explore</h2><p>Select a region to view its clinical profile. In your live site this panel sits beside the 3D model — clicking a mesh region should call <code class="mono">selectRegion(id)</code> just like the buttons below do.</p></div>
+      <span class="badge">${REGIONS.length} regions loaded</span>
+    </div>
+    <div class="card">
+      <div class="grid">
+        ${REGIONS.map(r=>`<button class="chip" data-region="${r.id}">${r.name}<small>${r.lobe}</small></button>`).join('')}
+      </div>
+    </div>
+    <div id="exploreDetail"></div>
+  `;
+}
+function renderExploreDetail(id){
+  const r = REGIONS.find(x=>x.id===id);
+  if(!r) return '';
+  return `
+    <div class="card">
+      <h3>${r.name}</h3>
+      <div class="row" style="margin:8px 0;">
+        <span class="code-pill">DSM-5-TR: ${r.dsm5}</span>
+        <span class="code-pill">ICD-11: ${r.icd11}</span>
+      </div>
+      <ul class="deficit-list">${r.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>
+    </div>`;
+}
+
+/* ---- 02 Reverse Diagnosis ("Build-a-Deficit") ---- */
+function newReverseRound(){
+  const r = REGIONS[Math.floor(Math.random()*REGIONS.length)];
+  state.reverseDx = { current:r, guess:null, confidence:50, revealed:false };
+}
+function renderReverseDx(){
+  if(!state.reverseDx.current) newReverseRound();
+  const r = state.reverseDx.current;
+  const { guess, confidence, revealed } = state.reverseDx;
+  return `
+    <div class="panel-title">
+      <div><h2>Reverse Diagnosis</h2><p>You're given the symptom cluster. Click the region you think is damaged, set your confidence, then reveal.</p></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Symptom cluster</h3>
+      <ul class="deficit-list">${r.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>
+    </div>
+    <div class="card">
+      <div class="grid">
+        ${REGIONS.map(x=>`<button class="chip ${guess===x.id?'selected':''} ${revealed && x.id===guess && x.id!==r.id?'wrong':''}" data-guess="${x.id}" ${revealed?'disabled':''}>${x.name}</button>`).join('')}
+      </div>
+      <div class="slider-row">
+        <label style="font-size:12px;color:var(--muted);width:110px;">Confidence</label>
+        <input type="range" min="0" max="100" step="5" value="${confidence}" id="rdConfidence" ${revealed?'disabled':''}>
+        <span class="slider-val">${confidence}%</span>
+      </div>
+      <div class="row">
+        <button class="primary-btn" id="rdReveal" ${!guess || revealed?'disabled':''}>Reveal answer</button>
+        <button class="ghost-btn" id="rdNext" ${!revealed?'disabled':''}>Next case →</button>
+      </div>
+      ${revealed ? `<div class="feedback ${guess===r.id?'correct':'incorrect'}">
+          ${guess===r.id ? '✓ Correct.' : '✗ Not quite.'} The lesion is in the <strong>${r.name}</strong> (${r.lobe}).
+        </div>` : ''}
+    </div>
+  `;
+}
+
+/* ---- 03 Lesion Stacking ---- */
+function renderLesionStack(){
+  const stacked = [...state.lesionStack].map(id=>REGIONS.find(r=>r.id===id));
+  return `
+    <div class="panel-title">
+      <div><h2>Lesion Stacking</h2><p>Select multiple regions to simulate combined damage (e.g. a stroke spanning adjacent territories). The profile below merges all selected deficits.</p></div>
+      <span class="badge">${stacked.length} lesion${stacked.length===1?'':'s'} active</span>
+    </div>
+    <div class="card">
+      <div class="grid">
+        ${REGIONS.map(r=>`<button class="chip ${state.lesionStack.has(r.id)?'selected':''}" data-stack="${r.id}">${r.name}<small>${r.lobe}</small></button>`).join('')}
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button class="ghost-btn" id="clearStack">Clear all</button>
+      </div>
+    </div>
+    ${stacked.length ? `
+      <div class="card">
+        <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Combined patient profile</h3>
+        ${stacked.map(r=>`
+          <div style="margin-top:10px;">
+            <div class="code-pill" style="margin-bottom:4px;">${r.name}</div>
+            <ul class="deficit-list">${r.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>
+          </div>`).join('')}
+      </div>` : ''}
+  `;
+}
+
+/* ---- 04 Split-Brain Compare ---- */
+function renderSplitCompare(){
+  const L = REGIONS.find(r=>r.id===state.splitLeft);
+  const R = REGIONS.find(r=>r.id===state.splitRight);
+  const selectHtml = (side, current) => `
+    <select data-split="${side}" class="chip" style="width:100%;">
+      <option value="">— choose region —</option>
+      ${REGIONS.map(r=>`<option value="${r.id}" ${current===r.id?'selected':''}>${r.name}</option>`).join('')}
+    </select>`;
+  return `
+    <div class="panel-title">
+      <div><h2>Split-Brain Compare</h2><p>Pick two regions (e.g. healthy vs. pathological state) and compare their deficit profiles side by side.</p></div>
+    </div>
+    <div class="compare-cols">
+      <div class="card compare-col">
+        <h3>Left</h3>
+        ${selectHtml('left', state.splitLeft)}
+        ${L ? `<ul class="deficit-list" style="margin-top:12px;">${L.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>` : ''}
+      </div>
+      <div class="card compare-col">
+        <h3>Right</h3>
+        ${selectHtml('right', state.splitRight)}
+        ${R ? `<ul class="deficit-list" style="margin-top:12px;">${R.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>` : ''}
+      </div>
+    </div>
+    ${L && R ? `
+      <div class="card">
+        <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Non-overlapping deficits</h3>
+        <p style="font-size:12px;color:var(--muted);">Symptoms unique to each region — the differential clues a clinician would look for.</p>
+        <div class="compare-cols" style="margin-top:8px;">
+          <ul class="deficit-list">${L.deficits.filter(d=>!R.deficits.includes(d)).map(d=>`<li>${d}</li>`).join('') || '<li>No unique deficits</li>'}</ul>
+          <ul class="deficit-list">${R.deficits.filter(d=>!L.deficits.includes(d)).map(d=>`<li>${d}</li>`).join('') || '<li>No unique deficits</li>'}</ul>
+        </div>
+      </div>` : ''}
+  `;
+}
+
+/* ---- 05 Timed Triage ---- */
+function newTriageCase(){
+  state.triage.current = REGIONS[Math.floor(Math.random()*REGIONS.length)];
+  state.triage.revealed = false;
+  state.triage.confidence = 50;
+}
+function startTriage(){
+  state.triage.active = true; state.triage.score = 0; state.triage.streak = 0; state.triage.timeLeft = 20;
+  newTriageCase();
+  clearInterval(state.triage.timerId);
+  state.triage.timerId = setInterval(()=>{
+    state.triage.timeLeft--;
+    if(state.triage.timeLeft<=0){ endTriageRound(false); }
+    else { updateTriageTimerDisplay(); }
+  },1000);
+  renderMain();
+}
+function endTriageRound(wasCorrect){
+  state.triage.revealed = true;
+  state.calibration.push({ confidence: state.triage.confidence, correct: wasCorrect });
+  if(wasCorrect){ state.triage.score++; state.triage.streak++; }
+  else { state.triage.streak = 0; }
+  clearInterval(state.triage.timerId);
+  renderMain();
+}
+function updateTriageTimerDisplay(){
+  const el = document.getElementById('triageTimer');
+  if(el) el.textContent = state.triage.timeLeft + 's';
+}
+function renderTriage(){
+  const t = state.triage;
+  if(!t.active){
+    return `
+      <div class="panel-title"><div><h2>Timed Triage</h2><p>ER-style rapid rounds: localize the lesion before the clock runs out. Score and streak reset each session.</p></div></div>
+      <div class="card" style="text-align:center;padding:36px;">
+        <button class="primary-btn" id="startTriage">Start round (20s per case)</button>
+      </div>`;
+  }
+  const r = t.current;
+  return `
+    <div class="panel-title">
+      <div><h2>Timed Triage</h2><p>Pick the region before time runs out.</p></div>
+      <div class="row">
+        <div class="stat"><div class="num">${t.score}</div><div class="lbl">Score</div></div>
+        <div class="stat"><div class="num">${t.streak}</div><div class="lbl">Streak</div></div>
+        <div class="stat"><div class="num timer" id="triageTimer">${t.timeLeft}s</div><div class="lbl">Time</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <ul class="deficit-list">${r.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>
+    </div>
+    <div class="card">
+      <div class="grid">
+        ${REGIONS.map(x=>`<button class="chip" data-triageGuess="${x.id}" ${t.revealed?'disabled':''}>${x.name}</button>`).join('')}
+      </div>
+      ${t.revealed ? `
+        <div class="feedback ${t.lastCorrect?'correct':'incorrect'}">
+          ${t.lastCorrect? '✓ Correct — ':'✗ '} Answer: <strong>${r.name}</strong>
+        </div>
+        <div class="row" style="margin-top:10px;"><button class="primary-btn" id="nextTriage">Next case →</button></div>
+      ` : ''}
+    </div>
+  `;
+}
+
+/* ---- 06 Historical Cases ---- */
+function newHistoricalRound(){
+  const c = CASES[Math.floor(Math.random()*CASES.length)];
+  state.historical = { current:c, guess:null, revealed:false };
+}
+function renderHistorical(){
+  if(!state.historical.current) newHistoricalRound();
+  const { current:c, guess, revealed } = state.historical;
+  return `
+    <div class="panel-title">
+      <div><h2>Historical Cases</h2><p>Real case studies from the history of neuroscience. Read the vignette, localize the lesion.</p></div>
+    </div>
+    <div class="card">
+      <div class="code-pill" style="margin-bottom:8px;">${c.name}</div>
+      <p class="case-vignette">${c.vignette}</p>
+    </div>
+    <div class="card">
+      <div class="grid">
+        ${REGIONS.map(x=>`<button class="chip ${guess===x.id?'selected':''} ${revealed && x.id===guess && x.id!==c.correctRegionId?'wrong':''}" data-hguess="${x.id}" ${revealed?'disabled':''}>${x.name}</button>`).join('')}
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button class="primary-btn" id="hReveal" ${!guess || revealed?'disabled':''}>Reveal</button>
+        <button class="ghost-btn" id="hNext" ${!revealed?'disabled':''}>Next case →</button>
+      </div>
+      ${revealed ? `
+        <div class="feedback ${guess===c.correctRegionId?'correct':'incorrect'}">
+          ${guess===c.correctRegionId?'✓ Correct.':'✗ Not quite.'} ${c.explanation}
+        </div>
+        <p class="case-meta">Replace these vignettes with fully cited sources before publishing — attribute the original case reports.</p>
+      ` : ''}
+    </div>
+  `;
+}
+
+/* ---- 07 Calibration Stats ---- */
+function renderCalibration(){
+  const data = state.calibration;
+  if(!data.length){
+    return `
+      <div class="panel-title"><div><h2>Calibration Stats</h2><p>Play a few rounds of Timed Triage to generate calibration data — this tracks whether your confidence matches your actual accuracy.</p></div></div>
+      <div class="card" style="text-align:center;padding:30px;color:var(--muted);">No data yet.</div>`;
+  }
+  const buckets = [[0,20],[20,40],[40,60],[60,80],[80,101]];
+  const rows = buckets.map(([lo,hi])=>{
+    const inBucket = data.filter(d=>d.confidence>=lo && d.confidence<hi);
+    const acc = inBucket.length ? Math.round(100*inBucket.filter(d=>d.correct).length/inBucket.length) : null;
+    return { label:`${lo}-${hi<101?hi:100}%`, acc, n:inBucket.length };
+  });
+  return `
+    <div class="panel-title"><div><h2>Calibration Stats</h2><p>Accuracy vs. stated confidence, bucketed. A well-calibrated forecaster's bars roughly match their bucket label.</p></div></div>
+    <div class="card">
+      ${rows.map(r=>`
+        <div class="calib-bar-row">
+          <div class="bucket">${r.label}</div>
+          <div class="calib-track"><div class="calib-fill" style="width:${r.acc ?? 0}%;"></div></div>
+          <div style="width:70px;text-align:right;color:var(--muted);">${r.acc!==null ? r.acc+'% (n='+r.n+')' : '—'}</div>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+/* =========================================================================
+   WIRE UP interactions per mode (re-run after every render)
+   ========================================================================= */
+function wireMode(mode){
+  if(mode==='explore'){
+    document.querySelectorAll('[data-region]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('[data-region]').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('exploreDetail').innerHTML = renderExploreDetail(btn.dataset.region);
+      });
+    });
+  }
+
+  if(mode==='reverseDx'){
+    document.querySelectorAll('[data-guess]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ state.reverseDx.guess = btn.dataset.guess; renderMain(); });
+    });
+    const slider = document.getElementById('rdConfidence');
+    if(slider) slider.addEventListener('input', e=>{
+      state.reverseDx.confidence = +e.target.value;
+      document.querySelector('#mainContent .slider-val').textContent = e.target.value+'%';
+    });
+    const revealBtn = document.getElementById('rdReveal');
+    if(revealBtn) revealBtn.addEventListener('click', ()=>{
+      state.reverseDx.revealed = true;
+      state.calibration.push({ confidence: state.reverseDx.confidence, correct: state.reverseDx.guess===state.reverseDx.current.id });
+      renderMain();
+    });
+    const nextBtn = document.getElementById('rdNext');
+    if(nextBtn) nextBtn.addEventListener('click', ()=>{ newReverseRound(); renderMain(); });
+  }
+
+  if(mode==='lesionStack'){
+    document.querySelectorAll('[data-stack]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.dataset.stack;
+        state.lesionStack.has(id) ? state.lesionStack.delete(id) : state.lesionStack.add(id);
+        renderMain();
+      });
+    });
+    const clearBtn = document.getElementById('clearStack');
+    if(clearBtn) clearBtn.addEventListener('click', ()=>{ state.lesionStack.clear(); renderMain(); });
+  }
+
+  if(mode==='splitCompare'){
+    document.querySelectorAll('[data-split]').forEach(sel=>{
+      sel.addEventListener('change', e=>{
+        if(sel.dataset.split==='left') state.splitLeft = e.target.value || null;
+        else state.splitRight = e.target.value || null;
+        renderMain();
+      });
+    });
+  }
+
+  if(mode==='triage'){
+    const startBtn = document.getElementById('startTriage');
+    if(startBtn) startBtn.addEventListener('click', startTriage);
+    document.querySelectorAll('[data-triageGuess]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const correct = btn.dataset.triageguess === state.triage.current.id || btn.dataset.triageGuess === state.triage.current.id;
+        state.triage.lastCorrect = btn.getAttribute('data-triageGuess') === state.triage.current.id;
+        endTriageRound(state.triage.lastCorrect);
+      });
+    });
+    const nextBtn = document.getElementById('nextTriage');
+    if(nextBtn) nextBtn.addEventListener('click', ()=>{
+      newTriageCase();
+      state.triage.timeLeft = 20;
+      clearInterval(state.triage.timerId);
+      state.triage.timerId = setInterval(()=>{
+        state.triage.timeLeft--;
+        if(state.triage.timeLeft<=0) endTriageRound(false);
+        else updateTriageTimerDisplay();
+      },1000);
+      renderMain();
+    });
+  }
+
+  if(mode==='historical'){
+    document.querySelectorAll('[data-hguess]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ state.historical.guess = btn.dataset.hguess; renderMain(); });
+    });
+    const revealBtn = document.getElementById('hReveal');
+    if(revealBtn) revealBtn.addEventListener('click', ()=>{ state.historical.revealed = true; renderMain(); });
+    const nextBtn = document.getElementById('hNext');
+    if(nextBtn) nextBtn.addEventListener('click', ()=>{ newHistoricalRound(); renderMain(); });
+  }
+}
+
+/* =========================================================================
+   TOP-LEVEL CONTROLS: dev notes, accessibility, export
+   ========================================================================= */
+document.getElementById('btnDevNotes').addEventListener('click', ()=>{
+  document.getElementById('devOverlay').classList.add('show');
+});
+document.getElementById('closeDevNotes').addEventListener('click', ()=>{
+  document.getElementById('devOverlay').classList.remove('show');
+});
+document.getElementById('devOverlay').addEventListener('click', (e)=>{
+  if(e.target.id==='devOverlay') e.currentTarget.classList.remove('show');
+});
+
+document.getElementById('btnA11y').addEventListener('click', (e)=>{
+  state.a11y = !state.a11y;
+  document.getElementById('appRoot').setAttribute('data-a11y', state.a11y);
+  e.currentTarget.classList.toggle('on', state.a11y);
+});
+
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const dataset = { regions: REGIONS, historicalCases: CASES, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(dataset, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'neuromap-dataset.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+function renderAll(){ renderTabs(); renderMain(); }
+renderAll();
+</script>
+</body>
+</html>
