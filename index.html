@@ -16,7 +16,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
   :root{
     --bg:#04060a;
@@ -33,6 +33,7 @@
     --mono:'IBM Plex Mono', ui-monospace, monospace;
     --sans:'Inter', system-ui, sans-serif;
     --display:'Space Grotesk', sans-serif;
+    --serif:'Playfair Display', 'Times New Roman', serif;
   }
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--sans); }
@@ -48,54 +49,40 @@
     position:fixed; inset:0; z-index:50;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     text-align:center; padding:24px;
-    background:
-      radial-gradient(circle at 50% 20%, rgba(0,229,199,0.10), transparent 55%),
-      radial-gradient(circle at 80% 80%, rgba(124,92,255,0.08), transparent 50%),
-      #04060a;
+    background:#0a0e1a;
     overflow:hidden;
   }
-  #cover::before{
-    content:''; position:absolute; inset:0;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-    background-size:42px 42px;
-    mask-image: radial-gradient(circle at 50% 40%, black 0%, transparent 75%);
-  }
-  .cover-eyebrow{
-    font-family:var(--mono); font-size:12px; letter-spacing:0.28em; text-transform:uppercase;
-    color:var(--accent); border:1px solid var(--accent-dim); border-radius:999px;
-    padding:6px 16px; margin-bottom:26px; z-index:1;
-  }
+  .cover-logo{ z-index:1; margin-bottom:28px; width:150px; height:150px; }
+  .cover-logo .ring{ animation: spin-slow 14s linear infinite; transform-origin:75px 75px; }
+  @keyframes spin-slow{ from{ transform:rotate(0deg);} to{ transform:rotate(360deg);} }
+
   .cover-title{
-    font-family:var(--display); font-weight:700; z-index:1;
-    font-size:clamp(2.4rem, 7vw, 5rem); line-height:1.02; letter-spacing:-0.01em;
-    text-shadow: 0 0 40px rgba(0,229,199,0.35);
-    margin:0 0 18px;
+    font-family:var(--serif); font-weight:900; z-index:1;
+    text-transform:uppercase;
+    font-size:clamp(2.6rem, 8.5vw, 6.2rem); line-height:0.95; letter-spacing:0.01em;
+    margin:0;
+    color:#fbfcfe;
   }
-  .cover-title .hl{ color:var(--accent); }
+  .cover-byline{
+    z-index:1; font-family:var(--mono); font-size:clamp(11px, 1.6vw, 15px);
+    letter-spacing:0.32em; text-transform:uppercase; color:#dfe4ec;
+    margin:6px 0 30px;
+  }
   .cover-subtitle{
-    z-index:1; max-width:640px; color:var(--muted); font-size:1.05rem; line-height:1.65;
+    z-index:1; max-width:680px; color:#aab2c0; font-size:1.05rem; line-height:1.65;
     margin-bottom:38px;
   }
   .cta-launch{
     z-index:1; display:inline-flex; align-items:center; gap:10px;
-    background:var(--accent); color:#012; font-weight:600; font-size:1.02rem;
-    padding:15px 30px; border:none; border-radius:10px; cursor:pointer;
-    box-shadow:0 0 40px rgba(0,229,199,0.25);
+    background:#3b6df0; color:#fff; font-family:var(--sans); font-weight:700; font-size:1rem;
+    padding:16px 34px; border:none; border-radius:12px; cursor:pointer;
+    box-shadow:0 12px 30px rgba(59,109,240,0.35);
     transition:transform .15s ease, box-shadow .15s ease;
   }
-  .cta-launch:hover{ transform:translateY(-2px); box-shadow:0 0 55px rgba(0,229,199,0.4); }
-  .scroll-cue{
-    z-index:1; margin-top:46px; font-family:var(--mono); font-size:11px; letter-spacing:.15em;
-    color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:8px;
-    animation:bob 2s ease-in-out infinite;
-  }
-  .scroll-cue .arrow{ width:1px; height:26px; background:linear-gradient(var(--accent), transparent); }
-  @keyframes bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(8px);} }
+  .cta-launch:hover{ transform:translateY(-2px); box-shadow:0 16px 38px rgba(59,109,240,0.45); }
   .cover-disclaimer{
     position:absolute; bottom:18px; z-index:1; font-family:var(--mono); font-size:10.5px;
-    color:var(--muted); opacity:.7;
+    color:var(--muted); opacity:.6;
   }
 
   /* ============================================================
@@ -251,15 +238,47 @@
 
   <!-- ============ COVER ============ -->
   <section id="cover">
-    <span class="cover-eyebrow">Clinical Neuroanatomy Platform</span>
-    <h1 class="cover-title">NEURO3D<br><span class="hl">Interactive Clinical Brain Atlas</span></h1>
+    <svg class="cover-logo" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="75" cy="75" r="60" fill="none" stroke="#26324a" stroke-width="1" stroke-dasharray="2 5"/>
+      <line x1="75" y1="6"  x2="75" y2="18"  stroke="#33415c" stroke-width="1.5"/>
+      <line x1="75" y1="132" x2="75" y2="144" stroke="#33415c" stroke-width="1.5"/>
+      <line x1="6"  y1="75" x2="18"  y2="75" stroke="#33415c" stroke-width="1.5"/>
+      <line x1="132" y1="75" x2="144" y2="75" stroke="#33415c" stroke-width="1.5"/>
+
+      <g class="ring">
+        <ellipse cx="75" cy="75" rx="70" ry="26" transform="rotate(-18 75 75)" fill="none" stroke="#3b82f6" stroke-width="1.6"/>
+        <circle cx="139" cy="52" r="4.5" fill="#60a5fa"/>
+      </g>
+
+      <g transform="translate(75,75)">
+        <clipPath id="leftHalf"><rect x="-46" y="-36" width="46" height="72"/></clipPath>
+        <clipPath id="rightHalf"><rect x="0" y="-36" width="46" height="72"/></clipPath>
+
+        <g clip-path="url(#leftHalf)">
+          <path d="M -40,-20 Q -20,-35 0,-25 Q 15,-15 9,0 Q 15,15 0,25 Q -20,35 -40,20 Q -48,0 -40,-20 Z" fill="#0d1626" stroke="#233451" stroke-width="1"/>
+          <circle cx="-26" cy="-11" r="1" fill="#5b6b85"/>
+          <circle cx="-16" cy="9" r="1" fill="#5b6b85"/>
+          <circle cx="-31" cy="10" r="1" fill="#5b6b85"/>
+          <circle cx="-11" cy="-18" r="0.8" fill="#5b6b85"/>
+        </g>
+
+        <g clip-path="url(#rightHalf)">
+          <path d="M 40,-20 Q 20,-35 0,-25 Q -15,-15 -9,0 Q -15,15 0,25 Q 20,35 40,20 Q 48,0 40,-20 Z" fill="#1d4ed8" fill-opacity="0.16" stroke="#3b82f6" stroke-width="1"/>
+          <path d="M 36,-16 Q 15,-26 -3,-18" fill="none" stroke="#3b82f6" stroke-width="0.8" opacity="0.65"/>
+          <path d="M 39,-6  Q 12,-16 -6,-6"  fill="none" stroke="#3b82f6" stroke-width="0.8" opacity="0.65"/>
+          <path d="M 39,5   Q 12,15  -6,5"   fill="none" stroke="#3b82f6" stroke-width="0.8" opacity="0.65"/>
+          <path d="M 36,16  Q 15,26  -3,18"  fill="none" stroke="#3b82f6" stroke-width="0.8" opacity="0.65"/>
+        </g>
+      </g>
+    </svg>
+
+    <h1 class="cover-title">Neuro Atlas</h1>
+    <div class="cover-byline">by Aarsheya Vasavada</div>
     <p class="cover-subtitle">
-      Twenty anatomical regions mapped to physiological function, lesion deficits,
-      DSM-5-TR presentations, and ICD-11 classification — explore, simulate damage,
-      and test your localization skills in real time.
+      An interactive 3D human brain atlas integrating 21 anatomical structures with real-world clinical lesion
+      mapping, DSM-5-TR diagnostic criteria, and ICD classifications.
     </p>
-    <button class="cta-launch" id="btn-explore">Explore Atlas ↓</button>
-    <div class="scroll-cue"><span>SCROLL</span><span class="arrow"></span></div>
+    <button class="cta-launch" id="btn-explore">Explore 3D Brain Atlas ↓</button>
     <div class="cover-disclaimer">Educational reference only — not a diagnostic tool.</div>
   </section>
 
@@ -1005,7 +1024,7 @@ document.querySelectorAll('#slice-row .cam-btn[data-axis]').forEach(btn=>{
    pending professional medical-translation review)
    ========================================================================= */
 const I18N = {
-  en: { explore:'Explore Atlas ↓', search:'Search region, DSM-5, or ICD code…', lesion:'🩸 Lesion Mode', quiz:'🎯 Quiz Mode',
+  en: { explore:'Explore 3D Brain Atlas ↓', search:'Search region, DSM-5, or ICD code…', lesion:'🩸 Lesion Mode', quiz:'🎯 Quiz Mode',
         network:'🕸️ Networks', slice:'🔪 Slice View', refs:'📄 References', hint:'Drag to rotate · scroll to zoom · click a region to select it',
         cover:'↑ Cover' },
   es: { explore:'Explorar Atlas ↓', search:'Buscar región, DSM-5 o código CIE…', lesion:'🩸 Modo Lesión', quiz:'🎯 Modo Quiz',
