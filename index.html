@@ -108,7 +108,6 @@
     </main>
 
     <script>
-        // COMPLETE SAFEGUARDED BRAIN DATASET
         const brainData = [
             { id: "pfc", name: "Prefrontal Cortex", Brodmann: "BA 9, 10, 11, 46, 47", pos: [0, 1.2, 1.8], color: 0x3b82f6, radius: 0.7, function: "Executive functions, decision making, working memory, personality, and social behavior regulation.", lesion: "Executive dysfunction, apathy, disinhibition, impaired judgment, perseveration.", dsm: "Major Depressive Disorder, Schizophrenia, ADHD, Antisocial Personality Disorder.", icd: "ICD-11: 6A70 (Depressive Disorder), 6A20 (Schizophrenia)" },
             { id: "broca", name: "Broca's Area", Brodmann: "BA 44, 45", pos: [-1.1, 0.6, 1.4], color: 0x60a5fa, radius: 0.4, function: "Motor speech production, language processing, and syntactic comprehension.", lesion: "Broca's Aphasia (expressive, non-fluent speech with preserved comprehension).", dsm: "Neurodevelopmental Language Disorder, Major Neurocognitive Disorder due to Stroke.", icd: "ICD-10: R47.01 (Aphasia)" },
@@ -135,6 +134,7 @@
         let scene, camera, renderer, controls, raycaster, mouse;
         let brainMeshGroup = new THREE.Group();
         let regionMeshes = [];
+        let leftCortexWireframe, rightCortexWireframe;
         let selectedRegion = null;
         let currentMode = "anatomical";
 
@@ -156,10 +156,14 @@
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
             dirLight.position.set(5, 10, 7);
             scene.add(dirLight);
+
+            const pointLight = new THREE.PointLight(0x3b82f6, 1.5, 10);
+            pointLight.position.set(0, 0, 0);
+            scene.add(pointLight);
 
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
@@ -174,27 +178,58 @@
             animate();
         }
 
-        // GENERATE ANATOMICAL GYRI & SULCI TEXTURED MESHES
+        // GENERATE TRANSLUCENT WIREFRAME BRAIN SHELL WITH FLOATING GLOWING REGION SPHERES
         function buildBrainRegions() {
+            // 1. OUTER BRAIN CORTEX WIREFRAME SHELL (LEFT & RIGHT HEMISPHERES)
+            const outerShellGeo = new THREE.IcosahedronGeometry(1.8, 5);
+            const pos = outerShellGeo.attributes.position;
+            const v = new THREE.Vector3();
+            for (let i = 0; i < pos.count; i++) {
+                v.fromBufferAttribute(pos, i);
+                const noise = Math.sin(v.x * 4) * Math.cos(v.y * 4) * Math.sin(v.z * 4) * 0.15;
+                v.multiplyScalar(1 + noise);
+                pos.setXYZ(i, v.x, v.y, v.z);
+            }
+            outerShellGeo.computeVertexNormals();
+
+            const shellMat = new THREE.MeshBasicMaterial({
+                color: 0x1e293b,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.18
+            });
+
+            leftCortexWireframe = new THREE.Mesh(outerShellGeo, shellMat);
+            leftCortexWireframe.scale.set(0.9, 0.85, 1.2);
+            leftCortexWireframe.position.set(-0.85, 0.3, -0.1);
+            brainMeshGroup.add(leftCortexWireframe);
+
+            rightCortexWireframe = new THREE.Mesh(outerShellGeo, shellMat);
+            rightCortexWireframe.scale.set(0.9, 0.85, 1.2);
+            rightCortexWireframe.position.set(0.85, 0.3, -0.1);
+            brainMeshGroup.add(rightCortexWireframe);
+
+            // 2. INNER COLORED GLOWING REGION SPHERES / BLOBS
             brainData.forEach((data) => {
-                const geometry = new THREE.IcosahedronGeometry(data.radius, 4);
+                const geometry = new THREE.IcosahedronGeometry(data.radius * 0.65, 3);
                 
-                // Displace vertices to create brain gyri & sulci folds
-                const pos = geometry.attributes.position;
-                const v = new THREE.Vector3();
-                for (let i = 0; i < pos.count; i++) {
-                    v.fromBufferAttribute(pos, i);
-                    const noise = Math.sin(v.x * 6) * Math.cos(v.y * 6) * Math.sin(v.z * 6) * 0.15;
-                    v.multiplyScalar(1 + noise);
-                    pos.setXYZ(i, v.x, v.y, v.z);
+                const p = geometry.attributes.position;
+                const tempV = new THREE.Vector3();
+                for (let i = 0; i < p.count; i++) {
+                    tempV.fromBufferAttribute(p, i);
+                    const noise = Math.sin(tempV.x * 5) * Math.cos(tempV.y * 5) * 0.1;
+                    tempV.multiplyScalar(1 + noise);
+                    p.setXYZ(i, tempV.x, tempV.y, tempV.z);
                 }
                 geometry.computeVertexNormals();
 
                 const mat = new THREE.MeshPhongMaterial({
                     color: data.color,
-                    shininess: 30,
+                    emissive: data.color,
+                    emissiveIntensity: 0.35,
+                    shininess: 90,
                     transparent: true,
-                    opacity: 0.85
+                    opacity: 0.9
                 });
 
                 const mesh = new THREE.Mesh(geometry, mat);
@@ -213,7 +248,6 @@
             renderer.render(scene, camera);
         }
 
-        // SAFEGUARDED CLICK HANDLER
         function onCanvasClick(event) {
             const rect = renderer.domElement.getBoundingClientRect();
             mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -222,13 +256,11 @@
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(regionMeshes);
 
-            // Ensure intersect exists and has valid target data
             if (intersects.length > 0 && intersects[0]?.object?.userData?.id) {
                 selectRegion(intersects[0].object.userData.id);
             }
         }
 
-        // SAFEGUARDED REGION SELECTOR
         function selectRegion(id) {
             if (!id) return;
             const data = brainData.find(r => r.id === id);
@@ -239,8 +271,8 @@
             regionMeshes.forEach(mesh => {
                 if (mesh.userData && mesh.userData.id === id) {
                     mesh.material.opacity = 1.0;
-                    mesh.material.emissive.setHex(currentMode === 'lesion' ? 0xff0000 : 0x3b82f6);
-                    mesh.material.emissiveIntensity = 0.5;
+                    mesh.material.emissive.setHex(currentMode === 'lesion' ? 0xff0000 : 0x60a5fa);
+                    mesh.material.emissiveIntensity = 0.8;
                 } else if (mesh.material) {
                     mesh.material.opacity = 0.25;
                     mesh.material.emissive.setHex(0x000000);
@@ -250,12 +282,10 @@
             renderClinicalPanel(data);
         }
 
-        // SAFEGUARDED RENDERER WITH DEFENSIVE FALLBACKS
         function renderClinicalPanel(data) {
             const panel = document.getElementById("clinicalPanel");
             if (!panel) return;
 
-            // Safe property extractors (prevents "undefined")
             const name = data?.name || "Selected Region";
             const brodmann = data?.Brodmann || "Anatomical Region";
             const func = data?.function || "No functional description available.";
@@ -328,6 +358,11 @@
                     );
                 }
             });
+
+            if (leftCortexWireframe && rightCortexWireframe) {
+                leftCortexWireframe.position.x = -0.85 - factor * 0.8;
+                rightCortexWireframe.position.x = 0.85 + factor * 0.8;
+            }
         }
 
         function updateOpacity(val) {
@@ -340,6 +375,11 @@
                     mesh.material.opacity = opacity;
                 }
             });
+
+            if (leftCortexWireframe && rightCortexWireframe) {
+                leftCortexWireframe.material.opacity = opacity * 0.25;
+                rightCortexWireframe.material.opacity = opacity * 0.25;
+            }
         }
 
         function setMode(mode) {
@@ -350,12 +390,20 @@
             if (mode === "lesion") {
                 if (btnL) btnL.className = "flex-1 py-1.5 text-xs font-semibold rounded-md bg-red-600 text-white transition-all";
                 if (btnA) btnA.className = "flex-1 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all";
-                regionMeshes.forEach(m => m.material?.color?.setHex(0xd97706));
+                regionMeshes.forEach(m => {
+                    if (m.material) {
+                        m.material.color.setHex(0xd97706);
+                        m.material.emissive.setHex(0xd97706);
+                    }
+                });
             } else {
                 if (btnA) btnA.className = "flex-1 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white transition-all";
                 if (btnL) btnL.className = "flex-1 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all";
                 regionMeshes.forEach(m => {
-                    if (m.userData?.color) m.material?.color?.setHex(m.userData.color);
+                    if (m.userData?.color && m.material) {
+                        m.material.color.setHex(m.userData.color);
+                        m.material.emissive.setHex(m.userData.color);
+                    }
                 });
             }
 
