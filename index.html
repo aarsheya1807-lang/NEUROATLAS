@@ -3,9 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NeuroMap 3D | Anatomical Brain Explorer</title>
+  <title>NEURO3D — Interactive Clinical Brain Atlas</title>
   
-  <!-- Importmap for Three.js ES Modules -->
+  <!-- Tailwind CSS for styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* Custom Scrollbar & Dark Theme Utilities */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #0284c7; }
+    
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .glow-effect {
+      box-shadow: 0 0 25px rgba(14, 165, 233, 0.3);
+    }
+    
+    /* Parallax Scroll Container */
+    #main-container {
+      scroll-behavior: smooth;
+    }
+  </style>
+
+  <!-- ES Import Map for Three.js & OrbitControls -->
   <script type="importmap">
     {
       "imports": {
@@ -14,1870 +42,630 @@
       }
     }
   </script>
-
-  <style>
-    :root {
-      --bg-dark: #090d16;
-      --panel-bg: rgba(15, 23, 42, 0.90);
-      --panel-border: rgba(56, 189, 248, 0.2);
-      --accent: #38bdf8;
-      --danger: #ef4444;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      overflow: hidden;
-      height: 100vh;
-      width: 100vw;
-    }
-
-    #canvas-container {
-      width: 100vw;
-      height: 100vh;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-    }
-
-    .ui-panel {
-      position: absolute;
-      z-index: 10;
-      background: var(--panel-bg);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid var(--panel-border);
-      border-radius: 12px;
-      padding: 18px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-
-    #top-bar {
-      top: 16px;
-      left: 16px;
-      right: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .brand {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--accent);
-      letter-spacing: 0.5px;
-    }
-
-    .mode-selector {
-      display: flex;
-      gap: 8px;
-    }
-
-    button, select {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--panel-border);
-      color: var(--text-main);
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 500;
-      font-size: 0.85rem;
-      transition: all 0.2s ease;
-    }
-
-    select option {
-      background: #0f172a;
-      color: #fff;
-    }
-
-    button:hover {
-      background: var(--accent);
-      color: #000;
-    }
-
-    button.active {
-      background: var(--accent);
-      color: #000;
-      font-weight: 600;
-    }
-
-    #inspector {
-      top: 85px;
-      right: 16px;
-      width: 380px;
-      max-height: calc(100vh - 110px);
-      overflow-y: auto;
-    }
-
-    .select-label {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      display: block;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    #region-select {
-      width: 100%;
-      margin-bottom: 14px;
-    }
-
-    .struct-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--accent);
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-
-    .badge-normal { background: rgba(56, 189, 248, 0.2); color: var(--accent); }
-    .badge-lesion { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-
-    .section-desc {
-      font-size: 0.88rem;
-      line-height: 1.5;
-      color: var(--text-muted);
-      margin-bottom: 14px;
-    }
-
-    .diagnostic-box {
-      background: rgba(9, 13, 22, 0.7);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin-top: 10px;
-      font-size: 0.82rem;
-      line-height: 1.4;
-    }
-
-    .diagnostic-box header {
-      font-weight: 700;
-      color: var(--accent);
-      margin-bottom: 4px;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-    }
-
-    .clinical-box {
-      background: rgba(239, 68, 68, 0.1);
-      border-left: 3px solid var(--danger);
-      padding: 10px 12px;
-      border-radius: 0 6px 6px 0;
-      margin-top: 12px;
-      font-size: 0.82rem;
-    }
-
-    #game-banner {
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 600px;
-      max-width: 90vw;
-      text-align: center;
-      display: none;
-    }
-
-    #game-banner.active { display: block; }
-
-    .btn-danger { background: var(--danger); border-color: var(--danger); }
-    .btn-danger:hover { background: #dc2626; color: #fff; }
-
-    #inspector::-webkit-scrollbar { width: 5px; }
-    #inspector::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
-  </style>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased overflow-x-hidden selection:bg-sky-500 selection:text-white">
 
-  <div id="canvas-container"></div>
+  <!-- MAIN SCROLL CONTAINER -->
+  <div id="main-container" class="h-screen overflow-y-auto snap-y snap-mandatory">
 
-  <!-- Top Bar -->
-  <div id="top-bar" class="ui-panel">
-    <div class="brand">🧠 NeuroMap 3D Explorer</div>
-    <div class="mode-selector">
-      <button id="btn-explore" class="active" onclick="setMode('explore')">Explore Mode</button>
-      <button id="btn-lesion" onclick="setMode('lesion')">Virtual Lesion Mode</button>
-      <button id="btn-game" onclick="setMode('game')">Neuro-Detective Game</button>
-    </div>
+    <!-- ==================== COVER PAGE SECTION ==================== -->
+    <section class="h-screen w-full snap-start relative flex flex-col justify-between p-8 md:p-16 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black overflow-hidden">
+      <!-- Background Ambient Glows -->
+      <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-sky-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div class="absolute bottom-10 right-10 w-[300px] h-[300px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+      <!-- Header / Logo -->
+      <header class="relative z-10 flex justify-between items-center max-w-7xl mx-auto w-full">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-sky-500/30">
+            <i class="fa-solid fa-brain text-xl text-white"></i>
+          </div>
+          <span class="text-xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-300">
+            NEURO<span class="text-white">3D</span>
+          </span>
+        </div>
+        <span class="text-xs uppercase tracking-widest px-3 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-300">
+          Clinical Edition v2.0
+        </span>
+      </header>
+
+      <!-- Hero Content -->
+      <main class="relative z-10 max-w-4xl mx-auto text-center my-auto py-12">
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+          Interactive <span class="bg-clip-text text-transparent bg-gradient-to-r from-sky-400 via-cyan-300 to-indigo-400">3D Neuroanatomy</span> & Diagnostic Atlas
+        </h1>
+        <p class="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+          Bridge spatial neuroanatomy with clinical psychiatry and neurology. Explore 20 functional brain regions, simulate lesion deficits, and review localized DSM-5 and ICD criteria.
+        </p>
+        <a href="#atlas-section" class="inline-flex items-center gap-3 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-xl shadow-sky-500/25 glow-effect">
+          <span>Launch 3D Explorer</span>
+          <i class="fa-solid fa-arrow-down"></i>
+        </a>
+      </main>
+
+      <!-- Footer / Scroll Prompt -->
+      <div class="relative z-10 text-center animate-bounce text-slate-500 text-sm flex flex-col items-center gap-2">
+        <span>Scroll down to enter 3D viewport</span>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </section>
+
+
+    <!-- ==================== 3D ATLAS SECTION ==================== -->
+    <section id="atlas-section" class="h-screen w-full snap-start relative flex flex-col md:flex-row overflow-hidden bg-slate-950">
+      
+      <!-- 3D CANVAS VIEWPORT -->
+      <div class="relative flex-1 h-2/3 md:h-full w-full bg-slate-950">
+        <canvas id="brain-canvas" class="w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+
+        <!-- FLOATING TOP CONTROLS -->
+        <div class="absolute top-4 left-4 right-4 flex flex-wrap gap-3 justify-between items-center pointer-events-none">
+          
+          <!-- Search Bar -->
+          <div class="relative w-full max-w-xs pointer-events-auto">
+            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="search-input" placeholder="Search region, DSM-5, or ICD..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:border-sky-500 glass-panel shadow-lg">
+            <div id="search-results" class="hidden absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-2xl z-50 max-h-60 overflow-y-auto"></div>
+          </div>
+
+          <!-- Camera Presets -->
+          <div class="flex gap-1.5 pointer-events-auto bg-slate-900/80 p-1 rounded-xl border border-slate-800 glass-panel shadow-lg">
+            <button onclick="setCameraView('lateral')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-sky-600 transition-colors">Lateral</button>
+            <button onclick="setCameraView('medial')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-sky-600 transition-colors">Medial</button>
+            <button onclick="setCameraView('superior')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-sky-600 transition-colors">Superior</button>
+            <button onclick="setCameraView('limbic')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-sky-600 transition-colors">Limbic</button>
+            <button onclick="setCameraView('reset')" class="px-2 py-1.5 text-xs rounded-lg bg-slate-800 hover:bg-rose-600 transition-colors" title="Reset Camera"><i class="fa-solid fa-arrow-rotate-left"></i></button>
+          </div>
+        </div>
+
+        <!-- FLOATING BOTTOM CONTROLS (Sliders & Toggles) -->
+        <div class="absolute bottom-4 left-4 right-4 md:right-auto md:max-w-md pointer-events-auto flex flex-col gap-3 glass-panel p-4 rounded-2xl border border-slate-800 shadow-xl">
+          
+          <!-- Mode Toggles -->
+          <div class="flex items-center justify-between gap-4 pb-2 border-b border-slate-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Visualization Mode</span>
+            <div class="flex gap-2">
+              <button id="btn-anatomical" onclick="setMode('anatomical')" class="px-3 py-1 text-xs rounded-lg bg-sky-500 font-bold text-slate-950 transition-all">Anatomical</button>
+              <button id="btn-lesion" onclick="setMode('lesion')" class="px-3 py-1 text-xs rounded-lg bg-slate-800 hover:bg-rose-900/60 font-bold text-rose-300 transition-all border border-rose-500/30">
+                <i class="fa-solid fa-triangle-exclamation mr-1"></i> Lesion Mode
+              </button>
+            </div>
+          </div>
+
+          <!-- Sliders -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <div class="flex justify-between text-xs text-slate-400 mb-1">
+                <span>Exploded View</span>
+                <span id="exploded-val">0%</span>
+              </div>
+              <input id="slider-exploded" type="range" min="0" max="100" value="0" class="w-full accent-sky-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs text-slate-400 mb-1">
+                <span>Cortex Opacity</span>
+                <span id="opacity-val">100%</span>
+              </div>
+              <input id="slider-opacity" type="range" min="20" max="100" value="100" class="w-full accent-sky-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+        <!-- Hover Tooltip -->
+        <div id="hover-tooltip" class="hidden absolute pointer-events-none px-3 py-1.5 rounded-lg bg-slate-900/90 text-sky-300 border border-sky-500/40 text-xs font-bold shadow-xl"></div>
+      </div>
+
+      <!-- CLINICAL DATA PANEL (SIDEBAR) -->
+      <div class="w-full md:w-[420px] h-1/3 md:h-full bg-slate-900 border-t md:border-t-0 md:border-l border-slate-800 flex flex-col justify-between overflow-hidden glass-panel">
+        
+        <!-- Sidebar Header -->
+        <div class="p-5 border-b border-slate-800/80 flex justify-between items-center bg-slate-950/40">
+          <div>
+            <span class="text-[10px] uppercase tracking-widest text-sky-400 font-bold">Selected Structure</span>
+            <h2 id="panel-title" class="text-2xl font-extrabold text-white">Select a Region</h2>
+            <p id="panel-latin" class="text-xs text-slate-400 italic">Click any structure on the 3D brain canvas</p>
+          </div>
+          <span id="panel-broadmann" class="text-xs px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-sky-300 font-mono">BA --</span>
+        </div>
+
+        <!-- Sidebar Scrollable Body -->
+        <div class="p-5 overflow-y-auto flex-1 space-y-6 text-sm">
+          
+          <!-- Normal Function -->
+          <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+            <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-gear text-sky-400"></i> Physiological Function
+            </h3>
+            <p id="panel-function" class="text-slate-300 leading-relaxed text-xs">
+              Select an anatomical region from the 3D model to inspect its core functional roles and pathways.
+            </p>
+          </div>
+
+          <!-- Lesion / Damage Outcomes -->
+          <div id="panel-lesion-box" class="bg-rose-950/20 p-4 rounded-xl border border-rose-900/30">
+            <h3 class="text-xs uppercase font-bold text-rose-400 tracking-wider mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-heart-pulse text-rose-400"></i> Lesion Deficit Profile
+            </h3>
+            <p id="panel-lesion" class="text-slate-300 leading-relaxed text-xs">
+              Lesion outcomes and structural damage symptoms will appear here when selected.
+            </p>
+          </div>
+
+          <!-- DSM-5 Diagnostic Criteria -->
+          <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+            <h3 class="text-xs uppercase font-bold text-indigo-400 tracking-wider mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-book-medical text-indigo-400"></i> Associated DSM-5 Criteria
+            </h3>
+            <ul id="panel-dsm" class="list-disc list-inside text-slate-300 text-xs space-y-1">
+              <li class="italic text-slate-500">No region selected</li>
+            </ul>
+          </div>
+
+          <!-- ICD Diagnostic Codes -->
+          <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+            <h3 class="text-xs uppercase font-bold text-emerald-400 tracking-wider mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-hashtag text-emerald-400"></i> ICD Diagnostic Classifications
+            </h3>
+            <div id="panel-icd" class="flex flex-wrap gap-2 pt-1">
+              <span class="text-slate-500 italic text-xs">No ICD codes loaded</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar Footer / Quick Info -->
+        <div class="p-3 border-t border-slate-800/80 bg-slate-950/60 text-[11px] text-slate-500 flex justify-between items-center">
+          <span>3D Coordinates: <span id="panel-coords" class="font-mono text-slate-400">(0,0,0)</span></span>
+          <span class="text-sky-400/80"><i class="fa-solid fa-circle-info mr-1"></i> Interactive Mesh Mode</span>
+        </div>
+      </div>
+    </section>
   </div>
 
-  <!-- Inspector Panel -->
-  <div id="inspector" class="ui-panel">
-    <label class="select-label" for="region-select">Select Brain Region (20 Structures)</label>
-    <select id="region-select" onchange="onSelectDropdown(this.value)">
-      <option value="">-- Choose a Region --</option>
-    </select>
-
-    <div id="struct-name" class="struct-title">Anatomical Brain Viewer</div>
-    <div id="status-badge" class="badge badge-normal">Healthy State</div>
-    <div id="struct-desc" class="section-desc">Click on any 3D brain region or pick one from the menu to analyze its clinical function, DSM-5-TR, and ICD-11 classifications.</div>
-
-    <div id="dsm-container" class="diagnostic-box" style="display: none;">
-      <header>DSM-5-TR Diagnostic Code</header>
-      <div id="dsm-text"></div>
-    </div>
-
-    <div id="icd-container" class="diagnostic-box" style="display: none;">
-      <header>ICD-11 Classification</header>
-      <div id="icd-text"></div>
-    </div>
-
-    <div id="clinical-block" class="clinical-box" style="display: none;">
-      <strong>Lesion Deficit Profile:</strong>
-      <p id="struct-clinical" style="margin-top: 4px;"></p>
-    </div>
-
-    <div id="action-controls" style="margin-top: 14px; display: none;">
-      <button id="btn-toggle-lesion" class="btn-danger" style="width: 100%;" onclick="toggleCurrentLesion()">Apply Virtual Lesion</button>
-    </div>
-  </div>
-
-  <!-- Game Panel -->
-  <div id="game-banner" class="ui-panel">
-    <h3 style="color: var(--accent); margin-bottom: 6px;">Neuro-Detective Clinical Challenge</h3>
-    <p id="game-case-text" style="font-size: 0.9rem; margin-bottom: 10px; color: var(--text-muted);"></p>
-    <div id="game-feedback" style="font-weight: 600; margin-bottom: 8px; min-height: 20px;"></div>
-    <button onclick="nextGameCase()">Next Case</button>
-  </div>
-
-  <!-- Three.js App -->
+  <!-- THREE.JS & APPLICATION SCRIPT -->
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // =========================================================================
-    // 1. DATASET: 20 REGIONS WITH DSM-5-TR & ICD-11 CODES
-    // =========================================================================
+    // ==================== 20 ANATOMICAL REGIONS DATA ====================
     const BRAIN_REGIONS = [
-      {
-        id: 'dorsolateral_pfc',
-        name: 'Dorsolateral Prefrontal Cortex (dlPFC)',
-        pos: [0.7, 1.2, 1.1],
-        scale: [0.35, 0.35, 0.35],
-        color: 0x38bdf8,
-        function: 'Executive functions, working memory, top-down attention, cognitive flexibility.',
-        lesionDeficit: 'Dysexecutive syndrome, severe impairment in planning and goal-directed behavior.',
-        dsm: 'Major Neurocognitive Disorder (Executive Domain) / ADHD (6A05)',
-        icd: '6D70 Major neurocognitive disorder / 6A05 Attention deficit hyperactivity disorder'
+      { id: 'pfc', name: 'Prefrontal Cortex', latin: 'Cortex Praefrontalis', ba: 'BA 9, 10, 11, 46', pos: [0, 1.2, 2.2], size: [1.8, 1.2, 1.2], color: 0x38bdf8,
+        function: 'Executive functioning, working memory, decision making, social cognition, and personality expression.',
+        lesion: 'Executive dysfunction, apathy, disinhibition, poor judgment (Phineas Gage syndrome), emotional lability.',
+        dsm: ['Major Depressive Disorder', 'ADHD (Inattentive type)', 'Schizophrenia (Negative symptoms)', 'Frontotemporal Dementia'],
+        icd: ['F90.9 (ADHD)', 'F32.9 (Depression)', 'G31.0 (Frontotemporal Degeneration)']
       },
-      {
-        id: 'ventromedial_pfc',
-        name: 'Ventromedial Prefrontal Cortex (vmPFC)',
-        pos: [0.0, 0.5, 1.4],
-        scale: [0.3, 0.3, 0.3],
-        color: 0x4ade80,
-        function: 'Processing risk, moral decision-making, social cognitive processing, fear extinction.',
-        lesionDeficit: 'Phineas Gage phenotype: social disinhibition, impaired moral judgment, acquired sociopathy.',
-        dsm: 'Antisocial Personality Disorder (301.7) / Conduct Disorder',
-        icd: '6D11.0 Antisocial personality disorder / 6C90 Conduct-dissocial disorder'
+      { id: 'broca', name: "Broca's Area", latin: 'Pars Opercularis & Triangularis', ba: 'BA 44, 45', pos: [-1.4, 0.4, 1.8], size: [0.7, 0.6, 0.6], color: 0x818cf8,
+        function: 'Motor production of speech, grammatical structure processing, and language fluency.',
+        lesion: "Broca's Expressive Aphasia (non-fluent, halting speech with intact comprehension), agrammatism.",
+        dsm: ['Neurocognitive Disorder due to Stroke', 'Developmental Speech Disorder'],
+        icd: ['R47.01 (Aphasia)', 'I63.9 (Cerebral Infarction)']
       },
-      {
-        id: 'brocas_area',
-        name: "Broca's Area (Brodmann 44/45)",
-        pos: [-1.2, 0.6, 0.8],
-        scale: [0.28, 0.28, 0.28],
-        color: 0xf97316,
-        function: 'Motor planning for speech articulation, syntactic sentence construction.',
-        lesionDeficit: "Broca's (Expressive) Aphasia: Non-fluent, halting speech with intact comprehension.",
-        dsm: 'Developmental Speech Sound Disorder / Neurogenic Communication Deficit',
-        icd: 'MA80.0 Expressive language disorder / 6A01.2 Developmental language disorder'
+      { id: 'wernicke', name: "Wernicke's Area", latin: 'Cortex Posterior Temporalis', ba: 'BA 22', pos: [-1.7, -0.2, -0.6], size: [0.7, 0.6, 0.7], color: 0xc084fc,
+        function: 'Receptive language comprehension and semantic decoding of spoken and written words.',
+        lesion: "Wernicke's Fluent Aphasia (rapid, jargon-filled speech with severely impaired comprehension).",
+        dsm: ['Neurocognitive Disorder with Language Impairment'],
+        icd: ['R47.01 (Aphasia)', 'F80.2 (Receptive Language Disorder)']
       },
-      {
-        id: 'wernickes_area',
-        name: "Wernicke's Area (Brodmann 22)",
-        pos: [-1.3, 0.3, -0.6],
-        scale: [0.28, 0.28, 0.28],
-        color: 0xa855f7,
-        function: 'Auditory language comprehension, semantic representation processing.',
-        lesionDeficit: "Wernicke's (Receptive) Aphasia: Fluent but meaningless 'word salad' speech, loss of comprehension.",
-        dsm: 'Receptive Language Impairment / Neurocognitive Communication Domain',
-        icd: '6A01.21 Developmental language disorder with receptive impairment'
+      { id: 'motor', name: 'Primary Motor Cortex', latin: 'Gyrus Praecentralis', ba: 'BA 4', pos: [0, 1.8, 0.6], size: [2.2, 0.6, 0.6], color: 0xf43f5e,
+        function: 'Voluntary motor control execution following topographical body map (motor homunculus).',
+        lesion: 'Contralateral hemiparesis or hemiplegia, loss of fine motor coordination.',
+        dsm: ['Conversion Disorder (Functional Neurological Symptom Disorder with motor deficit)'],
+        icd: ['G81.9 (Hemiplegia)', 'F44.4 (Conversion Motor Deficit)']
       },
-      {
-        id: 'amygdala',
-        name: 'Amygdala (Basolateral & Central)',
-        pos: [-0.6, -0.2, 0.3],
-        scale: [0.22, 0.22, 0.22],
-        color: 0xef4444,
-        function: 'Threat processing, fear conditioning, emotional memory tagging.',
-        lesionDeficit: 'Klüver-Bucy syndrome (docility, hyperorality, hypersexuality, complete absence of fear).',
-        dsm: 'Post-Traumatic Stress Disorder (309.81) / Generalized Anxiety Disorder (300.02)',
-        icd: '6B40 Post traumatic stress disorder / 6B00 Generalized anxiety disorder'
+      { id: 'somato', name: 'Somatosensory Cortex', latin: 'Gyrus Postcentralis', ba: 'BA 1, 2, 3', pos: [0, 1.8, -0.1], size: [2.2, 0.6, 0.6], color: 0xf97316,
+        function: 'Processing tactile sensations (touch, pain, temperature, proprioception) from the opposite side of the body.',
+        lesion: 'Contralateral somatosensory loss, astereognosis (inability to identify objects by touch).',
+        dsm: ['Somatic Symptom Disorder', 'Central Pain Syndrome'],
+        icd: ['R20.8 (Sensory Disturbances)', 'F45.1 (Somatic Symptom Disorder)']
       },
-      {
-        id: 'hippocampus',
-        name: 'Hippocampus (CA1-CA3 & Dentate Gyrus)',
-        pos: [0.6, -0.2, 0.0],
-        scale: [0.25, 0.2, 0.45],
-        color: 0x14b8a6,
-        function: 'Consolidation of episodic and declarative memory, spatial mapping.',
-        lesionDeficit: 'Dense anterograde amnesia (inability to form new declarative memories).',
-        dsm: 'Major Neurocognitive Disorder due to Alzheimer’s Disease (331.0)',
-        icd: '6D70 & 8A20.0 Alzheimer disease with major neurocognitive disorder'
+      { id: 'occipital', name: 'Primary Visual Cortex', latin: 'Cortex Visualis Primarius', ba: 'BA 17', pos: [0, 0.3, -2.5], size: [1.8, 1.0, 0.9], color: 0xeab308,
+        function: 'Initial processing of visual input (lines, contrast, spatial orientation).',
+        lesion: 'Cortical blindness, contralateral homonymous hemianopia, visual agnosia.',
+        dsm: ['Hallucinogen Persisting Perception Disorder (HPPD)', 'Neurocognitive Disorder with Visual Agnosia'],
+        icd: ['H53.4 (Visual Field Defects)', 'F16.983 (HPPD)']
       },
-      {
-        id: 'nucleus_accumbens',
-        name: 'Nucleus Accumbens (Ventral Striatum)',
-        pos: [0.25, 0.1, 0.5],
-        scale: [0.22, 0.22, 0.22],
-        color: 0xeab308,
-        function: 'Dopaminergic reward gateway, incentive salience, motivation.',
-        lesionDeficit: 'Anhedonia, avolition, severe apathy, loss of goal-directed motivation.',
-        dsm: 'Substance Use Disorders / Gambling Disorder (312.31) / Major Depression',
-        icd: '6C40 Alcohol use disorder / 6C50 Gambling disorder / 6A70 Depressive disorder'
+      { id: 'temporal_l', name: 'Left Temporal Lobe', latin: 'Lobus Temporalis Sinister', ba: 'BA 20, 21, 38', pos: [-1.8, -0.6, 0.5], size: [0.8, 0.8, 1.6], color: 0xa855f7,
+        function: 'Auditory processing, verbal memory, complex visual pattern recognition.',
+        lesion: 'Verbal memory impairment, auditory hallucinations, temporal lobe epilepsy symptoms.',
+        dsm: ['Schizophrenia (Auditory Hallucinations focus)', 'Temporal Lobe Epilepsy with Psychiatric Features'],
+        icd: ['G40.2 (Temporal Lobe Epilepsy)', 'F20.0 (Paranoid Schizophrenia)']
       },
-      {
-        id: 'substantia_nigra',
-        name: 'Substantia Nigra (Pars Compacta)',
-        pos: [0.2, -0.6, -0.3],
-        scale: [0.2, 0.2, 0.2],
-        color: 0x9333ea,
-        function: 'Synthesis of dopamine supplying the dorsal basal ganglia motor loop.',
-        lesionDeficit: 'Parkinsonian symptoms: resting tremor, muscle rigidity, bradykinesia.',
-        dsm: 'Major Neurocognitive Disorder due to Parkinson’s Disease (332.0)',
-        icd: '8A00.0 Idiopathic Parkinsonism / 6D70 Major neurocognitive disorder'
+      { id: 'temporal_r', name: 'Right Temporal Lobe', latin: 'Lobus Temporalis Dexter', ba: 'BA 20, 21, 38', pos: [1.8, -0.6, 0.5], size: [0.8, 0.8, 1.6], color: 0xa855f7,
+        function: 'Non-verbal memory, spatial orientation, prosody comprehension, music perception.',
+        lesion: 'Amusia, inability to recognize facial expressions, non-verbal memory loss.',
+        dsm: ['Prosopagnosia / Agnosia', 'Social (Pragmatic) Communication Disorder'],
+        icd: ['R48.1 (Agnosia)', 'F88 (Other Disorders of Psychological Development)']
       },
-      {
-        id: 'thalamus',
-        name: 'Thalamus',
-        pos: [0.0, 0.1, -0.1],
-        scale: [0.45, 0.35, 0.5],
-        color: 0xf97316,
-        function: 'Sensory relay hub (except olfaction), cortical gating, sleep/arousal modulation.',
-        lesionDeficit: 'Thalamic pain syndrome (Dejerine-Roussy), sensory loss, coma/stupor.',
-        dsm: 'Sleep-Wake Disorders / Altered States of Consciousness',
-        icd: '7A00 Dyssomnias / 8E20 Alterations of consciousness'
+      { id: 'parietal_l', name: 'Left Parietal Lobe', latin: 'Lobus Parietalis Sinister', ba: 'BA 5, 7, 39, 40', pos: [-1.4, 1.4, -1.2], size: [1.2, 0.9, 1.2], color: 0x10b981,
+        function: 'Spatial integration, numerical processing, writing, and left-right orientation.',
+        lesion: "Gerstmann's Syndrome (Acalculia, Agraphia, Finger Agnosia, Left-Right confusion).",
+        dsm: ['Specific Learning Disorder (with impairment in mathematics / written expression)'],
+        icd: ['F81.2 (Mathematics Disorder)', 'R48.8 (Other Symbolic Dysfunctions)']
       },
-      {
-        id: 'hypothalamus',
-        name: 'Hypothalamus',
-        pos: [0.0, -0.25, 0.25],
-        scale: [0.25, 0.2, 0.25],
-        color: 0xd97706,
-        function: 'HPA axis neuroendocrine control, autonomic regulation, hunger, temperature.',
-        lesionDeficit: 'Poikilothermia, diabetes insipidus, hyperphagia or severe anorexia.',
-        dsm: 'Anorexia Nervosa (307.1) / Insomnia Disorder (307.42)',
-        icd: '6B80 Anorexia nervosa / 7A20 Insomnia disorder'
+      { id: 'parietal_r', name: 'Right Parietal Lobe', latin: 'Lobus Parietalis Dexter', ba: 'BA 5, 7, 39, 40', pos: [1.4, 1.4, -1.2], size: [1.2, 0.9, 1.2], color: 0x10b981,
+        function: 'Visuospatial awareness, constructional praxis, spatial attention.',
+        lesion: 'Hemispatial Neglect Syndrome (ignoring the left side of space or body), constructional apraxia.',
+        dsm: ['Unilateral Spatial Neglect due to Vascular Insult'],
+        icd: ['R41.89 (Spatial Neglect)', 'I69.39 (Sequelae of Cerebrovascular Disease)']
       },
-      {
-        id: 'anterior_cingulate',
-        name: 'Anterior Cingulate Cortex (ACC)',
-        pos: [0.0, 0.8, 0.5],
-        scale: [0.2, 0.35, 0.6],
-        color: 0x0d9488,
-        function: 'Conflict detection, cognitive error monitoring, affective pain processing.',
-        lesionDeficit: 'Akinetic mutism (awake but neither moves nor speaks), impaired error detection.',
-        dsm: 'Obsessive-Compulsive Disorder (300.3) / Major Depressive Disorder',
-        icd: '6B20 Obsessive-compulsive disorder / 6A71 Recurrent depressive disorder'
+      { id: 'hippocampus', name: 'Hippocampus', latin: 'Hippocampus Proper', ba: 'BA 34, 35', pos: [-0.6, -0.5, 0.1], size: [0.5, 0.4, 1.1], color: 0x06b6d4, deep: true,
+        function: 'Consolidation of short-term memory into long-term declarative memory; spatial navigation.',
+        lesion: 'Severe Anterograde Amnesia (inability to form new declarative memories).',
+        dsm: ["Alzheimer's Disease (Early Stage)", 'Major Neurocognitive Disorder due to Amnestic Syndrome'],
+        icd: ['G30.9 (Alzheimer Disease)', 'F04 (Amnestic Disorder)']
       },
-      {
-        id: 'fusiform_gyrus',
-        name: 'Fusiform Face Area (FFA)',
-        pos: [0.7, -0.7, -0.5],
-        scale: [0.3, 0.2, 0.45],
-        color: 0x16a34a,
-        function: 'Visual facial recognition and complex visual category processing.',
-        lesionDeficit: 'Prosopagnosia (face blindness - inability to recognize familiar human faces).',
-        dsm: 'Neurodevelopmental Visual Agnosias / Autism facial processing subset',
-        icd: '6A02 Autism spectrum disorder / MB20.1 Agnosia'
+      { id: 'amygdala', name: 'Amygdala', latin: 'Corpus Amygdaloideum', ba: 'BA 28, 34', pos: [0.6, -0.5, 0.8], size: [0.4, 0.4, 0.5], color: 0xec4899, deep: true,
+        function: 'Emotional processing, threat detection, fear conditioning, and stress response moderation.',
+        lesion: 'Klüver-Bucy Syndrome (hyperorality, loss of fear response, placidity), fear extinction deficits.',
+        dsm: ['Post-Traumatic Stress Disorder (PTSD)', 'Panic Disorder', 'Generalized Anxiety Disorder'],
+        icd: ['F43.10 (PTSD)', 'F41.0 (Panic Disorder)']
       },
-      {
-        id: 'cerebellum',
-        name: 'Cerebellum (Hemispheres)',
-        pos: [0.0, -1.1, -1.1],
-        scale: [1.1, 0.65, 0.75],
-        color: 0xd97706,
-        function: 'Motor coordination, precision timing, balance, internal predictive motor models.',
-        lesionDeficit: 'Ataxia, dysmetria (past-pointing), intention tremor, dysdiadochokinesia.',
-        dsm: 'Substance-Induced Persisting Ataxia / Cerebellar Cognitive Affective Syndrome',
-        icd: '8A03 Hereditary and acquired ataxia / 6C40.2 Alcohol movement disorder'
+      { id: 'thalamus', name: 'Thalamus', latin: 'Thalamus Opticus', ba: 'Subcortical', pos: [0, 0.1, -0.2], size: [1.0, 0.8, 0.9], color: 0x6366f1, deep: true,
+        function: 'Relay station for sensory and motor signals to the cerebral cortex; sleep and alertness regulation.',
+        lesion: 'Thalamic pain syndrome, sensory loss, coma, Korsakoff-related memory deficits.',
+        dsm: ['Alcohol-Induced Major Neurocognitive Disorder (Korsakoff Syndrome)', 'Sleep-Wake Disorders'],
+        icd: ['F10.26 (Korsakoff Amnestic State)', 'G93.4 (Encephalopathy)']
       },
-      {
-        id: 'primary_motor_cortex',
-        name: 'Primary Motor Cortex (M1)',
-        pos: [0.5, 1.2, -0.2],
-        scale: [0.25, 0.4, 0.8],
-        color: 0x2563eb,
-        function: 'Execution of voluntary somatic motor commands down the corticospinal tract.',
-        lesionDeficit: 'Contralateral spastic hemiparesis/paralysis, positive Babinski sign.',
-        dsm: 'Functional Neurological Symptom Disorder (Conversion Disorder)',
-        icd: '6B60 Conversion disorder / 8B20 Hemiplegia'
+      { id: 'cerebellum', name: 'Cerebellum', latin: 'Cerebellum', ba: 'Infratentorial', pos: [0, -1.2, -1.8], size: [2.0, 1.1, 1.2], color: 0x14b8a6,
+        function: 'Motor coordination, precision timing, balance, and cognitive procedural learning.',
+        lesion: 'Cerebellar Ataxia (intention tremor, dysmetria, dysdiadochokinesia, broad-based gait).',
+        dsm: ['Substance-Induced Persisting Cerebellar Ataxia'],
+        icd: ['G11.9 (Hereditary/Acquired Ataxia)', 'R27.0 (Ataxia Unspecified)']
       },
-      {
-        id: 'primary_somatosensory',
-        name: 'Primary Somatosensory Cortex (S1)',
-        pos: [0.5, 1.2, -0.6],
-        scale: [0.25, 0.4, 0.8],
-        color: 0x7c3aed,
-        function: 'Processing tactile, proprioceptive, nociceptive, and thermal inputs.',
-        lesionDeficit: 'Contralateral loss of fine touch localization, two-point discrimination.',
-        dsm: 'Somatic Symptom Disorder (300.82)',
-        icd: '6C20 Somatic distress disorder'
+      { id: 'brainstem', name: 'Brainstem', latin: 'Truncus Encephali', ba: 'Infratentorial', pos: [0, -1.8, -0.6], size: [0.8, 1.5, 0.8], color: 0x64748b,
+        function: 'Autonomic life-support functions (respiration, cardiac rhythm, blood pressure), cranial nerve nuclei.',
+        lesion: 'Locked-in Syndrome, autonomic breakdown, cranial nerve palsies, respiratory failure.',
+        dsm: ['Sleep Apnea (Central type)', 'Coma / Altered State of Consciousness'],
+        icd: ['G93.1 (Anoxic Brain Damage)', 'G47.31 (Central Sleep Apnea)']
       },
-      {
-        id: 'insula',
-        name: 'Insular Cortex (Insula)',
-        pos: [-0.8, 0.2, 0.1],
-        scale: [0.2, 0.3, 0.35],
-        color: 0x06b6d4,
-        function: 'Interoception (sensing internal bodily states), disgust processing, empathy.',
-        lesionDeficit: 'Loss of bodily interoceptive awareness, blunted disgust, altered pain perception.',
-        dsm: 'Panic Disorder (300.01) / Somatic Symptom Disorder / Anorexia Nervosa',
-        icd: '6B01 Panic disorder / 6B80 Anorexia nervosa'
+      { id: 'insula', name: 'Insular Cortex', latin: 'Cortex Insularis', ba: 'BA 13, 14', pos: [-1.1, 0.1, 0.3], size: [0.4, 0.7, 1.0], color: 0xd946ef, deep: true,
+        function: 'Interoceptive awareness (sensing heart rate, pain, visceral signals), empathy, gustation.',
+        lesion: 'Altered pain sensitivity, loss of craving in addiction, impaired empathy recognition.',
+        dsm: ['Substance Use Disorders (Craving mechanisms)', 'Anorexia Nervosa (Interoceptive deficit)'],
+        icd: ['F10.20 (Alcohol Dependence)', 'F50.0 (Anorexia Nervosa)']
       },
-      {
-        id: 'basal_ganglia_caudate',
-        name: 'Caudate Nucleus',
-        pos: [0.35, 0.35, 0.2],
-        scale: [0.25, 0.35, 0.3],
-        color: 0xca8a04,
-        function: 'Goal-directed action selection, procedural habit learning, motor loop gating.',
-        lesionDeficit: 'Choreiform involuntary movements, cognitive slowing, loss of flexibility.',
-        dsm: 'Major Neurocognitive Disorder due to Huntington’s Disease (333.4)',
-        icd: '8A01.0 Huntington disease / 6D70 Major neurocognitive disorder'
+      { id: 'acc', name: 'Anterior Cingulate Cortex', latin: 'Cortex Cingularis Anterior', ba: 'BA 24, 32', pos: [0, 0.8, 1.0], size: [0.4, 0.6, 1.2], color: 0x3b82f6, deep: true,
+        function: 'Error detection, conflict monitoring, motivation, and emotional-cognitive integration.',
+        lesion: 'Akinetic mutism (extreme poverty of speech and movement), apathy, reduced pain distress.',
+        dsm: ['Obsessive-Compulsive Disorder (OCD)', 'Treatment-Resistant Depression'],
+        icd: ['F42.2 (OCD)', 'F33.2 (Major Depressive Disorder Recurrent)']
       },
-      {
-        id: 'locus_coeruleus',
-        name: 'Locus Coeruleus',
-        pos: [0.1, -0.8, -0.6],
-        scale: [0.16, 0.16, 0.16],
-        color: 0x4f46e5,
-        function: 'Main noradrenergic nucleus; regulates arousal, hypervigilance, and threat reaction.',
-        lesionDeficit: 'Profound drowsiness, inability to maintain alert attention under stress.',
-        dsm: 'Post-Traumatic Stress Disorder (Hyperarousal) / Panic Attacks',
-        icd: '6B40 Post traumatic stress disorder / 6B01 Panic disorder'
+      { id: 'basalganglia', name: 'Basal Ganglia (Striatum)', latin: 'Nucleus Caudatus & Putamen', ba: 'Subcortical', pos: [0.8, 0.1, 0.2], size: [0.7, 0.7, 0.9], color: 0xf43f5e, deep: true,
+        function: 'Motor action selection, procedural habit learning, dopamine-driven reward loops.',
+        lesion: 'Parkinsonism (resting tremor, rigidity, bradykinesia), chorea (Huntington Disease).',
+        dsm: ["Neurocognitive Disorder due to Parkinson's / Huntington's Disease", 'Tourette Disorder'],
+        icd: ['G20 (Parkinson Disease)', 'G10 (Huntington Disease)', 'F95.2 (Tourette)']
       },
-      {
-        id: 'raphe_nuclei',
-        name: 'Raphe Nuclei',
-        pos: [0.0, -0.7, -0.5],
-        scale: [0.16, 0.22, 0.16],
-        color: 0xec4899,
-        function: 'Serotonergic center regulating mood stability, sleep-wake architecture, impulse control.',
-        lesionDeficit: 'Severe affective dysregulation, insomnia, heightened impulsive aggression.',
-        dsm: 'Major Depressive Episode / Intermittent Explosive Disorder (312.34)',
-        icd: '6A70 Major depressive disorder / 6C91 Intermittent explosive disorder'
+      { id: 'pcc', name: 'Posterior Cingulate Cortex', latin: 'Cortex Cingularis Posterior', ba: 'BA 23, 31', pos: [0, 0.8, -1.0], size: [0.4, 0.6, 1.0], color: 0x8b5cf6, deep: true,
+        function: 'Core node of the Default Mode Network (DMN); autobiographical memory retrieval and self-reflection.',
+        lesion: 'Autobiographical memory retrieval deficits, altered self-awareness.',
+        dsm: ["Alzheimer's Disease (Early DMN hypometabolism)", 'Depressive Rumination'],
+        icd: ['G30.0 (Alzheimer Disease Early Onset)']
       },
-      {
-        id: 'suprachiasmatic_nucleus',
-        name: 'Suprachiasmatic Nucleus (SCN)',
-        pos: [0.0, -0.3, 0.35],
-        scale: [0.12, 0.12, 0.12],
-        color: 0x10b981,
-        function: 'Master circadian clock synchronization via direct light signals from retina.',
-        lesionDeficit: 'Complete loss of endogenous 24-hour circadian sleep-wake rhythmicity.',
-        dsm: 'Circadian Rhythm Sleep-Wake Disorders (307.45)',
-        icd: '7A60 Circadian rhythm sleep-wake disorders'
+      { id: 'fusiform', name: 'Fusiform Gyrus', latin: 'Gyrus Fusiformis', ba: 'BA 37', pos: [1.2, -1.0, -0.4], size: [0.7, 0.5, 1.4], color: 0x10b981,
+        function: 'Face recognition (Fusiform Face Area), category identification, visual word form recognition.',
+        lesion: 'Prosopagnosia (face blindness - inability to recognize familiar faces or oneself).',
+        dsm: ['Neurocognitive Disorder with Visual Agnosia'],
+        icd: ['R48.1 (Agnosia)']
       }
     ];
 
-    const GAME_CASES = [
-      {
-        caseText: "A 62-year-old patient presents with resting pill-rolling tremor, severe bradykinesia, and muscle rigidity. Which dopaminergic region is degenerated?",
-        targetId: 'substantia_nigra'
-      },
-      {
-        caseText: "A patient exhibits hyperorality, hypersexuality, docility, and total loss of fear responses following encephalitis. Identify the damaged structure.",
-        targetId: 'amygdala'
-      },
-      {
-        caseText: "Following severe cerebral anoxia, a patient cannot form any new declarative memories despite intact working memory. Identify the affected region.",
-        targetId: 'hippocampus'
-      },
-      {
-        caseText: "A stroke patient speaks fluently with normal rhythm but produces nonsensical sentences ('word salad') and cannot follow spoken commands. Identify the region.",
-        targetId: 'wernickes_area'
-      },
-      {
-        caseText: "A patient understands language perfectly but produces non-fluent, halting, painful speech. Which frontal lobe region is lesioned?",
-        targetId: 'brocas_area'
-      }
-    ];
-
-    // =========================================================================
-    // 2. THREE.JS SCENE SETUP & ANATOMICAL BRAIN GEOMETRY
-    // =========================================================================
+    // ==================== STATE MANAGEMENT ====================
     let scene, camera, renderer, controls;
+    let brainGroup = new THREE.Group();
     let regionMeshes = [];
     let selectedRegion = null;
-    let currentMode = 'explore';
-    let currentCaseIndex = 0;
+    let hoveredRegion = null;
+    let currentMode = 'anatomical'; // 'anatomical' or 'lesion'
+    let explosionFactor = 0;
+    let cortexOpacity = 1.0;
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
+    // ==================== INITIALIZATION ====================
     function init() {
-      const container = document.getElementById('canvas-container');
+      const container = document.getElementById('atlas-section');
+      const canvas = document.getElementById('brain-canvas');
 
+      // 1. Scene Setup
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x090d16);
+      scene.background = new THREE.Color(0x020617); // Slate-950
 
-      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-      camera.position.set(0, 2.2, 6.5);
+      // 2. Camera
+      camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+      camera.position.set(0, 3, 8);
 
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(window.devicePixelRatio);
-      container.appendChild(renderer.domElement);
+      // 3. Renderer
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
 
+      // 4. OrbitControls
       controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
+      controls.maxDistance = 15;
+      controls.minDistance = 3;
 
-      // Lights
+      // 5. Lighting
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
       scene.add(ambientLight);
 
-      const dirLight1 = new THREE.DirectionalLight(0x38bdf8, 1.0);
-      dirLight1.position.set(5, 8, 5);
+      const dirLight1 = new THREE.DirectionalLight(0x38bdf8, 1.5);
+      dirLight1.position.set(5, 10, 7);
       scene.add(dirLight1);
 
-      const dirLight2 = new THREE.DirectionalLight(0x818cf8, 0.6);
+      const dirLight2 = new THREE.DirectionalLight(0x818cf8, 1.0);
       dirLight2.position.set(-5, -5, -5);
       scene.add(dirLight2);
 
-      buildAnatomicalBrain();
-      buildBrainRegions();
-      populateDropdown();
+      // 6. Build Brain Models
+      buildBrainModel();
+      scene.add(brainGroup);
 
+      // 7. Event Listeners
       window.addEventListener('resize', onWindowResize);
-      window.addEventListener('click', onPointerClick);
+      canvas.addEventListener('mousemove', onMouseMove);
+      canvas.addEventListener('click', onClick);
 
+      setupUIListeners();
+      
+      // Select Prefrontal Cortex by default
+      selectRegion(BRAIN_REGIONS[0]);
+
+      // Render Loop
       animate();
     }
 
-    // Constructs a multi-part 3D anatomical brain (Left/Right Hemispheres, Brainstem, Cerebellum)
-    function buildAnatomicalBrain() {
-      const brainGroup = new THREE.Group();
+    // ==================== PROCEDURAL 3D BRAIN GENERATION ====================
+    function buildBrainModel() {
+      BRAIN_REGIONS.forEach((data) => {
+        // Create stylized rounded mesh representing brain structures
+        const geometry = new THREE.SphereGeometry(1, 32, 24);
+        geometry.scale(data.size[0] * 0.5, data.size[1] * 0.5, data.size[2] * 0.5);
 
-      const cortexMat = new THREE.MeshPhongMaterial({
-        color: 0x475569,
-        transparent: true,
-        opacity: 0.18,
-        wireframe: true,
-        side: THREE.DoubleSide
-      });
-
-      // Left Hemisphere
-      const leftHemGeo = createHemisphereGeometry(true);
-      const leftHem = new THREE.Mesh(leftHemGeo, cortexMat);
-      leftHem.position.set(-0.7, 0.4, 0.1);
-      brainGroup.add(leftHem);
-
-      // Right Hemisphere
-      const rightHemGeo = createHemisphereGeometry(false);
-      const rightHem = new THREE.Mesh(rightHemGeo, cortexMat);
-      rightHem.position.set(0.7, 0.4, 0.1);
-      brainGroup.add(rightHem);
-
-      // Cerebellum
-      const cerGeo = new THREE.SphereGeometry(0.85, 24, 24);
-      cerGeo.scale(1.4, 0.7, 0.9);
-      const cerebellum = new THREE.Mesh(cerGeo, cortexMat);
-      cerebellum.position.set(0, -1.0, -0.9);
-      brainGroup.add(cerebellum);
-
-      // Brainstem
-      const stemGeo = new THREE.CylinderGeometry(0.35, 0.25, 1.4, 16);
-      const brainstem = new THREE.Mesh(stemGeo, cortexMat);
-      brainstem.position.set(0, -1.1, -0.3);
-      brainstem.rotation.x = 0.2;
-      brainGroup.add(brainstem);
-
-      scene.add(brainGroup);
-    }
-
-    // Helper: Sculpt a hemisphere with gyri surface displacement
-    function createHemisphereGeometry(isLeft) {
-      const geo = new THREE.SphereGeometry(1.35, 32, 32);
-      geo.scale(0.85, 0.95, 1.25);
-
-      const pos = geo.attributes.position;
-      for (let i = 0; i < pos.count; i++) {
-        let x = pos.getX(i);
-        let y = pos.getY(i);
-        let z = pos.getZ(i);
-
-        // Gyri/Sulci displacement wave function
-        const wave = Math.sin(x * 6.0) * Math.cos(y * 6.0) * Math.sin(z * 6.0) * 0.08;
-        
-        // Flatten medial side where hemispheres meet
-        if ((isLeft && x > 0) || (!isLeft && x < 0)) {
-          x *= 0.2;
-        }
-
-        pos.setXYZ(i, x + wave, y + wave, z + wave);
-      }
-      geo.computeVertexNormals();
-      return geo;
-    }
-
-    function buildBrainRegions() {
-      BRAIN_REGIONS.forEach(data => {
-        const geo = new THREE.SphereGeometry(0.5, 20, 20);
-        geo.scale(data.scale[0], data.scale[1], data.scale[2]);
-
-        const mat = new THREE.MeshStandardMaterial({
+        const material = new THREE.MeshStandardMaterial({
           color: data.color,
           roughness: 0.3,
           metalness: 0.1,
           transparent: true,
-          opacity: 0.88
+          opacity: 0.95
         });
 
-        const mesh = new THREE.Mesh(geo, mat);
+        const mesh = new THREE.Mesh(geometry, material);
+        
+        // Original Home Position
         mesh.position.set(...data.pos);
-        mesh.userData = { ...data, isLesioned: false, originalColor: data.color };
+        mesh.userData = { ...data, origPos: [...data.pos] };
 
-        scene.add(mesh);
+        // Subcortical indicator ring if deep
+        if(data.deep) {
+          const wireGeo = new THREE.WireframeGeometry(geometry);
+          const wireMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 });
+          const wireframe = new THREE.LineSegments(wireGeo, wireMat);
+          mesh.add(wireframe);
+        }
+
         regionMeshes.push(mesh);
+        brainGroup.add(mesh);
       });
     }
 
-    function populateDropdown() {
-      const select = document.getElementById('region-select');
-      BRAIN_REGIONS.forEach(region => {
-        const opt = document.createElement('option');
-        opt.value = region.id;
-        opt.textContent = region.name;
-        select.appendChild(opt);
-      });
-    }
-
-    // =========================================================================
-    // 3. INTERACTION & SELECTION
-    // =========================================================================
-    function onPointerClick(event) {
-      if (event.clientY < 75 && event.clientX < 420) return;
-      if (event.clientX > window.innerWidth - 400) return;
-
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    // ==================== INTERACTION HANDLERS ====================
+    function onMouseMove(event) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(regionMeshes);
 
+      const tooltip = document.getElementById('hover-tooltip');
+
       if (intersects.length > 0) {
-        selectRegionMesh(intersects[0].object);
+        const hovered = intersects[0].object;
+        if (hoveredRegion !== hovered) {
+          hoveredRegion = hovered;
+          document.body.style.cursor = 'pointer';
+        }
+        tooltip.classList.remove('hidden');
+        tooltip.style.left = `${event.clientX - rect.left + 15}px`;
+        tooltip.style.top = `${event.clientY - rect.top - 15}px`;
+        tooltip.innerText = hovered.userData.name;
+      } else {
+        hoveredRegion = null;
+        document.body.style.cursor = 'default';
+        tooltip.classList.add('hidden');
       }
     }
 
-    window.onSelectDropdown = function(regionId) {
-      if (!regionId) return;
-      const mesh = regionMeshes.find(m => m.userData.id === regionId);
-      if (mesh) {
-        selectRegionMesh(mesh);
-        controls.target.copy(mesh.position);
+    function onClick(event) {
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(regionMeshes);
+
+      if (intersects.length > 0) {
+        const target = intersects[0].object;
+        selectRegion(target.userData);
       }
+    }
+
+    function selectRegion(regionData) {
+      selectedRegion = regionData;
+
+      // Update Mesh Highlight
+      regionMeshes.forEach(mesh => {
+        if (mesh.userData.id === regionData.id) {
+          mesh.material.emissive.setHex(0x38bdf8);
+          mesh.material.emissiveIntensity = 0.6;
+        } else {
+          mesh.material.emissive.setHex(currentMode === 'lesion' ? 0x991b1b : 0x000000);
+          mesh.material.emissiveIntensity = currentMode === 'lesion' ? 0.3 : 0;
+        }
+      });
+
+      // Update Sidebar Information
+      document.getElementById('panel-title').innerText = regionData.name;
+      document.getElementById('panel-latin').innerText = regionData.latin;
+      document.getElementById('panel-broadmann').innerText = regionData.ba;
+      document.getElementById('panel-function').innerText = regionData.function;
+      document.getElementById('panel-lesion').innerText = regionData.lesion;
+
+      // DSM-5
+      const dsmList = document.getElementById('panel-dsm');
+      dsmList.innerHTML = regionData.dsm.map(item => `<li>${item}</li>`).join('');
+
+      // ICD Codes
+      const icdBox = document.getElementById('panel-icd');
+      icdBox.innerHTML = regionData.icd.map(code => 
+        `<span class="px-2.5 py-1 bg-emerald-950/60 border border-emerald-800/50 text-emerald-300 font-mono text-xs rounded-md">${code}</span>`
+      ).join('');
+
+      document.getElementById('panel-coords').innerText = `(${regionData.pos.join(', ')})`;
+    }
+
+    // ==================== UI CONTROLS & SLIDERS ====================
+    function setupUIListeners() {
+      // Exploded View Slider
+      const expSlider = document.getElementById('slider-exploded');
+      expSlider.addEventListener('input', (e) => {
+        explosionFactor = e.target.value / 100;
+        document.getElementById('exploded-val').innerText = `${e.target.value}%`;
+        applyExplosion();
+      });
+
+      // Opacity Slider
+      const opacSlider = document.getElementById('slider-opacity');
+      opacSlider.addEventListener('input', (e) => {
+        cortexOpacity = e.target.value / 100;
+        document.getElementById('opacity-val').innerText = `${e.target.value}%`;
+        applyOpacity();
+      });
+
+      // Search Bar
+      const searchInput = document.getElementById('search-input');
+      const searchResults = document.getElementById('search-results');
+
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if(!query) {
+          searchResults.classList.add('hidden');
+          return;
+        }
+
+        const matches = BRAIN_REGIONS.filter(r => 
+          r.name.toLowerCase().includes(query) ||
+          r.latin.toLowerCase().includes(query) ||
+          r.dsm.some(d => d.toLowerCase().includes(query)) ||
+          r.icd.some(i => i.toLowerCase().includes(query))
+        );
+
+        if(matches.length > 0) {
+          searchResults.innerHTML = matches.map(m => `
+            <div onclick="window.selectFromSearch('${m.id}')" class="p-2.5 hover:bg-slate-800 cursor-pointer border-b border-slate-800/50 text-xs">
+              <div class="font-bold text-sky-400">${m.name}</div>
+              <div class="text-slate-400 text-[10px]">${m.latin}</div>
+            </div>
+          `).join('');
+          searchResults.classList.remove('hidden');
+        } else {
+          searchResults.innerHTML = `<div class="p-3 text-xs text-slate-500">No matching neuro-anatomical region</div>`;
+          searchResults.classList.remove('hidden');
+        }
+      });
+
+      window.selectFromSearch = (id) => {
+        const target = BRAIN_REGIONS.find(r => r.id === id);
+        if(target) selectRegion(target);
+        searchResults.classList.add('hidden');
+        searchInput.value = '';
+      };
+    }
+
+    function applyExplosion() {
+      regionMeshes.forEach(mesh => {
+        const orig = mesh.userData.origPos;
+        // Direction vector from center
+        const dir = new THREE.Vector3(...orig).normalize();
+        mesh.position.set(
+          orig[0] + dir.x * explosionFactor * 1.8,
+          orig[1] + dir.y * explosionFactor * 1.8,
+          orig[2] + dir.z * explosionFactor * 1.8
+        );
+      });
+    }
+
+    function applyOpacity() {
+      regionMeshes.forEach(mesh => {
+        if(!mesh.userData.deep) {
+          mesh.material.opacity = cortexOpacity;
+        }
+      });
+    }
+
+    // Camera Views
+    window.setCameraView = (view) => {
+      switch(view) {
+        case 'lateral': camera.position.set(7, 0, 0); break;
+        case 'medial': camera.position.set(0, 0, 7); break;
+        case 'superior': camera.position.set(0, 8, 0.1); break;
+        case 'limbic': camera.position.set(2, 2, 3); break;
+        case 'reset': default: camera.position.set(0, 3, 8); break;
+      }
+      controls.target.set(0,0,0);
     };
 
-    function selectRegionMesh(mesh) {
-      if (selectedRegion && !selectedRegion.userData.isLesioned) {
-        selectedRegion.material.color.setHex(selectedRegion.userData.originalColor);
-      }
-
-      selectedRegion = mesh;
-
-      if (!selectedRegion.userData.isLesioned) {
-        selectedRegion.material.color.setHex(0xffffff);
-      }
-
-      document.getElementById('region-select').value = selectedRegion.userData.id;
-      displayStructureInfo(selectedRegion.userData);
-
-      if (currentMode === 'game') {
-        checkGameAnswer(selectedRegion.userData.id);
-      }
-    }
-
-    function displayStructureInfo(data) {
-      document.getElementById('struct-name').innerText = data.name;
-      document.getElementById('struct-desc').innerText = data.function;
-
-      const badge = document.getElementById('status-badge');
-      const dsmBox = document.getElementById('dsm-container');
-      const icdBox = document.getElementById('icd-container');
-      const clinicalBlock = document.getElementById('clinical-block');
-      const actionControls = document.getElementById('action-controls');
-      const btnLesion = document.getElementById('btn-toggle-lesion');
-
-      dsmBox.style.display = data.dsm ? "block" : "none";
-      document.getElementById('dsm-text').innerText = data.dsm || "";
-
-      icdBox.style.display = data.icd ? "block" : "none";
-      document.getElementById('icd-text').innerText = data.icd || "";
-
-      if (data.isLesioned) {
-        badge.className = "badge badge-lesion";
-        badge.innerText = "LESION ACTIVE";
-        clinicalBlock.style.display = "block";
-        document.getElementById('struct-clinical').innerText = data.lesionDeficit;
-        btnLesion.innerText = "Heal / Remove Lesion";
-      } else {
-        badge.className = "badge badge-normal";
-        badge.innerText = "Healthy State";
-        clinicalBlock.style.display = currentMode === 'lesion' ? "block" : "none";
-        document.getElementById('struct-clinical').innerText = "Apply a virtual lesion to simulate tissue damage and observe symptom profiles.";
-        btnLesion.innerText = "Apply Virtual Lesion";
-      }
-
-      actionControls.style.display = currentMode === 'lesion' ? "block" : "none";
-    }
-
-    window.toggleCurrentLesion = function() {
-      if (!selectedRegion) return;
-      
-      const isLesioned = !selectedRegion.userData.isLesioned;
-      selectedRegion.userData.isLesioned = isLesioned;
-
-      if (isLesioned) {
-        selectedRegion.material.color.setHex(0x333333);
-        selectedRegion.material.opacity = 0.3;
-      } else {
-        selectedRegion.material.color.setHex(selectedRegion.userData.originalColor);
-        selectedRegion.material.opacity = 0.88;
-      }
-
-      displayStructureInfo(selectedRegion.userData);
-    };
-
-    window.setMode = function(mode) {
+    // Mode Toggle
+    window.setMode = (mode) => {
       currentMode = mode;
-      document.querySelectorAll('.mode-selector button').forEach(b => b.classList.remove('active'));
-      document.getElementById(`btn-${mode}`).classList.add('active');
+      const btnAna = document.getElementById('btn-anatomical');
+      const btnLes = document.getElementById('btn-lesion');
 
-      document.getElementById('game-banner').classList.toggle('active', mode === 'game');
-
-      if (selectedRegion) {
-        displayStructureInfo(selectedRegion.userData);
-      }
-
-      if (mode === 'game') {
-        currentCaseIndex = 0;
-        loadGameCase();
-      }
-    };
-
-    function loadGameCase() {
-      const c = GAME_CASES[currentCaseIndex];
-      document.getElementById('game-case-text').innerText = `Case #${currentCaseIndex + 1}: ${c.caseText}`;
-      document.getElementById('game-feedback').innerText = "";
-    }
-
-    function checkGameAnswer(clickedId) {
-      const c = GAME_CASES[currentCaseIndex];
-      const feedback = document.getElementById('game-feedback');
-
-      if (clickedId === c.targetId) {
-        feedback.style.color = "#4ade80";
-        feedback.innerText = "✓ Correct Diagnosis! Target region identified.";
+      if(mode === 'lesion') {
+        btnLes.className = "px-3 py-1 text-xs rounded-lg bg-rose-600 font-bold text-white transition-all shadow-lg shadow-rose-600/40";
+        btnAna.className = "px-3 py-1 text-xs rounded-lg bg-slate-800 hover:bg-sky-900/60 font-bold text-slate-300 transition-all";
+        
+        // Turn regions into damaged/lesioned appearance
+        regionMeshes.forEach(mesh => {
+          mesh.material.emissive.setHex(0x991b1b);
+          mesh.material.emissiveIntensity = 0.3;
+        });
       } else {
-        feedback.style.color = "#ef4444";
-        feedback.innerText = "✗ Incorrect region. Review clinical signs and try again.";
+        btnAna.className = "px-3 py-1 text-xs rounded-lg bg-sky-500 font-bold text-slate-950 transition-all";
+        btnLes.className = "px-3 py-1 text-xs rounded-lg bg-slate-800 hover:bg-rose-900/60 font-bold text-rose-300 transition-all border border-rose-500/30";
+        
+        regionMeshes.forEach(mesh => {
+          mesh.material.emissive.setHex(0x000000);
+          mesh.material.emissiveIntensity = 0;
+        });
+        if(selectedRegion) selectRegion(selectedRegion);
       }
-    }
-
-    window.nextGameCase = function() {
-      currentCaseIndex = (currentCaseIndex + 1) % GAME_CASES.length;
-      loadGameCase();
     };
 
     function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
+      const canvas = document.getElementById('brain-canvas');
+      camera.aspect = canvas.clientWidth / canvas.clientHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     }
 
+    // ==================== ANIMATION LOOP ====================
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
 
-      if (selectedRegion) {
-        selectedRegion.rotation.y += 0.01;
+      // Gentle auto-rotation when user isn't interacting
+      if(!controls.state == -1) {
+        brainGroup.rotation.y += 0.001;
       }
 
       renderer.render(scene, camera);
     }
 
-    init();
+    // Initialize application when DOM is ready
+    window.addEventListener('DOMContentLoaded', init);
   </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NeuroMap Cover Transition Test</title>
-  
-  <style>
-    body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; }
-    
-    /* Hero Cover Section */
-    .neuromap-hero {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: #0d1117;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 10;
-      transition: opacity 0.8s ease, transform 0.8s ease;
-    }
-
-    .btn-launch {
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
-      background: #238636;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-
-    /* 3D Viewport Container */
-    #explorer-view {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      z-index: 1;
-      display: block;
-    }
-  </style>
-
-  <!-- Load GSAP, Three.js, and OrbitControls via CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-</head>
-<body>
-
-  <!-- HERO COVER PAGE -->
-  <header class="neuromap-hero" id="hero-cover">
-    <h1>NeuroMap 3D Explorer</h1>
-    <p>Interactive Clinical Neuroanatomy & Diagnostic Atlas</p>
-    <button class="btn-launch" id="btn-launch-explorer">Launch 3D Explorer</button>
-  </header>
-
-  <!-- 3D EXPLORER VIEWPORT -->
-  <div id="explorer-view"></div>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // 1. Setup Three.js Scene
-      const container = document.getElementById('explorer-view');
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x1a233a);
-
-      const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-      camera.position.set(0, 0, 100);
-
-      const renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      container.appendChild(renderer.domElement);
-
-      const controls = new THREE.OrbitControls(camera, renderer.domElement);
-
-      // Add a test cube (or brain mesh)
-      const geometry = new THREE.BoxGeometry(20, 20, 20);
-      const material = new THREE.MeshNormalMaterial();
-      const cube = new THREE.Mesh(geometry, material);
-      scene.add(cube);
-
-      // Animation Loop
-      function animate() {
-        requestAnimationFrame(animate);
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
-        controls.update();
-        renderer.render(scene, camera);
-      }
-      animate();
-
-      // Handle Window Resize
-      window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-
-      // 2. Setup Transition Handler
-      const launchBtn = document.getElementById('btn-launch-explorer');
-      const heroSection = document.getElementById('hero-cover');
-
-      launchBtn.addEventListener('click', () => {
-        // Fade out Hero using GSAP CDN
-        gsap.to(heroSection, {
-          opacity: 0,
-          y: -50,
-          duration: 0.8,
-          ease: 'power3.inOut',
-          onComplete: () => {
-            heroSection.style.display = 'none'; // Remove hero overlay
-          }
-        });
-
-        // Fly camera in
-        gsap.fromTo(camera.position, 
-          { z: 200 }, 
-          { z: 80, duration: 1.5, ease: 'power2.out' }
-        );
-      });
-    });
-  </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NeuroMap 3D Explorer</title>
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Libraries via CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-</head>
-<body>
-
-  <!-- HERO COVER OVERLAY -->
-  <header class="neuromap-hero" id="hero-cover">
-    <div class="hero-content">
-      <span class="badge">Clinical Neuroanatomy & Atlas</span>
-      <h1>NeuroMap <span>3D</span></h1>
-      <p>Interactive brain anatomy mapped to clinical lesion profiles, DSM-5-TR, ICD-11, and functional networks.</p>
-      
-      <div class="hero-actions">
-        <button class="btn-launch" id="btn-launch-explorer">Launch 3D Explorer</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- 3D CANVAS CONTAINER -->
-  <div id="canvas-container"></div>
-
-  <!-- CLINICAL INFORMATION OVERLAY -->
-  <div id="info-overlay" class="hidden">
-    <div class="card">
-      <h2 id="region-title">Select a Region</h2>
-      <p id="region-description">Click on any 3D brain region to view anatomical functions and clinical classifications.</p>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NeuroMap 3D Explorer</title>
-  <link rel="stylesheet" href="./style.css">
-
-  <!-- Libraries via CDN (No Build Tools Required) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-</head>
-<body>
-
-  <!-- HERO LANDING COVER PAGE OVERLAY -->
-  <header class="neuromap-hero" id="hero-cover">
-    <div class="hero-content">
-      <span class="badge-pill">Neuroanatomy & Diagnostic Atlas</span>
-      <h1 class="hero-title">NeuroMap <span>3D</span></h1>
-      <p class="hero-subtitle">
-        Explore interactive 3D human brain anatomy mapped to clinical lesion profiles, 
-        DSM-5-TR & ICD-11 classifications, and functional neural networks.
-      </p>
-
-      <div class="feature-tags">
-        <span class="tag">🧠 3D Brain Viewer</span>
-        <span class="tag">📑 DSM-5-TR / ICD-11</span>
-        <span class="tag">⚡ Network Dynamics</span>
-      </div>
-
-      <div class="hero-actions">
-        <button class="btn-launch" id="btn-launch-explorer">
-          Launch 3D Explorer 🚀
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- 3D CANVAS CONTAINER -->
-  <div id="canvas-container"></div>
-
-  <!-- CLINICAL INFO SIDE PANEL -->
-  <aside id="info-panel" class="hidden">
-    <div class="card">
-      <h2 id="region-title">🧠 Interactive Brain Atlas</h2>
-      <p id="region-desc">
-        Click or drag to rotate the 3D model. Select any anatomical region to inspect clinical functions, lesion profiles, and diagnostic classifications.
-      </p>
-      <div id="classification-tags" class="tags-container"></div>
-    </div>
-  </aside>
-
-  <script src="./script.js"></script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NeuroMap 3D Explorer</title>
-  <link rel="stylesheet" href="./style.css">
-
-  <!-- CDNs for Three.js, Controls, Loader, and GSAP -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-</head>
-<body>
-
-  <!-- HERO LANDING COVER PAGE -->
-  <header class="neuromap-hero" id="hero-cover">
-    <div class="hero-content">
-      <span class="badge-pill">Neuroanatomy & Diagnostic Atlas</span>
-      <h1 class="hero-title">NeuroMap <span>3D</span></h1>
-      <p class="hero-subtitle">
-        Explore interactive 3D human brain anatomy mapped to clinical lesion profiles, 
-        DSM-5-TR & ICD-11 classifications, and functional neural networks.
-      </p>
-
-      <div class="hero-actions">
-        <button class="btn-launch" id="btn-launch-explorer">
-          Launch 3D Explorer 🚀
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- 3D CANVAS CONTAINER -->
-  <div id="canvas-container"></div>
-
-  <!-- TOP CONTROL BAR -->
-  <nav id="top-bar" class="ui-panel hidden">
-    <div class="brand">🧠 NeuroMap 3D</div>
-    <select id="region-dropdown">
-      <option value="">-- Choose a Region --</option>
-      <option value="frontal">Frontal Lobe / Prefrontal Cortex</option>
-      <option value="broca">Broca's Area</option>
-      <option value="temporal">Temporal Lobe / Wernicke's Area</option>
-      <option value="parietal">Parietal Lobe</option>
-      <option value="occipital">Occipital Lobe</option>
-      <option value="hippocampus">Hippocampus</option>
-      <option value="amygdala">Amygdala</option>
-      <option value="cerebellum">Cerebellum</option>
-      <option value="brainstem">Brainstem</option>
-    </select>
-  </nav>
-
-  <!-- CLINICAL INFORMATION SIDE PANEL -->
-  <aside id="clinical-panel" class="ui-panel hidden">
-    <div class="card">
-      <span id="region-tag" class="region-badge">Anatomical Region</span>
-      <h2 id="region-name">Select a Region</h2>
-      <p id="region-desc" class="desc-text">
-        Click on any 3D brain region or pick one from the top menu to analyze its clinical function, DSM-5-TR, and ICD-11 classifications.
-      </p>
-
-      <div class="code-box">
-        <header>DSM-5-TR Diagnostic Code</header>
-        <div id="dsm-code" class="code-value">--</div>
-      </div>
-
-      <div class="code-box">
-        <header>ICD-11 Classification</header>
-        <div id="icd-code" class="code-value">--</div>
-      </div>
-
-      <div class="lesion-box">
-        <strong>Lesion Deficit Profile:</strong>
-        <p id="lesion-profile">Select an anatomical structure to view lesion manifestations.</p>
-      </div>
-    </div>
-  </aside>
-
-  <script src="./script.js"></script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NeuroMap Extensions — Feature Module</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-
-  :root{
-    --bg:#0A0E16;
-    --panel:#121826;
-    --panel-raised:#182136;
-    --border:#232B3D;
-    --signal:#45E0C4;
-    --signal-dim:#2A6E63;
-    --lesion:#E8734A;
-    --lesion-dim:#5A3324;
-    --text:#E8ECF4;
-    --muted:#7C8AA8;
-    --focus:#8FF0DE;
-    --radius:10px;
-  }
-  [data-a11y="true"]{
-    --signal:#4EA8FF;
-    --signal-dim:#1F4A75;
-    --lesion:#FFB454;
-    --lesion-dim:#5C4720;
-    --focus:#FFD866;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; background:var(--bg); color:var(--text);
-    font-family:'IBM Plex Sans', sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; margin:0 0 6px; font-weight:600; }
-  code, .mono{ font-family:'IBM Plex Mono', monospace; }
-  button{ font-family:inherit; cursor:pointer; }
-  *:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
-
-  /* ---------- shell ---------- */
-  .app{ display:flex; min-height:100vh; }
-  .rail{
-    width:230px; flex-shrink:0; background:var(--panel);
-    border-right:1px solid var(--border); padding:20px 12px;
-    display:flex; flex-direction:column; gap:4px;
-  }
-  .rail-header{ padding:8px 10px 18px; }
-  .rail-header .dot{
-    width:8px; height:8px; border-radius:50%; background:var(--signal);
-    display:inline-block; margin-right:8px; box-shadow:0 0 8px var(--signal);
-    animation:pulse 2.4s ease-in-out infinite;
-  }
-  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
-  .rail-header h1{ font-size:15px; letter-spacing:.02em; }
-  .rail-header p{ font-size:11px; color:var(--muted); margin:4px 0 0; }
-
-  .tab{
-    display:flex; align-items:center; gap:10px;
-    padding:10px 12px; border-radius:8px; border:1px solid transparent;
-    background:none; color:var(--muted); text-align:left; font-size:13px;
-    font-weight:500; position:relative;
-  }
-  .tab .n{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); width:16px; }
-  .tab:hover{ background:var(--panel-raised); color:var(--text); }
-  .tab.active{ background:var(--panel-raised); color:var(--signal); border-color:var(--signal-dim); }
-  .tab.active .n{ color:var(--signal); }
-  .tab.active::before{
-    content:''; position:absolute; left:-13px; top:50%; width:6px; height:6px;
-    border-radius:50%; background:var(--signal); transform:translateY(-50%);
-    box-shadow:0 0 6px var(--signal);
-  }
-
-  .rail-foot{ margin-top:auto; display:flex; flex-direction:column; gap:8px; padding-top:12px; border-top:1px solid var(--border); }
-  .ghost-btn{
-    background:none; border:1px solid var(--border); color:var(--muted);
-    padding:8px 10px; border-radius:8px; font-size:11.5px; text-align:left;
-  }
-  .ghost-btn:hover{ color:var(--text); border-color:var(--signal-dim); }
-  .ghost-btn.on{ color:var(--signal); border-color:var(--signal-dim); background:rgba(69,224,196,0.06); }
-
-  .main{ flex:1; padding:28px 36px 60px; max-width:1000px; }
-  .panel-title{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px; }
-  .panel-title p{ color:var(--muted); font-size:13px; margin:4px 0 0; max-width:640px; }
-  .badge{
-    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--signal);
-    border:1px solid var(--signal-dim); padding:3px 8px; border-radius:20px;
-    text-transform:uppercase; letter-spacing:.06em;
-  }
-
-  .card{
-    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
-    padding:18px 20px; margin-bottom:14px;
-  }
-  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
-  .chip{
-    background:var(--panel-raised); border:1px solid var(--border); border-radius:8px;
-    padding:10px 12px; font-size:12.5px; color:var(--text); text-align:left;
-  }
-  .chip:hover{ border-color:var(--signal-dim); }
-  .chip.selected{ border-color:var(--signal); box-shadow:0 0 0 1px var(--signal); }
-  .chip.wrong{ border-color:var(--lesion); box-shadow:0 0 0 1px var(--lesion); }
-  .chip small{ display:block; color:var(--muted); margin-top:3px; font-size:10.5px; }
-
-  .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-  .primary-btn{
-    background:var(--signal); color:#06231E; border:none; padding:10px 18px;
-    border-radius:8px; font-weight:600; font-size:13px;
-  }
-  .primary-btn:hover{ filter:brightness(1.08); }
-  .primary-btn:disabled{ opacity:.35; cursor:not-allowed; }
-  .code-pill{
-    font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--panel-raised);
-    border:1px solid var(--border); padding:3px 8px; border-radius:6px; color:var(--signal);
-  }
-
-  .deficit-list{ list-style:none; margin:8px 0 0; padding:0; font-size:12.5px; }
-  .deficit-list li{ padding:5px 0 5px 16px; position:relative; color:var(--text); }
-  .deficit-list li::before{ content:'—'; position:absolute; left:0; color:var(--lesion); }
-
-  .slider-row{ display:flex; align-items:center; gap:12px; margin:10px 0; }
-  .slider-row input[type=range]{ flex:1; accent-color:var(--signal); }
-  .slider-val{ font-family:'IBM Plex Mono',monospace; font-size:13px; width:44px; text-align:right; color:var(--signal); }
-
-  .timer{ font-family:'IBM Plex Mono',monospace; font-size:28px; color:var(--lesion); }
-  .stat{ text-align:center; }
-  .stat .num{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; color:var(--signal); }
-  .stat .lbl{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
-
-  .feedback{ margin-top:12px; padding:12px 14px; border-radius:8px; font-size:12.5px; }
-  .feedback.correct{ background:rgba(69,224,196,0.08); border:1px solid var(--signal-dim); color:var(--signal); }
-  .feedback.incorrect{ background:rgba(232,115,74,0.08); border:1px solid var(--lesion-dim); color:var(--lesion); }
-
-  .compare-cols{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  .compare-col h3{ font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
-
-  .case-vignette{ font-size:13px; line-height:1.6; color:var(--text); }
-  .case-meta{ font-size:11px; color:var(--muted); margin-top:8px; }
-
-  .overlay{
-    position:fixed; inset:0; background:rgba(4,6,10,0.72); display:none;
-    align-items:center; justify-content:center; z-index:50; padding:24px;
-  }
-  .overlay.show{ display:flex; }
-  .overlay-card{
-    background:var(--panel); border:1px solid var(--border); border-radius:14px;
-    max-width:560px; width:100%; padding:26px 28px; max-height:80vh; overflow:auto;
-  }
-  .overlay-card h2{ font-size:16px; margin-bottom:4px; }
-  .overlay-card .close{ float:right; background:none; border:none; color:var(--muted); font-size:18px; }
-  .devnote{ margin:14px 0; font-size:12.5px; color:var(--text); line-height:1.55; }
-  .devnote strong{ color:var(--signal); display:block; margin-bottom:3px; font-size:12px; }
-
-  .calib-bar-row{ display:flex; align-items:center; gap:10px; margin:6px 0; font-size:11.5px; }
-  .calib-bar-row .bucket{ width:64px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
-  .calib-track{ flex:1; height:8px; background:var(--panel-raised); border-radius:4px; overflow:hidden; }
-  .calib-fill{ height:100%; background:var(--signal); }
-
-  @media (max-width:760px){
-    .app{ flex-direction:column; }
-    .rail{ width:100%; flex-direction:row; overflow-x:auto; padding:10px; gap:6px; }
-    .rail-header{ display:none; }
-    .rail-foot{ display:none; }
-    .main{ padding:20px 16px 50px; }
-    .compare-cols{ grid-template-columns:1fr; }
-  }
-</style>
-</head>
-<body>
-
-<div class="app" data-a11y="false" id="appRoot">
-
-  <!-- ============ LEFT RAIL / MODE NAV ============ -->
-  <nav class="rail" id="rail">
-    <div class="rail-header">
-      <h1><span class="dot"></span>NEUROMAP</h1>
-      <p>Extension module · 7 modes</p>
-    </div>
-    <!-- tabs injected by JS -->
-    <div id="tabList"></div>
-    <div class="rail-foot">
-      <button class="ghost-btn" id="btnDevNotes">📝 Dev notes</button>
-      <button class="ghost-btn" id="btnA11y">♿ Accessibility mode</button>
-      <button class="ghost-btn" id="btnExport">⬇ Export dataset (JSON)</button>
-    </div>
-  </nav>
-
-  <!-- ============ MAIN CONTENT ============ -->
-  <main class="main" id="mainContent"></main>
-</div>
-
-<!-- ============ DEV NOTES OVERLAY ============ -->
-<div class="overlay" id="devOverlay">
-  <div class="overlay-card">
-    <button class="close" id="closeDevNotes">✕</button>
-    <h2>Design &amp; build notes</h2>
-    <p style="color:var(--muted);font-size:12px;">Why this module is built the way it is.</p>
-
-    <div class="devnote">
-      <strong>Data model</strong>
-      Every mode reads from one shared array (<code>REGIONS</code>) instead of maintaining
-      separate copies. Add a region once — DSM-5-TR code, ICD-11 code, function, deficits — and
-      it's automatically available in Explore, Reverse Diagnosis, Lesion Stacking, and Split Compare.
-    </div>
-    <div class="devnote">
-      <strong>Why in-memory state, not localStorage</strong>
-      Scores, streaks, and calibration history live in a JS object for this session only. If you want
-      persistence across visits, use the site's proper storage layer (a small backend, or the
-      artifact/app storage API) rather than browser storage, which isn't reliable across all embedding
-      contexts.
-    </div>
-    <div class="devnote">
-      <strong>Confidence calibration</strong>
-      Before revealing the answer in Reverse Diagnosis and Timed Triage, we ask "how confident are you?"
-      (0–100%). Over many rounds we bucket guesses by confidence and plot accuracy per bucket — a
-      well-calibrated user should be right ~70% of the time when they said "70% confident."
-    </div>
-    <div class="devnote">
-      <strong>Accessibility mode</strong>
-      Swaps the signal/lesion palette to a colorblind-safer blue/amber pairing (avoids red-green
-      reliance) and is meant to sit alongside — not replace — full keyboard navigation, which every
-      chip/tab already supports via native <code>button</code> elements and visible focus rings.
-    </div>
-    <div class="devnote">
-      <strong>What's sample data vs. what you own</strong>
-      The 10 regions and 4 historical cases here are placeholders with real, sourced clinical
-      information — but you should replace them with your existing 20-region dataset and cite your
-      actual references (DSM-5-TR, ICD-11, a neuroanatomy text) in a visible sources section.
-    </div>
-  </div>
-</div>
-
-<script>
-/* =========================================================================
-   DATA — replace with your real 20-region dataset. This is a 10-region
-   sample with sourced-style clinical detail so the logic below is testable.
-   ========================================================================= */
-const REGIONS = [
-  { id:'broca',   name:"Broca's Area",        lobe:'Frontal',
-    dsm5:'Language deficits reference criteria under Neurocognitive Disorders',
-    icd11:'MB4A (spoken language)',
-    deficits:['Non-fluent, effortful speech','Preserved comprehension','Awareness of own errors (frustration)'],
-    pathologyColor:'#E8734A' },
-  { id:'wernicke', name:"Wernicke's Area",     lobe:'Temporal',
-    dsm5:'Language deficits reference criteria under Neurocognitive Disorders',
-    icd11:'MB4A (spoken language)',
-    deficits:['Fluent but nonsensical speech','Impaired comprehension','Lack of awareness of deficit'],
-    pathologyColor:'#4EA8FF' },
-  { id:'hippocampus', name:'Hippocampus',      lobe:'Temporal (medial)',
-    dsm5:'Major/Mild Neurocognitive Disorder — amnestic profile',
-    icd11:'6D80–6D8Z (Neurocognitive disorders)',
-    deficits:['Anterograde amnesia (new memory formation)','Relatively preserved procedural memory','Preserved remote memories'],
-    pathologyColor:'#B98CF2' },
-  { id:'amygdala', name:'Amygdala',            lobe:'Temporal (medial)',
-    dsm5:'Relevant to fear-processing components of anxiety disorders',
-    icd11:'6B00–6B0Z (Anxiety or fear-related disorders, associated circuitry)',
-    deficits:['Blunted fear response','Impaired threat recognition in faces','Reduced emotional memory salience'],
-    pathologyColor:'#FFC857' },
-  { id:'prefrontal', name:'Prefrontal Cortex', lobe:'Frontal',
-    dsm5:'Executive dysfunction seen across ADHD and Neurocognitive Disorders',
-    icd11:'6A05 (ADHD), 6D80 (Neurocognitive)',
-    deficits:['Impaired planning and judgment','Disinhibition / impulsivity','Difficulty with working memory tasks'],
-    pathologyColor:'#45E0C4' },
-  { id:'basalganglia', name:'Basal Ganglia',   lobe:'Subcortical',
-    dsm5:'Movement-disorder-related; relevant to differential of catatonia',
-    icd11:'8A00–8A0Z (Movement disorders)',
-    deficits:['Bradykinesia / rigidity','Resting tremor','Difficulty initiating movement'],
-    pathologyColor:'#E8734A' },
-  { id:'cerebellum', name:'Cerebellum',        lobe:'Hindbrain',
-    dsm5:'Not primary DSM target; relevant to motor-coordination comorbidities',
-    icd11:'8A04 (Ataxia)',
-    deficits:['Ataxia (uncoordinated movement)','Intention tremor','Impaired balance / gait'],
-    pathologyColor:'#4EA8FF' },
-  { id:'occipital', name:'Occipital Lobe',     lobe:'Occipital',
-    dsm5:'Not a primary DSM target; relevant to visual-perceptual comorbidities',
-    icd11:'9D00–9D3Z (Visual disturbances)',
-    deficits:['Visual field cuts','Difficulty recognizing objects (visual agnosia)','Preserved verbal ability'],
-    pathologyColor:'#B98CF2' },
-  { id:'thalamus', name:'Thalamus',            lobe:'Subcortical (relay)',
-    dsm5:'Relevant to attention and consciousness-related presentations',
-    icd11:'8A00 (broad sensorimotor relay disruption)',
-    deficits:['Sensory processing disruption','Reduced arousal / attention','Possible thalamic pain syndrome'],
-    pathologyColor:'#FFC857' },
-  { id:'insula', name:'Insular Cortex',        lobe:'Deep within lateral sulcus',
-    dsm5:'Implicated in interoception relevant to anxiety and eating-related disorders',
-    icd11:'6B0Z (Anxiety, associated circuitry)',
-    deficits:['Impaired interoceptive awareness','Altered risk perception','Disrupted taste/disgust processing'],
-    pathologyColor:'#45E0C4' },
-];
-
-/* Historical cases — factual summaries in original wording, not quoted text. */
-const CASES = [
-  { id:'gage', name:'Patient — 1848, railroad construction foreman', correctRegionId:'prefrontal',
-    vignette:'An iron rod was driven through the front of the skull during a workplace accident. The patient survived, but colleagues described a marked change in temperament afterward — impulsive, profane, and unable to stick to plans he had previously been diligent about. Basic movement, speech, and memory were largely unaffected.',
-    explanation:'Classic teaching case for prefrontal-cortex damage: executive function and personality regulation impaired while motor and language systems stayed intact.' },
-  { id:'hm', name:'Patient — bilateral medial temporal lobe resection, 1950s', correctRegionId:'hippocampus',
-    vignette:'Following surgery intended to control severe seizures, the patient could no longer form new long-term memories, though memories from before the operation, and the ability to learn new physical skills, remained intact.',
-    explanation:'The single most cited case for the hippocampus\'s role in converting short-term experience into long-term declarative memory.' },
-  { id:'tan', name:"Patient known by the syllable he could still say, 1861", correctRegionId:'broca',
-    vignette:'The patient understood spoken language well and could follow conversation, but had lost almost all ability to produce fluent speech, able to reliably utter only a single repeated syllable.',
-    explanation:'Foundational case linking a left frontal lobe lesion to expressive (non-fluent) aphasia.' },
-  { id:'wernickecase', name:'Patient described in 1874 case reports', correctRegionId:'wernicke',
-    vignette:'The patient spoke fluently and with normal rhythm, but the sentences were largely meaningless strings of real and invented words, and the patient struggled to understand what was said to them.',
-    explanation:'Foundational case for receptive aphasia, localizing language comprehension to the posterior superior temporal lobe.' },
-];
-
-/* =========================================================================
-   STATE
-   ========================================================================= */
-const state = {
-  mode: 'explore',
-  a11y: false,
-  lesionStack: new Set(),
-  splitLeft: null,
-  splitRight: null,
-  triage: { active:false, score:0, streak:0, timeLeft:20, timerId:null, current:null, confidence:50, revealed:false },
-  reverseDx: { current:null, guess:null, confidence:50, revealed:false },
-  historical: { current:null, guess:null, revealed:false },
-  calibration: [], // {confidence, correct}
-};
-
-const TABS = [
-  { id:'explore',    label:'Explore',              n:'01' },
-  { id:'reverseDx',  label:'Reverse Diagnosis',    n:'02' },
-  { id:'lesionStack',label:'Lesion Stacking',      n:'03' },
-  { id:'splitCompare',label:'Split-Brain Compare', n:'04' },
-  { id:'triage',     label:'Timed Triage',         n:'05' },
-  { id:'historical', label:'Historical Cases',     n:'06' },
-  { id:'calibration',label:'Calibration Stats',    n:'07' },
-];
-
-/* =========================================================================
-   RENDER: RAIL
-   ========================================================================= */
-function renderTabs(){
-  const el = document.getElementById('tabList');
-  el.innerHTML = TABS.map(t => `
-    <button class="tab ${state.mode===t.id?'active':''}" data-mode="${t.id}">
-      <span class="n">${t.n}</span>${t.label}
-    </button>`).join('');
-  el.querySelectorAll('.tab').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ state.mode = btn.dataset.mode; renderAll(); });
-  });
-}
-
-/* =========================================================================
-   RENDER: MAIN — dispatches to each mode's render function
-   ========================================================================= */
-function renderMain(){
-  const main = document.getElementById('mainContent');
-  const renderers = {
-    explore: renderExplore,
-    reverseDx: renderReverseDx,
-    lesionStack: renderLesionStack,
-    splitCompare: renderSplitCompare,
-    triage: renderTriage,
-    historical: renderHistorical,
-    calibration: renderCalibration,
-  };
-  main.innerHTML = renderers[state.mode]();
-  wireMode(state.mode);
-}
-
-/* ---- 01 Explore (baseline region browser — swap for your real 3D viewer) ---- */
-function renderExplore(){
-  return `
-    <div class="panel-title">
-      <div><h2>Explore</h2><p>Select a region to view its clinical profile. In your live site this panel sits beside the 3D model — clicking a mesh region should call <code class="mono">selectRegion(id)</code> just like the buttons below do.</p></div>
-      <span class="badge">${REGIONS.length} regions loaded</span>
-    </div>
-    <div class="card">
-      <div class="grid">
-        ${REGIONS.map(r=>`<button class="chip" data-region="${r.id}">${r.name}<small>${r.lobe}</small></button>`).join('')}
-      </div>
-    </div>
-    <div id="exploreDetail"></div>
-  `;
-}
-function renderExploreDetail(id){
-  const r = REGIONS.find(x=>x.id===id);
-  if(!r) return '';
-  return `
-    <div class="card">
-      <h3>${r.name}</h3>
-      <div class="row" style="margin:8px 0;">
-        <span class="code-pill">DSM-5-TR: ${r.dsm5}</span>
-        <span class="code-pill">ICD-11: ${r.icd11}</span>
-      </div>
-      <ul class="deficit-list">${r.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>
-    </div>`;
-}
-
-/* ---- 02 Reverse Diagnosis ("Build-a-Deficit") ---- */
-function newReverseRound(){
-  const r = REGIONS[Math.floor(Math.random()*REGIONS.length)];
-  state.reverseDx = { current:r, guess:null, confidence:50, revealed:false };
-}
-function renderReverseDx(){
-  if(!state.reverseDx.current) newReverseRound();
-  const r = state.reverseDx.current;
-  const { guess, confidence, revealed } = state.reverseDx;
-  return `
-    <div class="panel-title">
-      <div><h2>Reverse Diagnosis</h2><p>You're given the symptom cluster. Click the region you think is damaged, set your confidence, then reveal.</p></div>
-    </div>
-    <div class="card">
-      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Symptom cluster</h3>
-      <ul class="deficit-list">${r.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>
-    </div>
-    <div class="card">
-      <div class="grid">
-        ${REGIONS.map(x=>`<button class="chip ${guess===x.id?'selected':''} ${revealed && x.id===guess && x.id!==r.id?'wrong':''}" data-guess="${x.id}" ${revealed?'disabled':''}>${x.name}</button>`).join('')}
-      </div>
-      <div class="slider-row">
-        <label style="font-size:12px;color:var(--muted);width:110px;">Confidence</label>
-        <input type="range" min="0" max="100" step="5" value="${confidence}" id="rdConfidence" ${revealed?'disabled':''}>
-        <span class="slider-val">${confidence}%</span>
-      </div>
-      <div class="row">
-        <button class="primary-btn" id="rdReveal" ${!guess || revealed?'disabled':''}>Reveal answer</button>
-        <button class="ghost-btn" id="rdNext" ${!revealed?'disabled':''}>Next case →</button>
-      </div>
-      ${revealed ? `<div class="feedback ${guess===r.id?'correct':'incorrect'}">
-          ${guess===r.id ? '✓ Correct.' : '✗ Not quite.'} The lesion is in the <strong>${r.name}</strong> (${r.lobe}).
-        </div>` : ''}
-    </div>
-  `;
-}
-
-/* ---- 03 Lesion Stacking ---- */
-function renderLesionStack(){
-  const stacked = [...state.lesionStack].map(id=>REGIONS.find(r=>r.id===id));
-  return `
-    <div class="panel-title">
-      <div><h2>Lesion Stacking</h2><p>Select multiple regions to simulate combined damage (e.g. a stroke spanning adjacent territories). The profile below merges all selected deficits.</p></div>
-      <span class="badge">${stacked.length} lesion${stacked.length===1?'':'s'} active</span>
-    </div>
-    <div class="card">
-      <div class="grid">
-        ${REGIONS.map(r=>`<button class="chip ${state.lesionStack.has(r.id)?'selected':''}" data-stack="${r.id}">${r.name}<small>${r.lobe}</small></button>`).join('')}
-      </div>
-      <div class="row" style="margin-top:10px;">
-        <button class="ghost-btn" id="clearStack">Clear all</button>
-      </div>
-    </div>
-    ${stacked.length ? `
-      <div class="card">
-        <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Combined patient profile</h3>
-        ${stacked.map(r=>`
-          <div style="margin-top:10px;">
-            <div class="code-pill" style="margin-bottom:4px;">${r.name}</div>
-            <ul class="deficit-list">${r.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>
-          </div>`).join('')}
-      </div>` : ''}
-  `;
-}
-
-/* ---- 04 Split-Brain Compare ---- */
-function renderSplitCompare(){
-  const L = REGIONS.find(r=>r.id===state.splitLeft);
-  const R = REGIONS.find(r=>r.id===state.splitRight);
-  const selectHtml = (side, current) => `
-    <select data-split="${side}" class="chip" style="width:100%;">
-      <option value="">— choose region —</option>
-      ${REGIONS.map(r=>`<option value="${r.id}" ${current===r.id?'selected':''}>${r.name}</option>`).join('')}
-    </select>`;
-  return `
-    <div class="panel-title">
-      <div><h2>Split-Brain Compare</h2><p>Pick two regions (e.g. healthy vs. pathological state) and compare their deficit profiles side by side.</p></div>
-    </div>
-    <div class="compare-cols">
-      <div class="card compare-col">
-        <h3>Left</h3>
-        ${selectHtml('left', state.splitLeft)}
-        ${L ? `<ul class="deficit-list" style="margin-top:12px;">${L.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>` : ''}
-      </div>
-      <div class="card compare-col">
-        <h3>Right</h3>
-        ${selectHtml('right', state.splitRight)}
-        ${R ? `<ul class="deficit-list" style="margin-top:12px;">${R.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>` : ''}
-      </div>
-    </div>
-    ${L && R ? `
-      <div class="card">
-        <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Non-overlapping deficits</h3>
-        <p style="font-size:12px;color:var(--muted);">Symptoms unique to each region — the differential clues a clinician would look for.</p>
-        <div class="compare-cols" style="margin-top:8px;">
-          <ul class="deficit-list">${L.deficits.filter(d=>!R.deficits.includes(d)).map(d=>`<li>${d}</li>`).join('') || '<li>No unique deficits</li>'}</ul>
-          <ul class="deficit-list">${R.deficits.filter(d=>!L.deficits.includes(d)).map(d=>`<li>${d}</li>`).join('') || '<li>No unique deficits</li>'}</ul>
-        </div>
-      </div>` : ''}
-  `;
-}
-
-/* ---- 05 Timed Triage ---- */
-function newTriageCase(){
-  state.triage.current = REGIONS[Math.floor(Math.random()*REGIONS.length)];
-  state.triage.revealed = false;
-  state.triage.confidence = 50;
-}
-function startTriage(){
-  state.triage.active = true; state.triage.score = 0; state.triage.streak = 0; state.triage.timeLeft = 20;
-  newTriageCase();
-  clearInterval(state.triage.timerId);
-  state.triage.timerId = setInterval(()=>{
-    state.triage.timeLeft--;
-    if(state.triage.timeLeft<=0){ endTriageRound(false); }
-    else { updateTriageTimerDisplay(); }
-  },1000);
-  renderMain();
-}
-function endTriageRound(wasCorrect){
-  state.triage.revealed = true;
-  state.calibration.push({ confidence: state.triage.confidence, correct: wasCorrect });
-  if(wasCorrect){ state.triage.score++; state.triage.streak++; }
-  else { state.triage.streak = 0; }
-  clearInterval(state.triage.timerId);
-  renderMain();
-}
-function updateTriageTimerDisplay(){
-  const el = document.getElementById('triageTimer');
-  if(el) el.textContent = state.triage.timeLeft + 's';
-}
-function renderTriage(){
-  const t = state.triage;
-  if(!t.active){
-    return `
-      <div class="panel-title"><div><h2>Timed Triage</h2><p>ER-style rapid rounds: localize the lesion before the clock runs out. Score and streak reset each session.</p></div></div>
-      <div class="card" style="text-align:center;padding:36px;">
-        <button class="primary-btn" id="startTriage">Start round (20s per case)</button>
-      </div>`;
-  }
-  const r = t.current;
-  return `
-    <div class="panel-title">
-      <div><h2>Timed Triage</h2><p>Pick the region before time runs out.</p></div>
-      <div class="row">
-        <div class="stat"><div class="num">${t.score}</div><div class="lbl">Score</div></div>
-        <div class="stat"><div class="num">${t.streak}</div><div class="lbl">Streak</div></div>
-        <div class="stat"><div class="num timer" id="triageTimer">${t.timeLeft}s</div><div class="lbl">Time</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <ul class="deficit-list">${r.deficits.map(d=>`<li>${d}</li>`).join('')}</ul>
-    </div>
-    <div class="card">
-      <div class="grid">
-        ${REGIONS.map(x=>`<button class="chip" data-triageGuess="${x.id}" ${t.revealed?'disabled':''}>${x.name}</button>`).join('')}
-      </div>
-      ${t.revealed ? `
-        <div class="feedback ${t.lastCorrect?'correct':'incorrect'}">
-          ${t.lastCorrect? '✓ Correct — ':'✗ '} Answer: <strong>${r.name}</strong>
-        </div>
-        <div class="row" style="margin-top:10px;"><button class="primary-btn" id="nextTriage">Next case →</button></div>
-      ` : ''}
-    </div>
-  `;
-}
-
-/* ---- 06 Historical Cases ---- */
-function newHistoricalRound(){
-  const c = CASES[Math.floor(Math.random()*CASES.length)];
-  state.historical = { current:c, guess:null, revealed:false };
-}
-function renderHistorical(){
-  if(!state.historical.current) newHistoricalRound();
-  const { current:c, guess, revealed } = state.historical;
-  return `
-    <div class="panel-title">
-      <div><h2>Historical Cases</h2><p>Real case studies from the history of neuroscience. Read the vignette, localize the lesion.</p></div>
-    </div>
-    <div class="card">
-      <div class="code-pill" style="margin-bottom:8px;">${c.name}</div>
-      <p class="case-vignette">${c.vignette}</p>
-    </div>
-    <div class="card">
-      <div class="grid">
-        ${REGIONS.map(x=>`<button class="chip ${guess===x.id?'selected':''} ${revealed && x.id===guess && x.id!==c.correctRegionId?'wrong':''}" data-hguess="${x.id}" ${revealed?'disabled':''}>${x.name}</button>`).join('')}
-      </div>
-      <div class="row" style="margin-top:10px;">
-        <button class="primary-btn" id="hReveal" ${!guess || revealed?'disabled':''}>Reveal</button>
-        <button class="ghost-btn" id="hNext" ${!revealed?'disabled':''}>Next case →</button>
-      </div>
-      ${revealed ? `
-        <div class="feedback ${guess===c.correctRegionId?'correct':'incorrect'}">
-          ${guess===c.correctRegionId?'✓ Correct.':'✗ Not quite.'} ${c.explanation}
-        </div>
-        <p class="case-meta">Replace these vignettes with fully cited sources before publishing — attribute the original case reports.</p>
-      ` : ''}
-    </div>
-  `;
-}
-
-/* ---- 07 Calibration Stats ---- */
-function renderCalibration(){
-  const data = state.calibration;
-  if(!data.length){
-    return `
-      <div class="panel-title"><div><h2>Calibration Stats</h2><p>Play a few rounds of Timed Triage to generate calibration data — this tracks whether your confidence matches your actual accuracy.</p></div></div>
-      <div class="card" style="text-align:center;padding:30px;color:var(--muted);">No data yet.</div>`;
-  }
-  const buckets = [[0,20],[20,40],[40,60],[60,80],[80,101]];
-  const rows = buckets.map(([lo,hi])=>{
-    const inBucket = data.filter(d=>d.confidence>=lo && d.confidence<hi);
-    const acc = inBucket.length ? Math.round(100*inBucket.filter(d=>d.correct).length/inBucket.length) : null;
-    return { label:`${lo}-${hi<101?hi:100}%`, acc, n:inBucket.length };
-  });
-  return `
-    <div class="panel-title"><div><h2>Calibration Stats</h2><p>Accuracy vs. stated confidence, bucketed. A well-calibrated forecaster's bars roughly match their bucket label.</p></div></div>
-    <div class="card">
-      ${rows.map(r=>`
-        <div class="calib-bar-row">
-          <div class="bucket">${r.label}</div>
-          <div class="calib-track"><div class="calib-fill" style="width:${r.acc ?? 0}%;"></div></div>
-          <div style="width:70px;text-align:right;color:var(--muted);">${r.acc!==null ? r.acc+'% (n='+r.n+')' : '—'}</div>
-        </div>`).join('')}
-    </div>
-  `;
-}
-
-/* =========================================================================
-   WIRE UP interactions per mode (re-run after every render)
-   ========================================================================= */
-function wireMode(mode){
-  if(mode==='explore'){
-    document.querySelectorAll('[data-region]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        document.querySelectorAll('[data-region]').forEach(b=>b.classList.remove('selected'));
-        btn.classList.add('selected');
-        document.getElementById('exploreDetail').innerHTML = renderExploreDetail(btn.dataset.region);
-      });
-    });
-  }
-
-  if(mode==='reverseDx'){
-    document.querySelectorAll('[data-guess]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{ state.reverseDx.guess = btn.dataset.guess; renderMain(); });
-    });
-    const slider = document.getElementById('rdConfidence');
-    if(slider) slider.addEventListener('input', e=>{
-      state.reverseDx.confidence = +e.target.value;
-      document.querySelector('#mainContent .slider-val').textContent = e.target.value+'%';
-    });
-    const revealBtn = document.getElementById('rdReveal');
-    if(revealBtn) revealBtn.addEventListener('click', ()=>{
-      state.reverseDx.revealed = true;
-      state.calibration.push({ confidence: state.reverseDx.confidence, correct: state.reverseDx.guess===state.reverseDx.current.id });
-      renderMain();
-    });
-    const nextBtn = document.getElementById('rdNext');
-    if(nextBtn) nextBtn.addEventListener('click', ()=>{ newReverseRound(); renderMain(); });
-  }
-
-  if(mode==='lesionStack'){
-    document.querySelectorAll('[data-stack]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const id = btn.dataset.stack;
-        state.lesionStack.has(id) ? state.lesionStack.delete(id) : state.lesionStack.add(id);
-        renderMain();
-      });
-    });
-    const clearBtn = document.getElementById('clearStack');
-    if(clearBtn) clearBtn.addEventListener('click', ()=>{ state.lesionStack.clear(); renderMain(); });
-  }
-
-  if(mode==='splitCompare'){
-    document.querySelectorAll('[data-split]').forEach(sel=>{
-      sel.addEventListener('change', e=>{
-        if(sel.dataset.split==='left') state.splitLeft = e.target.value || null;
-        else state.splitRight = e.target.value || null;
-        renderMain();
-      });
-    });
-  }
-
-  if(mode==='triage'){
-    const startBtn = document.getElementById('startTriage');
-    if(startBtn) startBtn.addEventListener('click', startTriage);
-    document.querySelectorAll('[data-triageGuess]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const correct = btn.dataset.triageguess === state.triage.current.id || btn.dataset.triageGuess === state.triage.current.id;
-        state.triage.lastCorrect = btn.getAttribute('data-triageGuess') === state.triage.current.id;
-        endTriageRound(state.triage.lastCorrect);
-      });
-    });
-    const nextBtn = document.getElementById('nextTriage');
-    if(nextBtn) nextBtn.addEventListener('click', ()=>{
-      newTriageCase();
-      state.triage.timeLeft = 20;
-      clearInterval(state.triage.timerId);
-      state.triage.timerId = setInterval(()=>{
-        state.triage.timeLeft--;
-        if(state.triage.timeLeft<=0) endTriageRound(false);
-        else updateTriageTimerDisplay();
-      },1000);
-      renderMain();
-    });
-  }
-
-  if(mode==='historical'){
-    document.querySelectorAll('[data-hguess]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{ state.historical.guess = btn.dataset.hguess; renderMain(); });
-    });
-    const revealBtn = document.getElementById('hReveal');
-    if(revealBtn) revealBtn.addEventListener('click', ()=>{ state.historical.revealed = true; renderMain(); });
-    const nextBtn = document.getElementById('hNext');
-    if(nextBtn) nextBtn.addEventListener('click', ()=>{ newHistoricalRound(); renderMain(); });
-  }
-}
-
-/* =========================================================================
-   TOP-LEVEL CONTROLS: dev notes, accessibility, export
-   ========================================================================= */
-document.getElementById('btnDevNotes').addEventListener('click', ()=>{
-  document.getElementById('devOverlay').classList.add('show');
-});
-document.getElementById('closeDevNotes').addEventListener('click', ()=>{
-  document.getElementById('devOverlay').classList.remove('show');
-});
-document.getElementById('devOverlay').addEventListener('click', (e)=>{
-  if(e.target.id==='devOverlay') e.currentTarget.classList.remove('show');
-});
-
-document.getElementById('btnA11y').addEventListener('click', (e)=>{
-  state.a11y = !state.a11y;
-  document.getElementById('appRoot').setAttribute('data-a11y', state.a11y);
-  e.currentTarget.classList.toggle('on', state.a11y);
-});
-
-document.getElementById('btnExport').addEventListener('click', ()=>{
-  const dataset = { regions: REGIONS, historicalCases: CASES, exportedAt: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(dataset, null, 2)], { type:'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'neuromap-dataset.json'; a.click();
-  URL.revokeObjectURL(url);
-});
-
-/* =========================================================================
-   INIT
-   ========================================================================= */
-function renderAll(){ renderTabs(); renderMain(); }
-renderAll();
-</script>
 </body>
 </html>
