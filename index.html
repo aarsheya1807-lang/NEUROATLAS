@@ -189,19 +189,59 @@
         </div>
     </main>
 
-    <!-- CLINICAL VIGNETTE & DIAGNOSTIC MODAL -->
-    <div id="vignetteModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-2xl p-6 rounded-2xl border border-slate-700 shadow-2xl max-h-[90vh] overflow-y-auto space-y-5">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h2 class="text-xl font-extrabold text-blue-400 flex items-center gap-2">
-                    <i class="fa-solid fa-stethoscope"></i> Clinical Vignette Simulator
-                </h2>
-                <button onclick="closeVignetteModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            
-            <div id="vignetteContent" class="space-y-4 text-xs">
-                <!-- Case details loaded dynamically -->
-            </div>
+   <!-- CLINICAL VIGNETTE & MCQ SIMULATOR -->
+<section id="clinical-simulator-section" class="simulator-card">
+  <div class="simulator-header">
+    <h2><i class="fas fa-brain"></i> Clinical Vignette & MCQ Simulator</h2>
+    
+    <!-- Mode & Level Controls -->
+    <div class="simulator-controls">
+      <div class="mode-selector">
+        <button id="btn-mode-cases" class="mode-btn active" onclick="switchSimulatorMode('cases')">Clinical Cases (10)</button>
+        <button id="btn-mode-mcqs" class="mode-btn" onclick="switchSimulatorMode('mcqs')">MCQ Bank (50)</button>
+      </div>
+      
+      <div class="difficulty-selector">
+        <label for="difficulty-filter">Difficulty:</label>
+        <select id="difficulty-filter" onchange="filterQuestionsByDifficulty()">
+          <option value="all">All Levels</option>
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="quiz-progress-bar-container">
+    <div id="quiz-progress-bar" class="quiz-progress-fill" style="width: 0%;"></div>
+  </div>
+  <div class="quiz-meta-info">
+    <span id="question-tracker">Item 1 of 10</span>
+    <span id="difficulty-badge" class="badge badge-easy">Easy</span>
+  </div>
+
+  <!-- Question Content Container -->
+  <div id="vignette-container" class="vignette-content">
+    <span id="case-category" class="category-tag">Neuroanatomy</span>
+    <h3 id="case-title">Loading Question...</h3>
+    <p id="case-description" class="question-body"></p>
+
+    <!-- Options Container -->
+    <div id="options-container" class="options-grid"></div>
+
+    <!-- Feedback Pop-up -->
+    <div id="feedback-box" class="feedback-box" style="display: none;">
+      <h4 id="feedback-title"></h4>
+      <p id="feedback-explanation"></p>
+      <div class="feedback-actions">
+        <button id="prev-btn" class="nav-btn" onclick="loadPreviousQuestion()" style="display: none;">← Previous</button>
+        <button id="next-btn" class="nav-btn primary" onclick="loadNextQuestion()" style="display: none;">Next Question →</button>
+      </div>
+    </div>
+  </div>
+</section>
 
             <!-- ANALYTICS DASHBOARD -->
             <div id="analyticsDashboard" class="hidden bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3">
