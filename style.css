@@ -368,3 +368,24 @@ select {
   pointer-events: none;
   transform: translateY(-10px);
 }
+/* ==========================================
+   MOBILE RESPONSIVE DRAWER STYLES
+   ========================================== */
+@media (max-width: 768px) {
+    .viewer-controls-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 45vh;
+        overflow-y: auto;
+        border-radius: 16px 16px 0 0;
+        transform: translateY(calc(100% - 48px)); /* Collapsed state showing tab header */
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 900;
+    }
+
+    .viewer-controls-panel.expanded {
+        transform: translateY(0);
+    }
+}
