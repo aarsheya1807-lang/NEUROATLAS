@@ -1,0 +1,26 @@
+<!-- SVG Filter Definition (Place anywhere in body) -->
+<svg style="display: none;">
+  <filter id="vintage-magenta-duotone" color-interpolation-filters="sRGB">
+    <!-- Convert image to grayscale -->
+    <feColorMatrix type="matrix" values="0.33 0.33 0.33 0 0
+                                        0.33 0.33 0.33 0 0
+                                        0.33 0.33 0.33 0 0
+                                        0    0    0    1 0" />
+    <!-- Map darks to Magenta (#A82463) and lights to Cream (#F9F5EB) -->
+    <feComponentTransfer>
+      <feFuncR type="table" tableValues="0.66 0.98" />
+      <feFuncG type="table" tableValues="0.14 0.96" />
+      <feFuncB type="table" tableValues="0.39 0.92" />
+    </feComponentTransfer>
+  </filter>
+</svg>
+
+<!-- Target Image -->
+<style>
+  .duotone-img {
+    filter: url(#vintage-magenta-duotone) contrast(110%);
+    background-color: #f9f5eb;
+  }
+</style>
+
+<img src="your-brain-image.png" class="duotone-img" alt="Vintage Brain Illustration">
