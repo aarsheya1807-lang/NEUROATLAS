@@ -1248,6 +1248,679 @@
             initScene();
             initSimulator();
         };
+        <!--
+  ============================================================================
+  NEURO ATLAS — EXTENSION MODULE (Sections 8–18)
+  ============================================================================
+  HOW TO INSTALL
+  1. Copy the <style> block into your existing <head> (or link as a separate
+     .css file — recommended: save it as extension.css and add
+     <link rel="stylesheet" href="extension.css"> to your <head>).
+  2. Copy everything inside <body> (the <section id="na-ext-root">...</section>)
+     and paste it into your index.html, right before your closing </body>
+     tag, or right after your existing Citation section.
+  3. Copy the <script> block in at the very end, right before </body>.
+  4. Add nav links to your existing top nav (markup provided at the very
+     bottom of this file, in the NAV SNIPPET comment) so 8–18 are reachable.
+
+  Everything is namespaced with the "na-ext" prefix so it will not collide
+  with your existing CSS classes or IDs.
+  ============================================================================
+-->
+
+<style>
+  /* ---------- Design tokens (tuned to match dark clinical/atlas UI) ---------- */
+  #na-ext-root {
+    --na-bg: #0a0e14;
+    --na-panel: #10161f;
+    --na-panel-2: #151d29;
+    --na-border: #223047;
+    --na-text: #dce6f2;
+    --na-muted: #8fa3bd;
+    --na-cyan: #4fd8e8;
+    --na-purple: #a78bfa;
+    --na-amber: #f2b84b;
+    --na-danger: #f2607a;
+    --na-radius: 14px;
+    background: var(--na-bg);
+    color: var(--na-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    padding: 64px 6vw 96px;
+  }
+  #na-ext-root * { box-sizing: border-box; }
+  #na-ext-root h1, #na-ext-root h2, #na-ext-root h3 { margin: 0; letter-spacing: -0.01em; }
+
+  .na-ext-intro { max-width: 760px; margin-bottom: 48px; }
+  .na-ext-intro .na-eyebrow {
+    font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 12px; color: var(--na-cyan); text-transform: uppercase;
+    letter-spacing: 0.12em; margin-bottom: 10px; display: block;
+  }
+  .na-ext-intro h1 { font-size: clamp(28px, 3.4vw, 40px); font-weight: 700; }
+  .na-ext-intro p { color: var(--na-muted); font-size: 15.5px; line-height: 1.6; margin-top: 12px; }
+
+  /* Section shell used by every module 8–18 */
+  .na-mod {
+    border: 1px solid var(--na-border);
+    background: linear-gradient(180deg, var(--na-panel), var(--na-panel-2));
+    border-radius: var(--na-radius);
+    margin-bottom: 28px;
+    overflow: hidden;
+    scroll-margin-top: 90px;
+  }
+  .na-mod-head {
+    display: flex; align-items: center; gap: 14px;
+    padding: 22px 26px; cursor: pointer; user-select: none;
+    border-bottom: 1px solid transparent;
+  }
+  .na-mod-head:hover { background: rgba(79, 216, 232, 0.04); }
+  .na-mod-num {
+    font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 13px; color: var(--na-cyan);
+    border: 1px solid var(--na-border); border-radius: 8px;
+    width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .na-mod-title { flex: 1; }
+  .na-mod-title h2 { font-size: 19px; font-weight: 650; }
+  .na-mod-title span { display: block; font-size: 13px; color: var(--na-muted); margin-top: 3px; }
+  .na-mod-chevron { color: var(--na-muted); transition: transform 0.25s ease; font-size: 14px; }
+  .na-mod.open .na-mod-chevron { transform: rotate(180deg); color: var(--na-cyan); }
+  .na-mod.open .na-mod-head { border-bottom-color: var(--na-border); }
+
+  .na-mod-body {
+    max-height: 0; overflow: hidden; transition: max-height 0.35s ease;
+  }
+  .na-mod.open .na-mod-body { max-height: 4000px; }
+  .na-mod-inner { padding: 6px 26px 26px; }
+
+  /* Topic cards inside a module */
+  .na-topic {
+    border: 1px solid var(--na-border); border-radius: 10px;
+    padding: 16px 18px; margin-top: 12px; background: rgba(255,255,255,0.015);
+  }
+  .na-topic h3 { font-size: 15px; color: var(--na-cyan); font-weight: 600; margin-bottom: 6px; }
+  .na-topic p { font-size: 14px; line-height: 1.6; color: var(--na-text); opacity: 0.92; margin: 0; }
+  .na-topic .na-tag {
+    display: inline-block; font-size: 10.5px; font-family: monospace;
+    color: var(--na-purple); border: 1px solid var(--na-purple);
+    border-radius: 999px; padding: 1px 8px; margin-bottom: 8px; opacity: 0.85;
+  }
+
+  /* Comparison table (Section 10) */
+  .na-compare { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13.5px; }
+  .na-compare th, .na-compare td { padding: 10px 12px; border: 1px solid var(--na-border); text-align: left; }
+  .na-compare th { background: rgba(79,216,232,0.08); color: var(--na-cyan); font-weight: 600; }
+  .na-compare td.na-bio { color: var(--na-amber); }
+  .na-compare td.na-ann { color: var(--na-purple); }
+
+  /* Diff-dx simulator (Section 12) */
+  .na-sim { border: 1px dashed var(--na-border); border-radius: 10px; padding: 18px; margin-top: 16px; }
+  .na-sim-q { font-size: 14px; color: var(--na-muted); margin-bottom: 10px; }
+  .na-sim-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .na-btn {
+    background: transparent; border: 1px solid var(--na-border); color: var(--na-text);
+    padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .na-btn:hover { border-color: var(--na-cyan); color: var(--na-cyan); }
+  .na-sim-result {
+    margin-top: 14px; padding: 12px 14px; border-radius: 8px;
+    background: rgba(79,216,232,0.07); border: 1px solid var(--na-border);
+    font-size: 13.5px; line-height: 1.55; display: none;
+  }
+  .na-sim-result.show { display: block; }
+  .na-sim-reset { margin-top: 10px; }
+
+  /* Z-score calculator (Section 17) */
+  .na-calc { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-top: 14px; }
+  .na-calc label { font-size: 12px; color: var(--na-muted); display: block; margin-bottom: 5px; }
+  .na-calc input {
+    background: var(--na-bg); border: 1px solid var(--na-border); color: var(--na-text);
+    border-radius: 8px; padding: 8px 10px; font-size: 13.5px; width: 120px;
+  }
+  .na-calc-out {
+    margin-top: 16px; padding: 14px; border-radius: 10px;
+    background: rgba(167,139,250,0.08); border: 1px solid var(--na-border);
+    font-family: monospace; font-size: 13.5px;
+  }
+
+  .na-code {
+    background: #060a10; border: 1px solid var(--na-border); border-radius: 10px;
+    padding: 14px 16px; font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 12.5px; line-height: 1.6; color: #9be9c9; overflow-x: auto; margin-top: 12px;
+  }
+
+  /* Timeline (Section 18) */
+  .na-timeline { position: relative; margin-top: 18px; padding-left: 22px; }
+  .na-timeline::before {
+    content: ""; position: absolute; left: 6px; top: 4px; bottom: 4px; width: 2px;
+    background: linear-gradient(180deg, var(--na-cyan), var(--na-purple));
+  }
+  .na-tl-item { position: relative; padding-bottom: 20px; }
+  .na-tl-item::before {
+    content: ""; position: absolute; left: -22px; top: 3px; width: 10px; height: 10px;
+    border-radius: 50%; background: var(--na-cyan); box-shadow: 0 0 0 3px rgba(79,216,232,0.15);
+  }
+  .na-tl-year { font-family: monospace; color: var(--na-cyan); font-size: 12.5px; }
+  .na-tl-item h3 { font-size: 14.5px; margin: 3px 0 4px; }
+  .na-tl-item p { font-size: 13.5px; color: var(--na-muted); margin: 0; line-height: 1.5; }
+
+  /* Case selector (Section 12) */
+  .na-case-select {
+    background: var(--na-bg); border: 1px solid var(--na-border); color: var(--na-text);
+    padding: 9px 12px; border-radius: 8px; font-size: 13.5px; width: 100%; max-width: 360px;
+  }
+  .na-case-card { margin-top: 14px; display: none; }
+  .na-case-card.show { display: block; }
+
+  @media (max-width: 640px) {
+    #na-ext-root { padding: 48px 5vw 72px; }
+    .na-mod-head { padding: 18px; }
+    .na-mod-inner { padding: 4px 18px 20px; }
+  }
+</style>
+
+<section id="na-ext-root">
+
+  <div class="na-ext-intro">
+    <span class="na-eyebrow">Extended Reference · Sections 08–18</span>
+    <h1>Beyond the Atlas</h1>
+    <p>
+      Eleven additional modules extending Neuro Atlas from structural mapping into
+      behavior, plasticity, computation, ethics, clinical reasoning, and the
+      history of the field. Click any module to expand it.
+    </p>
+  </div>
+
+  <!-- ============================= 08 ============================= -->
+  <div class="na-mod" id="sec-08">
+    <div class="na-mod-head" onclick="naExtToggle('sec-08')">
+      <div class="na-mod-num">08</div>
+      <div class="na-mod-title">
+        <h2>Behavioral &amp; Affective Neuroscience</h2>
+        <span>Emotion circuitry, the stress axis, and reward architecture</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <span class="na-tag">CIRCUITRY</span>
+          <h3>Circuitry of Emotion</h3>
+          <p>The amygdala drives rapid threat appraisal and fear conditioning; the anterior cingulate cortex (ACC) integrates affective salience with conflict monitoring and pain; the insula maps interoceptive states onto subjective feeling, underpinning empathy and disgust. Together these three nodes form the core limbic-paralimbic triangle behind fear, anxiety, pleasure, and social emotion.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">HPA AXIS</span>
+          <h3>Stress Axis Dynamics</h3>
+          <p>The hypothalamic-pituitary-adrenal cascade — corticotropin-releasing hormone (CRH) → adrenocorticotropic hormone (ACTH) → cortisol — mobilizes energy and vigilance under acute stress. Repeated activation without recovery produces allostatic load: cortisol-mediated dendritic atrophy in CA3 hippocampal neurons, impaired negative feedback, and downstream vulnerability to depression and cognitive decline.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">REWARD</span>
+          <h3>Reward &amp; Addiction Architecture</h3>
+          <p>Dopaminergic projections from the ventral tegmental area (VTA) to the nucleus accumbens encode reward prediction error rather than pleasure itself. Repeated drug exposure produces incentive sensitization (cue-triggered wanting outpaces liking) alongside tolerance at the receptor level, driving the shift from voluntary use to compulsive, habit-driven seeking mediated by the dorsal striatum.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= 09 ============================= -->
+  <div class="na-mod" id="sec-09">
+    <div class="na-mod-head" onclick="naExtToggle('sec-09')">
+      <div class="na-mod-num">09</div>
+      <div class="na-mod-title">
+        <h2>Neurorehabilitation, Plasticity &amp; Brain Interventions</h2>
+        <span>LTP/LTD, non-invasive stimulation, and recovery after injury</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <span class="na-tag">PLASTICITY</span>
+          <h3>Mechanisms of Neuroplasticity</h3>
+          <p>Long-term potentiation (LTP) strengthens synapses via NMDA-receptor-dependent calcium influx and AMPA receptor insertion; long-term depression (LTD) weakens them through phosphatase-driven receptor removal. Structural correlates include axonal sprouting into denervated territory and activity-dependent remodeling of dendritic spine size and density.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">NIBS</span>
+          <h3>Non-Invasive Brain Stimulation — target selector</h3>
+          <p style="margin-bottom:10px;">Select a modality to see its typical clinical target and mechanism.</p>
+          <div class="na-sim-opts" id="nibs-opts">
+            <button class="na-btn" onclick="naNibs('rtms')">rTMS</button>
+            <button class="na-btn" onclick="naNibs('tdcs')">tDCS</button>
+            <button class="na-btn" onclick="naNibs('dbs')">DBS</button>
+          </div>
+          <div class="na-sim-result" id="nibs-out"></div>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">RECOVERY</span>
+          <h3>Functional Recovery &amp; TBI</h3>
+          <p>Post-stroke recovery follows a proportional-recovery curve for many patients, driven by peri-infarct cortical reorganization and diaschisis resolution. Cognitive remediation programs (errorless learning, spaced retrieval, compensatory strategy training) exploit residual plasticity, while diffuse axonal injury in TBI often demands network-level rather than lesion-focal rehabilitation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= 10 ============================= -->
+  <div class="na-mod" id="sec-10">
+    <div class="na-mod-head" onclick="naExtToggle('sec-10')">
+      <div class="na-mod-num">10</div>
+      <div class="na-mod-title">
+        <h2>Computational Neuroscience &amp; AI Paradigms</h2>
+        <span>Biological vs. artificial networks, BCIs, and predictive processing</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <h3>Biological vs. Artificial Neural Networks</h3>
+          <table class="na-compare">
+            <tr><th>Property</th><th>Biological neuron</th><th>Artificial node (ANN)</th></tr>
+            <tr><td>Signal</td><td class="na-bio">All-or-none action potential</td><td class="na-ann">Continuous scalar activation</td></tr>
+            <tr><td>Timing</td><td class="na-bio">Millisecond spike timing matters (STDP)</td><td class="na-ann">Timing usually abstracted away</td></tr>
+            <tr><td>Weights</td><td class="na-bio">Synaptic strength, activity-dependent (Hebbian)</td><td class="na-ann">Numeric weight, backprop-optimized</td></tr>
+            <tr><td>Refractory period</td><td class="na-bio">Absolute + relative, limits firing rate</td><td class="na-ann">No analogue</td></tr>
+            <tr><td>Learning rule</td><td class="na-bio">Local, unsupervised (mostly)</td><td class="na-ann">Global gradient descent, supervised</td></tr>
+          </table>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">BCI</span>
+          <h3>Neural Decoding &amp; Brain-Computer Interfaces</h3>
+          <p>Motor BCIs record population spiking or local field potentials from motor cortex, decode intended kinematics with linear or recurrent models, and drive a prosthetic effector in a closed loop refined by feedback. Speech BCIs decode articulatory or phonetic representations from sensorimotor cortex and synthesize text or audio in real time.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">FREE ENERGY</span>
+          <h3>Predictive Processing &amp; the Free Energy Principle</h3>
+          <p>Friston's framework casts the brain as a hierarchical Bayesian inference engine that minimizes prediction error (free energy) by updating internal generative models or acting on the world to make sensations match predictions. Perception is inference; action is prediction fulfilled through movement.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= 11 ============================= -->
+  <div class="na-mod" id="sec-11">
+    <div class="na-mod-head" onclick="naExtToggle('sec-11')">
+      <div class="na-mod-num">11</div>
+      <div class="na-mod-title">
+        <h2>Clinical Neuro-Ethics &amp; Medicolegal Frameworks</h2>
+        <span>Neurolaw, enhancement ethics, and capacity assessment</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <span class="na-tag">NEUROLAW</span>
+          <h3>Neurolaw Reference</h3>
+          <p>Neuroimaging is increasingly offered in competency, insanity, and mitigation proceedings, but courts weigh it against Daubert/Frye admissibility standards — group-level findings (e.g., fMRI activation maps) don't straightforwardly license claims about a single defendant's mental state at a specific past moment.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">ENHANCEMENT</span>
+          <h3>Ethics of Enhancement &amp; Neurotechnology</h3>
+          <p>Debates center on distributive justice (unequal access to nootropics or BCIs), authenticity (whether cognitive enhancement changes the self doing the enhancing), and emerging neural privacy/neurodata rights as neural signals become recordable outside clinical settings.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">CONSENT</span>
+          <h3>Informed Consent in Altered States</h3>
+          <p>Capacity assessment requires evaluating four components — understanding, appreciation, reasoning, and expressing a choice — which can be selectively impaired in executive dysfunction, dementia, or psychosis, meaning a global diagnosis alone does not determine incapacity.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= 12 ============================= -->
+  <div class="na-mod" id="sec-12">
+    <div class="na-mod-head" onclick="naExtToggle('sec-12')">
+      <div class="na-mod-num">12</div>
+      <div class="na-mod-title">
+        <h2>Interactive Clinical Case Repository — "The Neuro-Clinic"</h2>
+        <span>Lesion vignettes and a differential-diagnosis decision tree</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <h3>Lesion Locators &amp; Case Studies</h3>
+          <p style="margin-bottom:10px;">Choose a classic case to load its vignette.</p>
+          <select class="na-case-select" id="na-case-select" onchange="naLoadCase(this.value)">
+            <option value="">— select a case —</option>
+            <option value="broca">Broca's aphasia</option>
+            <option value="wernicke">Wernicke's aphasia</option>
+            <option value="kluver">Klüver-Bucy syndrome</option>
+            <option value="split">Split-brain (callosotomy)</option>
+            <option value="gage">Phineas Gage</option>
+          </select>
+          <div class="na-case-card" id="na-case-broca">
+            <div class="na-topic"><span class="na-tag">CASE</span><h3>Broca's Aphasia</h3>
+            <p><strong>Lesion:</strong> Posterior inferior frontal gyrus (Broca's area, BA 44/45), dominant hemisphere.<br><strong>Presentation:</strong> Non-fluent, effortful, agrammatic speech with relatively preserved comprehension; frequent awareness of the deficit and associated frustration.<br><strong>Teaching point:</strong> Production &gt;&gt; comprehension deficit; often accompanied by right hemiparesis given proximity to motor cortex.</p></div>
+          </div>
+          <div class="na-case-card" id="na-case-wernicke">
+            <div class="na-topic"><span class="na-tag">CASE</span><h3>Wernicke's Aphasia</h3>
+            <p><strong>Lesion:</strong> Posterior superior temporal gyrus (Wernicke's area, BA 22), dominant hemisphere.<br><strong>Presentation:</strong> Fluent but semantically empty, paraphasic speech ("word salad") with severely impaired comprehension; often unaware of the deficit (anosognosia).<br><strong>Teaching point:</strong> Comprehension &gt;&gt; production deficit — the mirror image of Broca's.</p></div>
+          </div>
+          <div class="na-case-card" id="na-case-kluver">
+            <div class="na-topic"><span class="na-tag">CASE</span><h3>Klüver-Bucy Syndrome</h3>
+            <p><strong>Lesion:</strong> Bilateral amygdala / anterior temporal lobe (originally described after bilateral temporal lobectomy).<br><strong>Presentation:</strong> Hyperorality, hypersexuality, placidity, visual agnosia, and hyperphagia.<br><strong>Teaching point:</strong> Demonstrates the amygdala's role in assigning emotional/threat salience to sensory objects.</p></div>
+          </div>
+          <div class="na-case-card" id="na-case-split">
+            <div class="na-topic"><span class="na-tag">CASE</span><h3>Split-Brain (Callosotomy)</h3>
+            <p><strong>Lesion:</strong> Surgical section of the corpus callosum (historically for intractable epilepsy).<br><strong>Presentation:</strong> Left-hand objects/words presented to the right hemisphere cannot be verbally named (language is left-lateralized) despite intact non-verbal recognition — the classic Sperry/Gazzaniga paradigm.<br><strong>Teaching point:</strong> Reveals functional and callosal division of labor between hemispheres.</p></div>
+          </div>
+          <div class="na-case-card" id="na-case-gage">
+            <div class="na-topic"><span class="na-tag">CASE</span><h3>Phineas Gage</h3>
+            <p><strong>Lesion:</strong> Bilateral (predominantly left) ventromedial and orbitofrontal cortex, from a tamping-iron injury (1848).<br><strong>Presentation:</strong> Preserved intellect and memory alongside profound personality change — impulsivity, poor planning, and disinhibited social conduct.<br><strong>Teaching point:</strong> Foundational case linking prefrontal cortex to emotion regulation and decision-making, not just "executive function" abstractly.</p></div>
+          </div>
+        </div>
+
+        <div class="na-topic">
+          <span class="na-tag">SIMULATOR</span>
+          <h3>Differential Diagnosis Simulator</h3>
+          <div class="na-sim" id="na-dx-sim">
+            <div class="na-sim-q" id="na-dx-q">Presenting symptom: is speech <strong>fluent</strong> or <strong>non-fluent</strong>?</div>
+            <div class="na-sim-opts" id="na-dx-opts">
+              <button class="na-btn" onclick="naDx('fluent')">Fluent</button>
+              <button class="na-btn" onclick="naDx('nonfluent')">Non-fluent</button>
+            </div>
+            <div class="na-sim-result" id="na-dx-result"></div>
+            <div class="na-sim-reset"><button class="na-btn" onclick="naDxReset()">↺ Restart simulator</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= 13 ============================= -->
+  <div class="na-mod" id="sec-13">
+    <div class="na-mod-head" onclick="naExtToggle('sec-13')">
+      <div class="na-mod-num">13</div>
+      <div class="na-mod-title">
+        <h2>Molecular &amp; Cellular Neurobiology</h2>
+        <span>Ion channels, glia, and the molecular basis of LTP</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic"><h3>Ion Channels &amp; Excitability</h3>
+        <p>Voltage-gated Na⁺ channels drive the depolarizing upstroke of the action potential; delayed-rectifier K⁺ channels repolarize it; voltage-gated Ca²⁺ channels at the presynaptic terminal couple depolarization to vesicle fusion. Channelopathies in these subunits underlie epilepsy, migraine, and periodic paralysis syndromes.</p></div>
+        <div class="na-topic"><h3>Glia: Beyond Support Cells</h3>
+        <p>Astrocytes buffer extracellular K⁺, regulate the blood-brain barrier, and participate in tripartite synaptic signaling; oligodendrocytes myelinate CNS axons; microglia perform activity-dependent synaptic pruning and immune surveillance, implicating them in both development and neurodegeneration.</p></div>
+        <div class="na-topic"><h3>Molecular Basis of LTP</h3>
+        <p>NMDA receptor coincidence detection (requiring both glutamate binding and postsynaptic depolarization to relieve Mg²⁺ block) triggers Ca²⁺ influx, CaMKII autophosphorylation, and AMPA receptor trafficking to the membrane — the core molecular cascade behind synaptic strengthening and much of associative memory.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= 14 ============================= -->
+  <div class="na-mod" id="sec-14">
+    <div class="na-mod-head" onclick="naExtToggle('sec-14')">
+      <div class="na-mod-num">14</div>
+      <div class="na-mod-title">
+        <h2>Gut-Brain Axis &amp; Systemic Neurobiology</h2>
+        <span>Microbiome signaling, vagal tone, and heart-rate variability</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic"><h3>Microbiome-Brain Signaling</h3>
+        <p>Gut microbiota influence CNS function via vagal afferents, microbial metabolites (short-chain fatty acids), immune/cytokine signaling, and modulation of tryptophan metabolism upstream of serotonin synthesis — implicated in mood, stress reactivity, and neurodevelopment.</p></div>
+        <div class="na-topic"><h3>Heart-Rate Variability as a Window on Autonomic-CNS Coupling</h3>
+        <p>HRV indexes the balance of sympathetic and parasympathetic (vagal) input to the heart; higher vagally-mediated HRV correlates with prefrontal regulatory capacity per polyvagal and neurovisceral integration models, making it a common biomarker in stress and affective-disorder research.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= 15 ============================= -->
+  <div class="na-mod" id="sec-15">
+    <div class="na-mod-head" onclick="naExtToggle('sec-15')">
+      <div class="na-mod-num">15</div>
+      <div class="na-mod-title">
+        <h2>Sleep, Consciousness &amp; the Glymphatic System</h2>
+        <span>Sleep architecture, arousal states, and CSF-mediated clearance</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic"><h3>Sleep Architecture</h3>
+        <p>NREM stages 1–3 (with stage 3 slow-wave sleep) alternate with REM sleep in ~90-minute cycles; slow-wave sleep is dense early in the night and supports declarative memory consolidation, while REM proportion rises toward morning and supports emotional and procedural memory processing.</p></div>
+        <div class="na-topic"><h3>Levels &amp; Contents of Consciousness</h3>
+        <p>Clinical arousal states (alert, drowsy, stupor, coma) are distinguished from the disorders-of-consciousness spectrum (vegetative/unresponsive wakefulness, minimally conscious state) by the presence or absence of reproducible, purposeful responsiveness rather than arousal alone.</p></div>
+        <div class="na-topic"><h3>The Glymphatic System</h3>
+        <p>A perivascular CSF-interstitial fluid exchange pathway, driven largely by aquaporin-4 channels on astrocytic end-feet, clears metabolic waste including amyloid-β; clearance is substantially higher during sleep, linking chronic sleep disruption to neurodegenerative risk.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= 16 ============================= -->
+  <div class="na-mod" id="sec-16">
+    <div class="na-mod-head" onclick="naExtToggle('sec-16')">
+      <div class="na-mod-num">16</div>
+      <div class="na-mod-title">
+        <h2>Sensory Systems &amp; Perceptual Pathways</h2>
+        <span>Vision, audition, and somatosensation from receptor to cortex</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic"><h3>Visual Pathway</h3>
+        <p>Retina → optic nerve/chiasm → lateral geniculate nucleus → primary visual cortex (V1), then splitting into the dorsal ("where/how") stream to parietal cortex and the ventral ("what") stream to inferotemporal cortex.</p></div>
+        <div class="na-topic"><h3>Auditory Pathway</h3>
+        <p>Cochlea → cochlear nucleus → superior olivary complex (binaural localization) → inferior colliculus → medial geniculate nucleus → primary auditory cortex (Heschl's gyrus), tonotopically organized at every relay.</p></div>
+        <div class="na-topic"><h3>Somatosensory Pathway</h3>
+        <p>Dorsal column-medial lemniscus pathway carries fine touch/proprioception ipsilaterally before decussating at the medulla; the anterolateral (spinothalamic) system carries pain/temperature and decussates near entry level — a dissociation clinically exploited in localizing spinal cord lesions.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= 17 ============================= -->
+  <div class="na-mod" id="sec-17">
+    <div class="na-mod-head" onclick="naExtToggle('sec-17')">
+      <div class="na-mod-num">17</div>
+      <div class="na-mod-title">
+        <h2>The Open Neuro Lab</h2>
+        <span>Python snippets, open datasets, and a Z-score calculator</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <span class="na-tag">CALCULATOR</span>
+          <h3>Z-Score / Percentile Calculator</h3>
+          <p style="margin-bottom:8px;">For converting a raw neuropsych score to a standardized z-score and percentile against a normative mean/SD.</p>
+          <div class="na-calc">
+            <div><label>Raw score</label><input type="number" id="na-z-raw" value="0"></div>
+            <div><label>Norm mean</label><input type="number" id="na-z-mean" value="0"></div>
+            <div><label>Norm SD</label><input type="number" id="na-z-sd" value="1"></div>
+            <button class="na-btn" onclick="naCalcZ()">Calculate</button>
+          </div>
+          <div class="na-calc-out" id="na-z-out">z = —, percentile = —</div>
+        </div>
+        <div class="na-topic">
+          <h3>Python Snippet — quick EEG bandpower</h3>
+          <div class="na-code">import numpy as np
+from scipy.signal import welch
+
+def bandpower(signal, fs, band):
+    f, Pxx = welch(signal, fs=fs, nperseg=fs*2)
+    lo, hi = band
+    idx = (f &gt;= lo) &amp; (f &lt;= hi)
+    return np.trapz(Pxx[idx], f[idx])
+
+# e.g. alpha power 8-12 Hz
+alpha = bandpower(eeg_channel, fs=256, band=(8, 12))</div>
+        </div>
+        <div class="na-topic">
+          <h3>Open Datasets Worth Knowing</h3>
+          <p>OpenNeuro (BIDS-format MRI/EEG/MEG), the Human Connectome Project, ADNI (Alzheimer's neuroimaging), PhysioNet (physiological signals incl. EEG/ECG), and the Allen Brain Atlas (gene expression &amp; connectivity) are common starting points for open-access analysis.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= 18 ============================= -->
+  <div class="na-mod" id="sec-18">
+    <div class="na-mod-head" onclick="naExtToggle('sec-18')">
+      <div class="na-mod-num">18</div>
+      <div class="na-mod-title">
+        <h2>Historical &amp; Epistemological Foundations</h2>
+        <span>Classic discoveries and paradigm shifts in the field</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-timeline">
+          <div class="na-tl-item"><span class="na-tl-year">1848</span><h3>Phineas Gage</h3><p>First widely documented case tying frontal lobe damage to personality change, reshaping ideas about localization of "character."</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1861–74</span><h3>Broca &amp; Wernicke</h3><p>Localization of expressive and receptive language function, founding the modern lesion-deficit method.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1906</span><h3>Cajal &amp; Golgi (Nobel)</h3><p>The neuron doctrine vs. reticular theory debate resolves in favor of neurons as discrete signaling units.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1950s</span><h3>Hodgkin &amp; Huxley</h3><p>Quantitative ionic model of the action potential — the mathematical foundation of modern electrophysiology.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1960s–70s</span><h3>Split-Brain Studies</h3><p>Sperry &amp; Gazzaniga's callosotomy work reframes hemispheric specialization and the unity of consciousness.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1973</span><h3>Bliss &amp; Lømo</h3><p>First description of long-term potentiation, launching the modern synaptic theory of memory.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1990s</span><h3>fMRI &amp; the "Decade of the Brain"</h3><p>Non-invasive functional imaging shifts neuroscience from lesion inference to in-vivo functional mapping.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">2013–present</span><h3>Connectomics &amp; Big Data Neuroscience</h3><p>The Human Connectome Project, large-scale calcium imaging, and computational psychiatry mark a shift toward network-level and data-driven models of brain function.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<script>
+  // Accordion toggle
+  function naExtToggle(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  // NIBS mini-simulator (Section 09)
+  function naNibs(kind) {
+    const data = {
+      rtms: "rTMS (repetitive Transcranial Magnetic Stimulation): induces focal cortical currents via a pulsed magnetic coil. Common target: left dorsolateral prefrontal cortex (DLPFC) for treatment-resistant depression. High-frequency = excitatory; low-frequency = inhibitory.",
+      tdcs: "tDCS (transcranial Direct Current Stimulation): a weak constant current shifts resting membrane potential rather than triggering spikes. Anodal stimulation increases cortical excitability; cathodal decreases it. Used in motor rehab and cognitive research, with a lower evidence bar than rTMS.",
+      dbs: "DBS (Deep Brain Stimulation): surgically implanted electrodes deliver high-frequency stimulation to subcortical targets — subthalamic nucleus or globus pallidus interna for Parkinson's disease, and (investigationally) subcallosal cingulate for refractory depression."
+    };
+    const out = document.getElementById('nibs-out');
+    out.textContent = data[kind];
+    out.classList.add('show');
+  }
+
+  // Case loader (Section 12)
+  function naLoadCase(id) {
+    document.querySelectorAll('.na-case-card').forEach(el => el.classList.remove('show'));
+    if (id) document.getElementById('na-case-' + id).classList.add('show');
+  }
+
+  // Differential diagnosis decision tree (Section 12)
+  const naDxTree = {
+    fluent: {
+      q: "Is comprehension impaired?",
+      opts: [
+        { label: "Comprehension impaired", next: "wernicke_result" },
+        { label: "Comprehension intact", next: "conduction_result" }
+      ]
+    },
+    nonfluent: {
+      q: "Is comprehension relatively preserved?",
+      opts: [
+        { label: "Comprehension preserved", next: "broca_result" },
+        { label: "Comprehension also impaired", next: "global_result" }
+      ]
+    },
+    wernicke_result: { result: "Localization: posterior superior temporal gyrus (Wernicke's area). Likely diagnosis: Wernicke's (receptive) aphasia — fluent, paraphasic, poor comprehension, often anosognosic." },
+    conduction_result: { result: "Localization: arcuate fasciculus (the white-matter tract linking Wernicke's and Broca's areas). Likely diagnosis: Conduction aphasia — fluent speech, intact comprehension, but disproportionately poor repetition." },
+    broca_result: { result: "Localization: posterior inferior frontal gyrus (Broca's area). Likely diagnosis: Broca's (expressive) aphasia — non-fluent, agrammatic, effortful, with preserved comprehension." },
+    global_result: { result: "Localization: large dominant-hemisphere perisylvian lesion involving both Broca's and Wernicke's territory (e.g., MCA territory stroke). Likely diagnosis: Global aphasia — severe impairment across production and comprehension." }
+  };
+  let naDxState = null;
+  function naDx(choice) {
+    // First click only: choice is 'fluent' or 'nonfluent', a direct key lookup
+    let target;
+    if (!naDxState) {
+      target = naDxTree[choice];
+      naDxState = choice;
+      if (target.result) { naDxShowResult(target.result); return; }
+      document.getElementById('na-dx-q').innerHTML = "<strong>" + target.q + "</strong>";
+      const optsDiv = document.getElementById('na-dx-opts');
+      optsDiv.innerHTML = "";
+      target.opts.forEach(o => {
+        const btn = document.createElement('button');
+        btn.className = 'na-btn';
+        btn.textContent = o.label;
+        btn.onclick = () => naDxGo(o.next);
+        optsDiv.appendChild(btn);
+      });
+    }
+  }
+  function naDxGo(nextKey) {
+    const node = naDxTree[nextKey];
+    if (node.result) { naDxShowResult(node.result); return; }
+  }
+  function naDxShowResult(text) {
+    document.getElementById('na-dx-opts').innerHTML = "";
+    document.getElementById('na-dx-q').innerHTML = "";
+    const res = document.getElementById('na-dx-result');
+    res.textContent = text;
+    res.classList.add('show');
+  }
+  function naDxReset() {
+    naDxState = null;
+    document.getElementById('na-dx-result').classList.remove('show');
+    document.getElementById('na-dx-q').innerHTML = "Presenting symptom: is speech <strong>fluent</strong> or <strong>non-fluent</strong>?";
+    document.getElementById('na-dx-opts').innerHTML =
+      '<button class="na-btn" onclick="naDx(\'fluent\')">Fluent</button>' +
+      '<button class="na-btn" onclick="naDx(\'nonfluent\')">Non-fluent</button>';
+  }
+
+  // Z-score calculator (Section 17)
+  function naCalcZ() {
+    const raw = parseFloat(document.getElementById('na-z-raw').value);
+    const mean = parseFloat(document.getElementById('na-z-mean').value);
+    const sd = parseFloat(document.getElementById('na-z-sd').value);
+    if (isNaN(raw) || isNaN(mean) || isNaN(sd) || sd === 0) {
+      document.getElementById('na-z-out').textContent = "Enter valid numbers (SD ≠ 0).";
+      return;
+    }
+    const z = (raw - mean) / sd;
+    // Standard normal CDF via error function approximation
+    const cdf = 0.5 * (1 + erf(z / Math.SQRT2));
+    const pct = (cdf * 100).toFixed(1);
+    document.getElementById('na-z-out').textContent =
+      `z = ${z.toFixed(2)}   |   percentile ≈ ${pct}th`;
+  }
+  function erf(x) {
+    const sign = x >= 0 ? 1 : -1;
+    x = Math.abs(x);
+    const a1=0.254829592, a2=-0.284496736, a3=1.421413741, a4=-1.453152027, a5=1.061405429, p=0.3275911;
+    const t = 1 / (1 + p * x);
+    const y = 1 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1) * t * Math.exp(-x * x);
+    return sign * y;
+  }
+</script>
+
+<!--
+  ============================================================================
+  NAV SNIPPET — add these links to your existing top navigation so 8–18
+  are reachable. Adjust classes to match your existing nav item markup.
+  ============================================================================
+
+  <a href="#sec-08">Behavioral &amp; Affective</a>
+  <a href="#sec-09">Neurorehab &amp; Plasticity</a>
+  <a href="#sec-10">Computational Neuro</a>
+  <a href="#sec-11">Neuroethics</a>
+  <a href="#sec-12">The Neuro-Clinic</a>
+  <a href="#sec-13">Molecular &amp; Cellular</a>
+  <a href="#sec-14">Gut-Brain Axis</a>
+  <a href="#sec-15">Sleep &amp; Consciousness</a>
+  <a href="#sec-16">Sensory Systems</a>
+  <a href="#sec-17">Open Neuro Lab</a>
+  <a href="#sec-18">History &amp; Foundations</a>
+  ============================================================================
+-->
     </script>
 </body>
 </html>
