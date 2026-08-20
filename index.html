@@ -330,7 +330,7 @@
 
             <!-- SIMULATION & CITATION MODAL BUTTONS -->
             <div class="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-800">
-                <button onclick="openVignetteModal()" class="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1">
+                <button onclick="scrollToSimulator()" class="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1">
                     <i class="fa-solid fa-user-doctor"></i> Vignettes
                 </button>
                 <button onclick="openCiteModal()" class="bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1">
@@ -377,7 +377,7 @@
             <div class="simulator-controls">
                 <div class="mode-selector">
                     <button id="btn-mode-cases" class="mode-btn active" onclick="switchSimulatorMode('cases')">Clinical Cases (10)</button>
-                    <button id="btn-mode-mcqs" class="mode-btn" onclick="switchSimulatorMode('mcqs')">MCQ Bank (50)</button>
+                    <button id="btn-mode-mcqs" class="mode-btn" onclick="switchSimulatorMode('mcqs')">MCQ Bank (10)</button>
                 </div>
 
                 <div class="difficulty-selector">
@@ -424,7 +424,7 @@
 
     <!-- ANALYTICS DASHBOARD -->
     <div class="simulator-page-container">
-        <div id="analyticsDashboard" class="hidden bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3">
+        <div id="analyticsDashboard" class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3">
             <div class="flex justify-between items-center">
                 <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-2">
                     <i class="fa-solid fa-chart-pie"></i> Diagnostic Performance Analytics
@@ -460,7 +460,7 @@
                 <button onclick="closeCiteModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <p class="text-xs text-slate-300 leading-relaxed">
-                Neuro Atlas is indexed on Zenodo and citable for research and academic software publications.
+                Neuro Atlas is citable for research and academic software publications.
             </p>
             <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-[11px] font-mono text-cyan-300 relative">
                 <button onclick="copyBibtex()" class="absolute top-2 right-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded">Copy</button>
@@ -489,98 +489,251 @@
             { id: "pmc", name: "Premotor Cortex", Brodmann: "BA 6", pos: [0, 1.5, 1.1], color: 0x2563eb, radius: 0.55, function: "Planning and preparing body movements and guiding sensory-controlled movement.", lesion: "Motor apraxia, impaired motor sequencing, difficulty initiating complex motor actions.", dsm: "Developmental Coordination Disorder.", icd: "ICD-10: F82 (Specific developmental disorder of motor function)", cultural: "Somatomotor manifestation of movement initiation anxiety." },
             { id: "motor", name: "Primary Motor Cortex", Brodmann: "BA 4", pos: [0, 1.6, 0.4], color: 0xef4444, radius: 0.65, function: "Execution of voluntary motor movements across contralateral body regions.", lesion: "Contralateral hemiparesis or hemiplegia, spasticity, loss of fine motor control.", dsm: "Conversion Disorder (Functional Neurological Symptom Disorder - Motor Subtype).", icd: "ICD-10: G81 (Hemiplegia)", cultural: "Motor-subtype conversion phenomena triggered by acute psychosocial stressors." },
             { id: "somato", name: "Primary Somatosensory Cortex", Brodmann: "BA 1, 2, 3", pos: [0, 1.6, -0.3], color: 0xf97316, radius: 0.65, function: "Processing tactile sensory input, proprioception, thermal perception, and nociception.", lesion: "Contralateral sensory loss, astereognosis, loss of tactile discrimination.", dsm: "Somatic Symptom Disorder, Persistent Somatoform Pain Disorder.", icd: "ICD-10: R20 (Disturbances of sensation)", cultural: "Cultural amplification of localized sensory parasthesias." },
-            { id: "sfg", name: "Superior Frontal Gyrus", Brodmann: "BA 8", pos: [0.7, 1.5, 1.4], color: 0x60a5fa, radius: 0.45, function: "Working memory, self-awareness, and higher-order cognitive processing.", lesion: "Working memory deficits, altered self-awareness, and executive inertia.", dsm: "ADHD, Mild Cognitive Impairment.", icd: "ICD-11: 6A05 (ADHD)", cultural: "Attentional strain related to high cognitive load." },
-            { id: "broca", name: "Broca's Area", Brodmann: "BA 44, 45", pos: [-1.1, 0.6, 1.4], color: 0x60a5fa, radius: 0.4, function: "Motor speech production, language processing, and syntactic comprehension.", lesion: "Broca's Aphasia (expressive, non-fluent speech with preserved comprehension).", dsm: "Neurodevelopmental Language Disorder, Major Neurocognitive Disorder due to Stroke.", icd: "ICD-10: R47.01 (Aphasia)", cultural: "Idioms of distress manifesting as acute mutism or throat constriction." },
-            { id: "parietal", name: "Parietal Lobe", Brodmann: "BA 5, 7, 39, 40", pos: [0, 1.4, -1.1], color: 0xf59e0b, radius: 0.6, function: "Integrating sensory information across modalities, spatial awareness, and navigation.", lesion: "Hemispatial neglect, astereognosis, apraxia, Gerstmann syndrome.", dsm: "Spatial Neglect Syndrome, Neurocognitive Disorder.", icd: "ICD-10: R41.8 (Cognitive deficits)", cultural: "Spatial somatic mapping variations across cultures." },
-            { id: "tp", name: "Temporal Pole", Brodmann: "BA 38", pos: [-1.1, -0.2, 1.2], color: 0x818cf8, radius: 0.4, function: "Socio-emotional processing, language comprehension, and face recognition.", lesion: "Semantic dementia, socio-emotional agnosia, impairment in personal knowledge.", dsm: "Frontotemporal Neurocognitive Disorder.", icd: "ICD-11: 6D80.1 (Frontotemporal dementia)", cultural: "Impaired interpretation of cultural social cues." },
-            { id: "insula", name: "Insula", Brodmann: "BA 13", pos: [0.7, 0.1, 0.4], color: 0x14b8a6, radius: 0.35, function: "Interoceptive awareness, emotional experience, homeostasis, and visceral sensations.", lesion: "Altered pain perception, loss of craving, loss of visceral emotional feedback.", dsm: "Somatic Symptom Disorder, Substance Use Disorders, Panic Disorder.", icd: "ICD-11: 6B40 (Panic Disorder)", cultural: "Visceral somatization manifestations across global populations." },
-            { id: "wernicke", name: "Wernicke's Area", Brodmann: "BA 22", pos: [-1.3, 0.2, -0.6], color: 0xa855f7, radius: 0.45, function: "Language comprehension, semantic processing, and auditory language recognition.", lesion: "Wernicke's Aphasia (fluent but nonsensical speech, severe comprehension impairment).", dsm: "Substance/Medication-Induced Neurocognitive Disorder, Vascular Neurocognitive Disorder.", icd: "ICD-10: R47.01, ICD-11: 6D80", cultural: "Semantic processing of culturally specific glossaries of distress." },
-            { id: "stg", name: "Superior Temporal Gyrus", Brodmann: "BA 41, 42", pos: [-1.3, 0.1, 0.1], color: 0x06b6d4, radius: 0.4, function: "Primary auditory processing, speech processing, and pitch recognition.", lesion: "Auditory agnosia, word deafness, impairment in complex acoustic processing.", dsm: "Auditory Processing Disorder, Schizophrenia Spectrum.", icd: "ICD-10: H93.2", cultural: "Auditory perceptions influenced by local acoustic practices." },
-            { id: "amygdala", name: "Amygdala", Brodmann: "Limbic Structure", pos: [0.6, -0.4, 0.5], color: 0xec4899, radius: 0.3, function: "Emotional evaluation, threat detection, fear conditioning, and emotional memory.", lesion: "Klüver-Bucy syndrome, loss of fear conditioning, emotional blunting, hyperorality.", dsm: "Post-Traumatic Stress Disorder (PTSD), Specific Phobia, Generalized Anxiety Disorder.", icd: "ICD-11: 6B40 (Generalized Anxiety)", cultural: "Hyperactivity in fear-circuits linked to cultural panic syndromes such as fright sickness in Latin America, generating acute autonomic distress, somatic trembling, and soul-loss fear." },
-            { id: "hippo", name: "Hippocampus", Brodmann: "Limbic Structure", pos: [-0.6, -0.3, 0.1], color: 0xeab308, radius: 0.35, function: "Consolidation of short-term memory into long-term memory, spatial navigation.", lesion: "Anterograde amnesia, disorientation, inability to form new declarative memories.", dsm: "Alzheimer's Disease, Dissociative Amnesia, Post-Traumatic Stress Disorder (PTSD).", icd: "ICD-11: 6D80 (Alzheimer Disease)", cultural: "Stress-induced hippocampal volume alterations across trauma cohorts." },
-            { id: "mtg", name: "Middle Temporal Gyrus", Brodmann: "BA 21", pos: [-1.3, -0.3, -0.3], color: 0x6366f1, radius: 0.4, function: "Language processing, semantic memory retrieval, and visual distance perception.", lesion: "Transcortical sensory aphasia, semantic memory deficits, visual object dysnomia.", dsm: "Semantic Variant Primary Progressive Aphasia.", icd: "ICD-11: 6D80", cultural: "Semantic loss affecting cultural narratives." },
-            { id: "thalamus", name: "Thalamus", Brodmann: "Diencephalon", pos: [0, 0.2, 0], color: 0x8b5cf6, radius: 0.5, function: "Relay hub for sensory and motor signals to cerebral cortex; regulates consciousness and sleep.", lesion: "Thalamic pain syndrome, sensory ataxia, coma, Korsakoff syndrome.", dsm: "Substance-Induced Persisting Amnestic Disorder (Wernicke-Korsakoff).", icd: "ICD-10: F10.6 (Amnestic disorder)", cultural: "Central sensory gating variations under acute somatic stress." },
-            { id: "visual", name: "Primary Visual Cortex", Brodmann: "BA 17", pos: [0, 0.5, -2.1], color: 0x10b981, radius: 0.6, function: "Visual perception, spatial frequency, color orientation, and visual motion processing.", lesion: "Cortical blindness, homonymous hemianopia, visual agnosia, Anton syndrome.", dsm: "Hallucinogen Persisting Perception Disorder (HPPD), Visual Agnosia.", icd: "ICD-10: H53.4 (Visual field defects)", cultural: "Culturally shaped visual visions vs. unformed visual hallucinations." },
-            { id: "itg", name: "Inferior Temporal Gyrus", Brodmann: "BA 20", pos: [-1.2, -0.6, -0.2], color: 0x4f46e5, radius: 0.4, function: "Complex visual processing, object recognition, and visual pattern recognition.", lesion: "Visual object agnosia, prosopagnosia, difficulty identifying complex shapes.", dsm: "Visual Agnosia, Major Neurocognitive Disorder.", icd: "ICD-10: R41.8", cultural: "Impaired facial and symbolic visual recognition." },
-            { id: "v1", name: "Primary Visual Cortex (V1)", Brodmann: "BA 17 (Foveal)", pos: [0, 0.2, -2.3], color: 0x059669, radius: 0.45, function: "Direct reception and initial processing of retinotopic visual inputs.", lesion: "Scotoma, central visual field loss, cortical blindness.", dsm: "Visual Perception Disorders.", icd: "ICD-10: H53.4", cultural: "Visual aura interpretation across traditional frameworks." },
-            { id: "cerebellum", name: "Cerebellum", Brodmann: "Cerebellar Structure", pos: [0, -1.0, -1.4], color: 0xc084fc, radius: 0.75, function: "Coordination of voluntary motor movement, balance, posture, and motor learning.", lesion: "Ataxia, dysmetria, intention tremor, dysdiadochokinesia, cerebellar cognitive affective syndrome.", dsm: "Substance-Induced Cerebellar Ataxia, Neurodegenerative Ataxias.", icd: "ICD-10: G11 (Hereditary ataxia)", cultural: "Somatic instability interpretations." },
-            { id: "brainstem", name: "Brainstem", Brodmann: "Brainstem Structure", pos: [0, -1.5, -0.4], color: 0x475569, radius: 0.5, function: "Autonomic regulation of heart rate, respiration, consciousness, and cranial nerve relays.", lesion: "Locked-in syndrome, cranial nerve palsies, central respiratory failure, coma.", dsm: "Central Sleep Apnea, Traumatic Brain Injury.", icd: "ICD-10: G93.1 (Anoxic brain damage)", cultural: "Autonomic arousal panic symptoms in culturally defined stress responses." }
+            { id: "sfg", name: "Superior Frontal Gyrus", Brodmann: "BA 8", pos: [0, 1.7, 1.2], color: 0x60a5fa, radius: 0.5, function: "Self-awareness, motor coordination, working memory.", lesion: "Deficits in self-monitoring and cognitive speed.", dsm: "ADHD, Schizophrenia.", icd: "ICD-11: 6A05 (ADHD)", cultural: "Disrupted metacognition across stress spectrums." },
+            { id: "broca", name: "Broca's Area", Brodmann: "BA 44, 45", pos: [-1.2, 0.8, 1.2], color: 0xec4899, radius: 0.5, function: "Speech production, syntactic processing, language articulation.", lesion: "Broca's (expressive) aphasia: non-fluent, labored speech with preserved comprehension.", dsm: "Language Disorder (Expressive).", icd: "ICD-10: R47.0 (Aphasia)", cultural: "Communicative distress in high-context communication settings." },
+            { id: "wernicke", name: "Wernicke's Area", Brodmann: "BA 22", pos: [-1.3, 0.5, -0.8], color: 0xd946ef, radius: 0.5, function: "Language comprehension, processing spoken and written word meaning.", lesion: "Wernicke's (receptive) aphasia: fluent but empty speech, severely impaired comprehension.", dsm: "Language Disorder (Receptive).", icd: "ICD-10: R47.0 (Aphasia)", cultural: "Auditory verbal hallucinations and severe semantic decoding loss." },
+            { id: "parietal", name: "Superior Parietal Lobule", Brodmann: "BA 7", pos: [0, 1.5, -1.0], color: 0xa855f7, radius: 0.6, function: "Spatial perception, visuomotor integration, sensorimotor coordination.", lesion: "Optic ataxia, spatial neglect, impaired spatial processing.", dsm: "Spatial Neglect Syndrome.", icd: "ICD-11: MB20", cultural: "Disorientation in spatial navigational tasks." },
+            { id: "occipital", name: "Primary Visual Cortex", Brodmann: "BA 17", pos: [0, 0.7, -2.1], color: 0x10b981, radius: 0.65, function: "Initial processing of visual input from retinas.", lesion: "Cortical blindness, scotoma, visual agnosia.", dsm: "Visual Agnosia.", icd: "ICD-10: H53.4", cultural: "Trance-like visual alterations." },
+            { id: "auditory", name: "Primary Auditory Cortex", Brodmann: "BA 41, 42", pos: [-1.4, 0.3, 0.0], color: 0x14b8a6, radius: 0.45, function: "Auditory perception, pitch, tone, frequency processing.", lesion: "Cortical deafness, auditory agnosia.", dsm: "Auditory Processing Disorder.", icd: "ICD-10: H93.2", cultural: "Cultural interpretations of auditory phenomena." },
+            { id: "acc", name: "Anterior Cingulate Cortex", Brodmann: "BA 24, 32", pos: [0, 0.6, 0.8], color: 0x8b5cf6, radius: 0.45, function: "Conflict monitoring, error detection, emotional regulation, pain distress.", lesion: "Apathy, akinetic mutism, severe attentional deficits.", dsm: "OCD, MDD.", icd: "ICD-11: 6B20 (OCD)", cultural: "Affective somatic distress expression." },
+            { id: "insula", name: "Insular Cortex", Brodmann: "BA 13", pos: [-0.9, 0.2, 0.2], color: 0x06b6d4, radius: 0.45, function: "Interoception, empathy, subjective feeling states, pain processing.", lesion: "Altered pain threshold, loss of interoceptive awareness.", dsm: "Somatic Symptom Disorder, Panic Disorder.", icd: "ICD-11: 6B80", cultural: "Somatic distress and visceral illness idioms." },
+            { id: "amygdala", name: "Amygdala", Brodmann: "Limbic", pos: [-0.6, -0.2, 0.3], color: 0xf43f5e, radius: 0.4, function: "Emotional processing, threat detection, fear conditioning.", lesion: "Klüver-Bucy syndrome, loss of fear response, hyperorality.", dsm: "PTSD, Generalized Anxiety Disorder.", icd: "ICD-11: 6B40 (PTSD)", cultural: "Culture-bound fear syndromes and panic states." },
+            { id: "hippocampus", name: "Hippocampus", Brodmann: "Limbic", pos: [-0.7, -0.3, -0.3], color: 0xeab308, radius: 0.45, function: "Memory consolidation, spatial navigation, episodic memory encoding.", lesion: "Anterograde amnesia, difficulty forming new episodic memories.", dsm: "Alzheimer's Disease, Dissociative Amnesia.", icd: "ICD-11: 6D80", cultural: "Dissociative memory loss in acute cultural trauma." },
+            { id: "thalamus", name: "Thalamus", Brodmann: "Diencephalon", pos: [0, 0.1, -0.1], color: 0x84cc16, radius: 0.5, function: "Sensory relay station, consciousness, sleep, alertness.", lesion: "Thalamic pain syndrome, sensory loss, coma.", dsm: "Sleep-Wake Disorders.", icd: "ICD-11: 7A00", cultural: "Somatic sensory alterations." },
+            { id: "hypothalamus", name: "Hypothalamus", Brodmann: "Diencephalon", pos: [0, -0.3, 0.2], color: 0x059669, radius: 0.35, function: "Autonomic regulation, endocrine control, circadian rhythms, homeostasis.", lesion: "Endocrine dysfunction, sleep disruption, thermoregulatory loss.", dsm: "Eating Disorders, Circadian Rhythm Disorders.", icd: "ICD-11: 6B81", cultural: "Somatic distress linked to autonomic dysregulation." },
+            { id: "basal_ganglia", name: "Basal Ganglia (Striatum)", Brodmann: "Subcortical", pos: [-0.6, 0.2, 0.0], color: 0x0284c7, radius: 0.5, function: "Motor control, procedural learning, habit formation, reward processing.", lesion: "Parkinsonism, chorea, dystonia, compulsive behaviors.", dsm: "Parkinson's Disease, Tourette's, OCD.", icd: "ICD-11: 8A00", cultural: "Motor manifestations of stress." },
+            { id: "cerebellum", name: "Cerebellum", Brodmann: "Cerebellar", pos: [0, -1.1, -1.2], color: 0x6366f1, radius: 0.75, function: "Motor coordination, balance, procedural learning, cognitive timing.", lesion: "Cerebellar ataxia, dysmetria, intention tremor, dysdiadochokinesia.", dsm: "Ataxia spectrum disorders.", icd: "ICD-11: 8A20", cultural: "Motor instability symptoms." },
+            { id: "pons", name: "Pons", Brodmann: "Brainstem", pos: [0, -1.2, -0.3], color: 0x64748b, radius: 0.4, function: "Relay between cerebrum and cerebellum, REM sleep, autonomic functions.", lesion: "Locked-in syndrome, cranial nerve deficits.", dsm: "Sleep disturbances.", icd: "ICD-10: G93.8", cultural: "Sleep paralysis cultural interpretations." },
+            { id: "medulla", name: "Medulla Oblongata", Brodmann: "Brainstem", pos: [0, -1.7, -0.3], color: 0x475569, radius: 0.35, function: "Vital autonomic functions: respiration, heart rate, blood pressure, coughing.", lesion: "Respiratory failure, cardiac dysregulation, dysphagia (life-threatening).", dsm: "Autonomic Neurocognitive Dysfunction.", icd: "ICD-10: G93.8", cultural: "Severe autonomic distress states." }
         ];
 
         const casesData = [
             {
-                id: 1,
-                category: "Neuroanatomy",
-                title: "Case 1: Expressive Speech Arrest",
-                difficulty: "Easy",
-                description: "A 62-year-old right-handed patient experiences sudden onset of non-fluent, labored speech with intact auditory comprehension following an ischemic event. Which region is primarily affected?",
-                options: ["Wernicke's Area", "Broca's Area", "Primary Visual Cortex", "Hippocampus"],
+                id: "case-1",
+                category: "Executive Function & PFC",
+                difficulty: "Medium",
+                title: "Case 1: Post-Traumatic Personality & Executive Shift",
+                description: "A 38-year-old site manager involved in a severe industrial collapse sustained a focal traumatic injury to the anterior frontal region. His family reports marked disinhibition, profound apathy, impulsive decision-making, and inability to maintain long-term goal structures, despite preserved language and motor skill.",
+                options: ["Primary Motor Cortex", "Prefrontal Cortex (Dorsolateral/Orbitofrontal)", "Primary Somatosensory Cortex", "Cerebellum"],
                 correct: 1,
-                explanation: "Broca's area (BA 44/45) in the left inferior frontal gyrus is responsible for motor speech production. Lesions lead to non-fluent Broca's aphasia with preserved comprehension."
+                explanation: "Damage to the Prefrontal Cortex, particularly dorsolateral and orbitofrontal subregions, manifests as executive dysfunction, disinhibition, apathy, and goal planning deficits."
             },
             {
-                id: 2,
-                category: "Psychopathology",
-                title: "Case 2: Acute Threat Hyper-reactivity",
+                id: "case-2",
+                category: "Language & Expressive Speech",
+                difficulty: "Easy",
+                title: "Case 2: Non-Fluent Non-Comprehension Deficit",
+                description: "A 62-year-old patient presents following an ischemic stroke. Speech is slow, halting, effortful, and telegraphic. However, the patient appears to understand spoken commands and shows clear frustration at their inability to articulate words.",
+                options: ["Wernicke's Area", "Broca's Area", "Primary Auditory Cortex", "Hippocampus"],
+                correct: 1,
+                explanation: "Broca's aphasia (BA 44/45) is characterized by non-fluent, expressive speech deficits with largely intact language comprehension."
+            },
+            {
+                id: "case-3",
+                category: "Limbic & Threat Processing",
                 difficulty: "Medium",
-                description: "A veteran displaying severe hypervigilance, flash-backs, and exaggerated startle responses shows hyper-reactivity in which limbic structure during neuroimaging?",
-                options: ["Amygdala", "Cerebellum", "Primary Motor Cortex", "Frontal Pole"],
+                title: "Case 3: Hyper-Reactivity and Fear Conditioning",
+                description: "A veteran presents with intense autonomic arousal, hypervigilance, intrusive traumatic memories, and an exaggerated startle response triggered by sudden acoustic stimuli. Neuroimaging indicates functional hyper-reactivity in a subcortical limbic structure.",
+                options: ["Thalamus", "Hippocampus", "Amygdala", "Cerebellum"],
+                correct: 2,
+                explanation: "The Amygdala coordinates fear response, threat detection, and emotional memory; its hyper-reactivity is central to PTSD pathophysiology."
+            },
+            {
+                id: "case-4",
+                category: "Memory & Consolidation",
+                difficulty: "Hard",
+                title: "Case 4: Anterograde Episodic Memory Loss",
+                description: "A 55-year-old patient who underwent bilateral medial temporal lobe resection displays severe inability to form new long-term declarative memories, while retaining working memory and historical memories from early childhood.",
+                options: ["Anterior Cingulate Cortex", "Hippocampus", "Basal Ganglia", "Insular Cortex"],
+                correct: 1,
+                explanation: "The Hippocampus is essential for consolidating short-term memory into long-term episodic and declarative memory structures."
+            },
+            {
+                id: "case-5",
+                category: "Motor Execution",
+                difficulty: "Easy",
+                title: "Case 5: Contralateral Motor Deficits",
+                description: "Following a middle cerebral artery stroke, a patient exhibits sudden paralysis on the right side of the face and upper extremity. Reflexes are brisk and hypertonic on the right side.",
+                options: ["Primary Motor Cortex (Precentral Gyrus)", "Primary Somatosensory Cortex", "Premotor Cortex", "Pons"],
                 correct: 0,
-                explanation: "The amygdala processes threat evaluation and fear responses. Hyper-reactivity in the amygdala is strongly linked with PTSD pathophysiology."
+                explanation: "The Primary Motor Cortex controls voluntary motor movements on the contralateral side of the body."
+            },
+            {
+                id: "case-6",
+                category: "Language Comprehension",
+                difficulty: "Medium",
+                title: "Case 6: Fluent Aphasia with Impaired Comprehension",
+                description: "A 70-year-old patient speaks in long, fluid sentences that sound natural in rhythm, but the speech contains nonsensical jargon. The patient is unable to follow simple auditory directives.",
+                options: ["Broca's Area", "Wernicke's Area", "Frontal Pole", "Insula"],
+                correct: 1,
+                explanation: "Wernicke's aphasia (BA 22) results in fluent, paraphasic speech coupled with severe deficits in language comprehension."
+            },
+            {
+                id: "case-7",
+                category: "Cross-Cultural & Interoception",
+                difficulty: "Hard",
+                title: "Case 7: Somatic Idioms of Distress",
+                description: "A patient presents with visceral discomfort described as 'heat rising from the heart' combined with heightened panic and anxiety. Functional imaging shows aberrant activity in the interoceptive cortex during emotional distress.",
+                options: ["Insular Cortex", "Primary Visual Cortex", "Superior Parietal Lobule", "Medulla Oblongata"],
+                correct: 0,
+                explanation: "The Insular Cortex processes interoception and bodily feeling states, frequently active during somatic expressions of psychological distress across cultural idioms."
+            },
+            {
+                id: "case-8",
+                category: "Motor Coordination",
+                difficulty: "Medium",
+                title: "Case 8: Cerebellar Ataxia and Dysmetria",
+                description: "An individual presents with a wide-based gait, intention tremor during finger-to-nose testing, and inability to perform rapid alternating movements (dysdiadochokinesia).",
+                options: ["Basal Ganglia", "Cerebellum", "Premotor Cortex", "Thalamus"],
+                correct: 1,
+                explanation: "Cerebellar pathology impairs motor coordination, balance, and execution of fine spatial movements."
+            },
+            {
+                id: "case-9",
+                category: "Autonomic Homeostasis",
+                difficulty: "Easy",
+                title: "Case 9: Endocrine and Temperature Dysregulation",
+                description: "A patient with a sellar region tumor exhibits severe circadian sleep disruption, thermoregulatory instability, hyperphagia, and pituitary hormonal imbalances.",
+                options: ["Hypothalamus", "Thalamus", "Anterior Cingulate Cortex", "Pons"],
+                correct: 0,
+                explanation: "The Hypothalamus governs the autonomic nervous system, endocrine function, thermoregulation, and circadian rhythms."
+            },
+            {
+                id: "case-10",
+                category: "Conflict Monitoring & OCD",
+                difficulty: "Hard",
+                title: "Case 10: Error Processing and Obsessive Compulsions",
+                description: "A patient suffering from refractory Obsessive-Compulsive Disorder exhibits persistent hyperactivity in an anterior cingulate-striatal-thalamic loop during error-monitoring tasks.",
+                options: ["Anterior Cingulate Cortex", "Primary Visual Cortex", "Superior Frontal Gyrus", "Medulla Oblongata"],
+                correct: 0,
+                explanation: "The Anterior Cingulate Cortex (ACC) monitors conflict and error signals; its hyper-activation is implicated in OCD intrusive error states."
             }
         ];
 
         const mcqsData = [
             {
-                id: 1,
+                id: "mcq-1",
                 category: "Neuroanatomy",
-                title: "Question 1: Primary Motor Output",
                 difficulty: "Easy",
-                description: "Which Brodmann Area corresponds directly to the Primary Motor Cortex?",
-                options: ["BA 17", "BA 4", "BA 22", "BA 10"],
+                title: "Question 1: Primary Motor Function",
+                description: "Which Brodmann Area corresponds to the Primary Motor Cortex?",
+                options: ["BA 17", "BA 4", "BA 44", "BA 10"],
                 correct: 1,
-                explanation: "Brodmann Area 4 represents the Primary Motor Cortex located in the precentral gyrus."
+                explanation: "Brodmann Area 4 represents the Primary Motor Cortex located on the precentral gyrus."
             },
             {
-                id: 2,
-                category: "Cross-Cultural",
-                title: "Question 2: Visceral Somatization",
-                difficulty: "Hard",
-                description: "Interoceptive awareness and visceral somatic distress are primarily mediated by which cortical structure?",
-                options: ["Insula", "Primary Visual Cortex", "Superior Frontal Gyrus", "Premotor Cortex"],
+                id: "mcq-2",
+                category: "Neuroanatomy",
+                difficulty: "Medium",
+                title: "Question 2: Visuomotor Integration",
+                description: "Which structure is primarily located in Brodmann Area 7?",
+                options: ["Superior Parietal Lobule", "Primary Visual Cortex", "Broca's Area", "Frontal Pole"],
                 correct: 0,
-                explanation: "The insular cortex is the central hub for interoception and mapping visceral body sensations to emotional awareness."
+                explanation: "BA 7 corresponds to the Superior Parietal Lobule, involved in spatial awareness and visuomotor processing."
+            },
+            {
+                id: "mcq-3",
+                category: "Psychopathology",
+                difficulty: "Hard",
+                title: "Question 3: Klüver-Bucy Syndrome",
+                description: "Bilateral lesions of which structure cause Klüver-Bucy syndrome (hyperorality, loss of fear, hypersexuality)?",
+                options: ["Amygdala", "Thalamus", "Cerebellum", "Pons"],
+                correct: 0,
+                explanation: "Bilateral destruction of the anterior temporal lobe/amygdala causes Klüver-Bucy syndrome."
+            },
+            {
+                id: "mcq-4",
+                category: "Neuroanatomy",
+                difficulty: "Easy",
+                title: "Question 4: Primary Visual Processing",
+                description: "Primary visual information is processed in which brain lobe?",
+                options: ["Frontal Lobe", "Occipital Lobe", "Temporal Lobe", "Parietal Lobe"],
+                correct: 1,
+                explanation: "The Primary Visual Cortex (BA 17) is located in the occipital lobe."
+            },
+            {
+                id: "mcq-5",
+                category: "Psychopathology",
+                difficulty: "Medium",
+                title: "Question 5: Interoceptive Awareness",
+                description: "Which cortical region is central to processing interoceptive bodily signals and subjective feeling states?",
+                options: ["Insula", "Primary Motor Cortex", "Occipital Cortex", "Premotor Cortex"],
+                correct: 0,
+                explanation: "The Insular Cortex integrates visceral interoceptive feedback into emotional awareness."
+            },
+            {
+                id: "mcq-6",
+                category: "Neuroanatomy",
+                difficulty: "Hard",
+                title: "Question 6: Speech Articulation Subregion",
+                description: "Broca's area is comprised of which two Brodmann areas?",
+                options: ["BA 41 & 42", "BA 44 & 45", "BA 1 & 2", "BA 9 & 10"],
+                correct: 1,
+                explanation: "Broca's area is formed by BA 44 (pars opercularis) and BA 45 (pars triangularis)."
+            },
+            {
+                id: "mcq-7",
+                category: "Neuroanatomy",
+                difficulty: "Easy",
+                title: "Question 7: Sensory Relay",
+                description: "Which brain structure acts as the principal relay station for almost all sensory pathways headed to the cortex?",
+                options: ["Thalamus", "Pons", "Medulla", "Cerebellum"],
+                correct: 0,
+                explanation: "The Thalamus relays all sensory inputs (except olfaction) to corresponding cortical regions."
+            },
+            {
+                id: "mcq-8",
+                category: "Psychopathology",
+                difficulty: "Medium",
+                title: "Question 8: Procedural Learning & Habit Formation",
+                description: "Impairments in procedural memory and movement initiation are primarily associated with pathology in the:",
+                options: ["Basal Ganglia", "Hippocampus", "Primary Auditory Cortex", "Frontal Pole"],
+                correct: 0,
+                explanation: "The Basal Ganglia govern procedural habit learning, reward regulation, and motor control."
+            },
+            {
+                id: "mcq-9",
+                category: "Neuroanatomy",
+                difficulty: "Hard",
+                title: "Question 9: Essential Autonomic Life Support",
+                description: "Damage to which brainstem structure is immediately life-threatening due to its role in controlling heart rate and respiration?",
+                options: ["Medulla Oblongata", "Amygdala", "Superior Frontal Gyrus", "Insula"],
+                correct: 0,
+                explanation: "The Medulla Oblongata houses cardiorespiratory centers vital for basic survival."
+            },
+            {
+                id: "mcq-10",
+                category: "Cross-Cultural",
+                difficulty: "Medium",
+                title: "Question 10: Executive Dysregulation",
+                description: "Which region in the 3D Atlas is designated as Brodmann Area 10?",
+                options: ["Frontal Pole", "Primary Somatosensory Cortex", "Wernicke's Area", "Anterior Cingulate"],
+                correct: 0,
+                explanation: "The Frontal Pole corresponds to BA 10, controlling prospective memory and complex goal orientation."
             }
         ];
 
         // Global State Variables
         let scene, camera, renderer, controls;
-        let brainMeshGroup;
+        let brainMeshGroup = new THREE.Group();
         let regionMeshes = [];
-        let raycaster, mouse;
-        let currentMode = 'anatomical';
-        let currentQuestions = casesData;
+        let selectedRegion = null;
+        let currentMode = "anatomical"; // "anatomical" | "lesion"
+        let currentSimulatorMode = "cases"; // "cases" | "mcqs"
         let currentQuestionIndex = 0;
-        let selectedOption = null;
+        let currentDifficultyFilter = "all";
+        let activeQuestions = [...casesData];
+        let answeredQuestions = {}; // { questionId: selectedOptionIndex }
+        let scores = { anatomy: 0, psych: 0, cultural: 0, total: 0 };
 
-        // Analytics tracking
-        let analytics = { anatomy: { correct: 0, total: 0 }, psych: { correct: 0, total: 0 }, cultural: { correct: 0, total: 0 } };
-
-        window.onload = function() {
-            init3D();
-            populateRegionList();
-            setupInteractivity();
-            loadQuestion();
-            animate();
-        };
-
+        // 3D Scene Setup
         function init3D() {
             const container = document.getElementById('canvasContainer');
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0b0f17);
 
             camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(0, 0, 7);
+            camera.position.set(0, 2, 7);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
@@ -591,7 +744,7 @@
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
 
-            // Lighting setup
+            // Lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
             scene.add(ambientLight);
 
@@ -599,25 +752,21 @@
             dirLight1.position.set(5, 10, 7);
             scene.add(dirLight1);
 
-            const dirLight2 = new THREE.DirectionalLight(0x818cf8, 0.5);
+            const dirLight2 = new THREE.DirectionalLight(0xa855f7, 0.5);
             dirLight2.position.set(-5, -5, -5);
             scene.add(dirLight2);
 
-            // Construct Brain Meshes
-            brainMeshGroup = new THREE.Group();
-            scene.add(brainMeshGroup);
-
-            brainData.forEach((data) => {
-                const geometry = new THREE.SphereGeometry(data.radius, 32, 32);
-                const material = new THREE.MeshStandardMaterial({
+            // Construct 3D Brain Region Spheres
+            brainData.forEach(data => {
+                const geo = new THREE.SphereGeometry(data.radius, 24, 24);
+                const mat = new THREE.MeshStandardMaterial({
                     color: data.color,
                     roughness: 0.3,
-                    metalness: 0.1,
+                    metalness: 0.2,
                     transparent: true,
                     opacity: 0.85
                 });
-
-                const mesh = new THREE.Mesh(geometry, material);
+                const mesh = new THREE.Mesh(geo, mat);
                 mesh.position.set(...data.pos);
                 mesh.userData = data;
                 mesh.userData.originalPos = [...data.pos];
@@ -626,10 +775,52 @@
                 regionMeshes.push(mesh);
             });
 
-            raycaster = new THREE.Raycaster();
-            mouse = new THREE.Vector2();
+            scene.add(brainMeshGroup);
+
+            // Raycaster for Interaction
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            window.addEventListener('click', (e) => {
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(regionMeshes);
+
+                if (intersects.length > 0) {
+                    selectRegion(intersects[0].object.userData);
+                }
+            });
+
+            // Hover Tooltip
+            const tooltip = document.getElementById('neuro-tooltip');
+            window.addEventListener('mousemove', (e) => {
+                const rect = renderer.domElement.getBoundingClientRect();
+                if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+                    raycaster.setFromCamera(mouse, camera);
+                    const intersects = raycaster.intersectObjects(regionMeshes);
+
+                    if (intersects.length > 0) {
+                        tooltip.style.display = 'block';
+                        tooltip.style.left = e.clientX + 12 + 'px';
+                        tooltip.style.top = e.clientY + 12 + 'px';
+                        tooltip.innerHTML = `<strong>${intersects[0].object.userData.name}</strong> <span style="color:#38bdf8;">(${intersects[0].object.userData.Brodmann})</span>`;
+                    } else {
+                        tooltip.style.display = 'none';
+                    }
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            });
 
             window.addEventListener('resize', onWindowResize);
+            animate();
+            populateRegionList();
         }
 
         function animate() {
@@ -640,102 +831,75 @@
 
         function onWindowResize() {
             const container = document.getElementById('canvasContainer');
-            if (!container) return;
             camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(container.clientWidth, container.clientHeight);
         }
 
-        function setupInteractivity() {
-            const container = document.getElementById('canvasContainer');
-            const tooltip = document.getElementById('neuro-tooltip');
-
-            container.addEventListener('mousemove', (e) => {
-                const rect = container.getBoundingClientRect();
-                mouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
-                mouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
-
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(regionMeshes);
-
-                if (intersects.length > 0) {
-                    const hit = intersects[0].object.userData;
-                    tooltip.style.display = 'block';
-                    tooltip.style.left = (e.clientX + 12) + 'px';
-                    tooltip.style.top = (e.clientY + 12) + 'px';
-                    tooltip.innerHTML = `<strong>${hit.name}</strong> (${hit.Brodmann})`;
-                } else {
-                    tooltip.style.display = 'none';
-                }
-            });
-
-            container.addEventListener('click', () => {
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(regionMeshes);
-                if (intersects.length > 0) {
-                    selectRegion(intersects[0].object.userData.id);
-                }
-            });
-        }
-
         function populateRegionList() {
-            const listContainer = document.getElementById('regionList');
-            listContainer.innerHTML = '';
-            brainData.forEach((region) => {
+            const list = document.getElementById('regionList');
+            list.innerHTML = '';
+            brainData.forEach(data => {
                 const btn = document.createElement('button');
-                btn.className = "w-full text-left px-2 py-1 rounded bg-slate-900 hover:bg-blue-900/50 text-slate-300 hover:text-white transition-all text-xs border border-slate-800 flex justify-between items-center";
-                btn.innerHTML = `<span>${region.name}</span> <span class="text-[10px] text-slate-500">${region.Brodmann}</span>`;
-                btn.onclick = () => selectRegion(region.id);
-                listContainer.appendChild(btn);
+                btn.className = "w-full text-left px-2 py-1.5 rounded bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white transition text-xs flex justify-between items-center";
+                btn.innerHTML = `<span>${data.name}</span> <span class="text-[10px] text-blue-400 font-mono">${data.Brodmann}</span>`;
+                btn.onclick = () => selectRegion(data);
+                list.appendChild(btn);
             });
         }
 
-        function selectRegion(regionId) {
-            const region = brainData.find(r => r.id === regionId);
-            if (!region) return;
-
-            const mesh = regionMeshes.find(m => m.userData.id === regionId);
-            if (mesh) {
-                gsap.to(camera.position, {
-                    x: mesh.position.x * 2.2,
-                    y: mesh.position.y * 2.2 + 0.5,
-                    z: mesh.position.z * 2.2 + 2,
-                    duration: 1.2,
-                    onUpdate: () => controls.update()
-                });
-            }
-
+        function selectRegion(data) {
+            selectedRegion = data;
             const panel = document.getElementById('clinicalPanel');
+
             panel.innerHTML = `
                 <div class="space-y-4">
                     <div class="border-b border-slate-800 pb-2">
-                        <span class="text-xs text-cyan-400 font-mono">${region.Brodmann}</span>
-                        <h2 class="text-xl font-black text-white">${region.name}</h2>
+                        <span class="text-xs font-bold text-blue-400 uppercase tracking-widest">${data.Brodmann}</span>
+                        <h2 class="text-xl font-black text-white">${data.name}</h2>
                     </div>
+
                     <div>
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Primary Function</h3>
-                        <p class="text-xs text-slate-200 leading-relaxed">${region.function}</p>
+                        <h4 class="text-xs font-bold text-slate-400 uppercase">Primary Function</h4>
+                        <p class="text-xs text-slate-200 mt-1 leading-relaxed">${data.function}</p>
                     </div>
+
                     <div>
-                        <h3 class="text-xs font-bold text-red-400 uppercase tracking-wider mb-1">Lesion Manifestation</h3>
-                        <p class="text-xs text-slate-200 leading-relaxed">${region.lesion}</p>
+                        <h4 class="text-xs font-bold text-red-400 uppercase">Lesion Deficit Profile</h4>
+                        <p class="text-xs text-slate-200 mt-1 leading-relaxed">${data.lesion}</p>
                     </div>
-                    <div>
-                        <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wider mb-1">DSM-5-TR Correlates</h3>
-                        <p class="text-xs text-slate-200 leading-relaxed">${region.dsm}</p>
+
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-2">
+                        <h4 class="text-xs font-bold text-cyan-400 uppercase">Diagnostic Classification</h4>
+                        <div class="text-[11px] text-slate-300"><strong class="text-slate-400">DSM-5-TR:</strong> ${data.dsm}</div>
+                        <div class="text-[11px] text-slate-300"><strong class="text-slate-400">ICD-10/11:</strong> ${data.icd}</div>
                     </div>
-                    <div>
-                        <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">ICD-10 / ICD-11 Mapping</h3>
-                        <p class="text-xs text-slate-200 leading-relaxed">${region.icd}</p>
-                    </div>
-                    <div class="bg-amber-950/30 border border-amber-800/40 p-3 rounded-lg">
-                        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1"><i class="fa-solid fa-earth-americas"></i> Cultural Idioms & Expression</h3>
-                        <p class="text-xs text-amber-200/90 leading-relaxed">${region.cultural}</p>
+
+                    <div class="bg-amber-950/30 p-3 rounded-lg border border-amber-900/40">
+                        <h4 class="text-xs font-bold text-amber-400 uppercase">Cross-Cultural Context</h4>
+                        <p class="text-xs text-amber-200/90 mt-1 leading-relaxed">${data.cultural}</p>
                     </div>
                 </div>
             `;
+
+            // Focus Camera on Selected Region
+            gsap.to(camera.position, {
+                x: data.pos[0] * 2,
+                y: data.pos[1] * 2 + 1,
+                z: data.pos[2] * 2 + 3,
+                duration: 1.5,
+                ease: "power2.inOut"
+            });
+            gsap.to(controls.target, {
+                x: data.pos[0],
+                y: data.pos[1],
+                z: data.pos[2],
+                duration: 1.5,
+                ease: "power2.inOut"
+            });
         }
 
+        // View Controls & Visual Overlays
         function setMode(mode) {
             currentMode = mode;
             const btnA = document.getElementById('btnAnatomical');
@@ -754,59 +918,66 @@
 
         function filterRegions() {
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const listContainer = document.getElementById('regionList');
-            listContainer.innerHTML = '';
-
-            brainData.filter(r => r.name.toLowerCase().includes(query) || r.dsm.toLowerCase().includes(query) || r.Brodmann.toLowerCase().includes(query))
-                .forEach(region => {
-                    const btn = document.createElement('button');
-                    btn.className = "w-full text-left px-2 py-1 rounded bg-slate-900 hover:bg-blue-900/50 text-slate-300 hover:text-white transition-all text-xs border border-slate-800 flex justify-between items-center";
-                    btn.innerHTML = `<span>${region.name}</span> <span class="text-[10px] text-slate-500">${region.Brodmann}</span>`;
-                    btn.onclick = () => selectRegion(region.id);
-                    listContainer.appendChild(btn);
-                });
+            regionMeshes.forEach(mesh => {
+                const match = mesh.userData.name.toLowerCase().includes(query) ||
+                              mesh.userData.dsm.toLowerCase().includes(query) ||
+                              mesh.userData.Brodmann.toLowerCase().includes(query);
+                mesh.visible = match;
+            });
         }
 
         function updateExplodedView(val) {
-            document.getElementById('explodedVal').innerText = val + "%";
-            const factor = 1 + (val / 100) * 0.8;
+            document.getElementById('explodedVal').innerText = val + '%';
+            const factor = 1 + (val / 100);
             regionMeshes.forEach(mesh => {
-                const orig = mesh.userData.originalPos;
-                mesh.position.set(orig[0] * factor, orig[1] * factor, orig[2] * factor);
+                mesh.position.x = mesh.userData.originalPos[0] * factor;
+                mesh.position.y = mesh.userData.originalPos[1] * factor;
+                mesh.position.z = mesh.userData.originalPos[2] * factor;
             });
         }
 
         function updateOpacity(val) {
-            document.getElementById('opacityVal').innerText = val + "%";
+            document.getElementById('opacityVal').innerText = val + '%';
+            const opacity = val / 100;
             regionMeshes.forEach(mesh => {
-                mesh.material.opacity = val / 100;
+                mesh.material.opacity = opacity;
             });
         }
 
+        function toggleBrodmannOverlay() {
+            alert("Brodmann Area boundaries toggled on 3D surface mesh.");
+        }
+
+        function toggleTractsOverlay() {
+            alert("White Matter Tractography pathways overlay active.");
+        }
+
+        function toggleNeurotransmitters() {
+            alert("Neurotransmitter distribution map toggled (Dopamine / Serotonin / Acetylcholine).");
+        }
+
         function updateLesionRadius(val) {
-            document.getElementById('lesionRadiusVal').innerText = val + " mm";
+            document.getElementById('lesionRadiusVal').innerText = val + ' mm';
         }
 
         function setCameraPreset(preset) {
-            const positions = {
-                lateral: { x: 6, y: 0, z: 0 },
-                medial: { x: 0, y: 0, z: 6 },
-                superior: { x: 0, y: 6, z: 0.1 },
-                limbic: { x: 2, y: 1, z: 3 }
-            };
-            const pos = positions[preset] || positions.lateral;
-            gsap.to(camera.position, { ...pos, duration: 1.2, onUpdate: () => controls.update() });
+            if (preset === 'lateral') {
+                gsap.to(camera.position, { x: 7, y: 0, z: 0, duration: 1.2 });
+            } else if (preset === 'medial') {
+                gsap.to(camera.position, { x: 0, y: 0, z: 7, duration: 1.2 });
+            } else if (preset === 'superior') {
+                gsap.to(camera.position, { x: 0, y: 8, z: 0.1, duration: 1.2 });
+            } else if (preset === 'limbic') {
+                gsap.to(camera.position, { x: 2, y: 1, z: 2, duration: 1.2 });
+            }
+            gsap.to(controls.target, { x: 0, y: 0, z: 0, duration: 1.2 });
         }
-
-        function toggleBrodmannOverlay() { alert("Brodmann Area boundaries highlighted."); }
-        function toggleTractsOverlay() { alert("White matter tracts overlay toggled."); }
-        function toggleNeurotransmitters() { alert("Dopamine / Serotonin pathways mapped."); }
 
         function scrollToAtlas() {
             document.getElementById('atlas').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function openVignetteModal() {
+        function scrollToSimulator() {
             document.getElementById('clinical-simulator-section').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -819,102 +990,121 @@
         }
 
         function copyBibtex() {
-            const bibtex = document.getElementById('bibtexSnippet').innerText;
-            navigator.clipboard.writeText(bibtex).then(() => {
-                alert("BibTeX copied to clipboard!");
-            });
+            const text = document.getElementById('bibtexSnippet').innerText;
+            navigator.clipboard.writeText(text);
+            alert("BibTeX citation copied to clipboard!");
         }
 
-        // Simulator Logic
+        // Clinical Vignette & MCQ Simulator Logic
         function switchSimulatorMode(mode) {
-            document.getElementById('btn-mode-cases').classList.toggle('active', mode === 'cases');
-            document.getElementById('btn-mode-mcqs').classList.toggle('active', mode === 'mcqs');
-            currentQuestions = mode === 'cases' ? casesData : mcqsData;
-            currentQuestionIndex = 0;
-            loadQuestion();
+            currentSimulatorMode = mode;
+            document.getElementById('btn-mode-cases').className = mode === 'cases' ? 'mode-btn active' : 'mode-btn';
+            document.getElementById('btn-mode-mcqs').className = mode === 'mcqs' ? 'mode-btn active' : 'mode-btn';
+
+            activeQuestions = mode === 'cases' ? [...casesData] : [...mcqsData];
+            filterQuestionsByDifficulty();
         }
 
         function filterQuestionsByDifficulty() {
-            const diff = document.getElementById('difficulty-filter').value;
-            const source = document.getElementById('btn-mode-cases').classList.contains('active') ? casesData : mcqsData;
-            currentQuestions = diff === 'all' ? source : source.filter(q => q.difficulty === diff);
+            const level = document.getElementById('difficulty-filter').value;
+            currentDifficultyFilter = level;
+
+            const baseSet = currentSimulatorMode === 'cases' ? casesData : mcqsData;
+            if (level === 'all') {
+                activeQuestions = [...baseSet];
+            } else {
+                activeQuestions = baseSet.filter(q => q.difficulty.toLowerCase() === level.toLowerCase());
+            }
+
             currentQuestionIndex = 0;
             loadQuestion();
         }
 
         function loadQuestion() {
-            if (!currentQuestions || currentQuestions.length === 0) {
-                document.getElementById('case-title').innerText = "No questions available.";
-                document.getElementById('case-description').innerText = "Please choose a different difficulty filter.";
-                document.getElementById('options-container').innerHTML = '';
+            if (activeQuestions.length === 0) {
+                document.getElementById('case-title').innerText = "No questions found for this difficulty.";
+                document.getElementById('case-description').innerText = "";
+                document.getElementById('options-container').innerHTML = "";
                 document.getElementById('feedback-box').style.display = 'none';
                 return;
             }
 
-            const q = currentQuestions[currentQuestionIndex];
-            selectedOption = null;
+            const q = activeQuestions[currentQuestionIndex];
+            document.getElementById('question-tracker').innerText = `Item ${currentQuestionIndex + 1} of ${activeQuestions.length}`;
 
-            document.getElementById('question-tracker').innerText = `Item ${currentQuestionIndex + 1} of ${currentQuestions.length}`;
-            document.getElementById('difficulty-badge').innerText = q.difficulty;
-            document.getElementById('difficulty-badge').className = `badge badge-${q.difficulty.toLowerCase()}`;
+            const badge = document.getElementById('difficulty-badge');
+            badge.innerText = q.difficulty;
+            badge.className = `badge badge-${q.difficulty.toLowerCase()}`;
+
             document.getElementById('case-category').innerText = q.category;
             document.getElementById('case-title').innerText = q.title;
             document.getElementById('case-description').innerText = q.description;
 
-            const progress = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
-            document.getElementById('quiz-progress-bar').style.width = progress + '%';
+            // Update Progress Bar
+            const progress = ((currentQuestionIndex + 1) / activeQuestions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${progress}%`;
 
+            // Render Options
             const optsContainer = document.getElementById('options-container');
             optsContainer.innerHTML = '';
-            q.options.forEach((opt, idx) => {
+
+            const isAnswered = answeredQuestions.hasOwnProperty(q.id);
+
+            q.options.forEach((optText, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
-                btn.innerText = opt;
-                btn.onclick = () => handleAnswer(idx);
+                btn.innerText = optText;
+
+                if (isAnswered) {
+                    btn.disabled = true;
+                    if (idx === q.correct) {
+                        btn.classList.add('correct');
+                    } else if (idx === answeredQuestions[q.id]) {
+                        btn.classList.add('incorrect');
+                    }
+                } else {
+                    btn.onclick = () => selectOption(idx);
+                }
+
                 optsContainer.appendChild(btn);
             });
 
-            document.getElementById('feedback-box').style.display = 'none';
-        }
+            // Feedback Display
+            const fbBox = document.getElementById('feedback-box');
+            if (isAnswered) {
+                const userChoice = answeredQuestions[q.id];
+                const isCorrect = userChoice === q.correct;
 
-        function handleAnswer(index) {
-            if (selectedOption !== null) return;
-            selectedOption = index;
+                document.getElementById('feedback-title').innerText = isCorrect ? "Correct Diagnostic Formulation" : "Incorrect Formulation";
+                document.getElementById('feedback-title').style.color = isCorrect ? "#34d399" : "#f87171";
+                document.getElementById('feedback-explanation').innerText = q.explanation;
+                fbBox.style.display = 'block';
 
-            const q = currentQuestions[currentQuestionIndex];
-            const buttons = document.querySelectorAll('.option-btn');
-
-            buttons.forEach((btn, idx) => {
-                btn.disabled = true;
-                if (idx === q.correct) btn.classList.add('correct');
-                if (idx === index && index !== q.correct) btn.classList.add('incorrect');
-            });
-
-            const isCorrect = index === q.correct;
-            const feedbackBox = document.getElementById('feedback-box');
-            const feedbackTitle = document.getElementById('feedback-title');
-            const feedbackExp = document.getElementById('feedback-explanation');
-
-            feedbackTitle.innerText = isCorrect ? "Correct Diagnosis!" : "Incorrect Answer";
-            feedbackTitle.className = isCorrect ? "text-emerald-400 font-bold" : "text-red-400 font-bold";
-            feedbackExp.innerText = q.explanation;
-
-            document.getElementById('prev-btn').style.display = currentQuestionIndex > 0 ? 'inline-block' : 'none';
-            document.getElementById('next-btn').style.display = currentQuestionIndex < currentQuestions.length - 1 ? 'inline-block' : 'none';
-
-            feedbackBox.style.display = 'block';
-
-            // Analytics calculation
-            const catKey = q.category === 'Neuroanatomy' ? 'anatomy' : (q.category === 'Psychopathology' ? 'psych' : 'cultural');
-            if (analytics[catKey]) {
-                analytics[catKey].total++;
-                if (isCorrect) analytics[catKey].correct++;
-                updateAnalyticsDisplay();
+                document.getElementById('prev-btn').style.display = currentQuestionIndex > 0 ? 'inline-block' : 'none';
+                document.getElementById('next-btn').style.display = currentQuestionIndex < activeQuestions.length - 1 ? 'inline-block' : 'none';
+            } else {
+                fbBox.style.display = 'none';
             }
         }
 
+        function selectOption(index) {
+            const q = activeQuestions[currentQuestionIndex];
+            answeredQuestions[q.id] = index;
+
+            if (index === q.correct) {
+                if (q.category.includes("Anatomy") || q.category.includes("Executive")) scores.anatomy += 10;
+                else if (q.category.includes("Psychopathology") || q.category.includes("Limbic")) scores.psych += 10;
+                else scores.cultural += 10;
+
+                scores.total += 1;
+                updateAnalytics();
+            }
+
+            loadQuestion();
+        }
+
         function loadNextQuestion() {
-            if (currentQuestionIndex < currentQuestions.length - 1) {
+            if (currentQuestionIndex < activeQuestions.length - 1) {
                 currentQuestionIndex++;
                 loadQuestion();
             }
@@ -927,21 +1117,25 @@
             }
         }
 
-        function updateAnalyticsDisplay() {
-            document.getElementById('analyticsDashboard').classList.remove('hidden');
-            ['anatomy', 'psych', 'cultural'].forEach(k => {
-                const perc = analytics[k].total > 0 ? Math.round((analytics[k].correct / analytics[k].total) * 100) : 0;
-                const elId = k === 'anatomy' ? 'scoreAnatomy' : (k === 'psych' ? 'scorePsych' : 'scoreCultural');
-                document.getElementById(elId).innerText = perc + "%";
-            });
+        function updateAnalytics() {
+            document.getElementById('scoreAnatomy').innerText = Math.min(100, scores.anatomy) + '%';
+            document.getElementById('scorePsych').innerText = Math.min(100, scores.psych) + '%';
+            document.getElementById('scoreCultural').innerText = Math.min(100, scores.cultural) + '%';
         }
 
         function resetDiagnosticSession() {
-            analytics = { anatomy: { correct: 0, total: 0 }, psych: { correct: 0, total: 0 }, cultural: { correct: 0, total: 0 } };
-            updateAnalyticsDisplay();
+            answeredQuestions = {};
+            scores = { anatomy: 0, psych: 0, cultural: 0, total: 0 };
+            updateAnalytics();
             currentQuestionIndex = 0;
             loadQuestion();
         }
+
+        // Initialize on DOM Ready
+        window.addEventListener('DOMContentLoaded', () => {
+            init3D();
+            switchSimulatorMode('cases');
+        });
     </script>
 </body>
 </html>
