@@ -1,645 +1,1862 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3D Anatomical Brain Viewer & Neuro-Detective Suite</title>
-  <!-- Three.js Library & OrbitControls -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURO ATLAS - By Aarsheya Vasavada</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- GSAP for Smooth Camera Transitions -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0f17; color: #f3f4f6; overflow-x: hidden; }
+        .glass-panel { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glow-effect { box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
 
-    body {
-      background-color: #0b111e;
-      color: #f1f5f9;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* Left Section: 3D Visualization Canvas */
-    #canvas-container {
-      flex: 1;
-      position: relative;
-      background: radial-gradient(circle at center, #111d33 0%, #080d18 100%);
-    }
-
-    /* Right Section: Control Panel & Data Viewer */
-    #panel {
-      width: 420px;
-      background-color: #0f172a;
-      border-left: 1px solid #1e293b;
-      display: flex;
-      flex-direction: column;
-      padding: 24px;
-      overflow-y: auto;
-      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.4);
-    }
-
-    /* Navigation Tabs */
-    .nav-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 24px;
-      background-color: #1e293b;
-      padding: 4px;
-      border-radius: 8px;
-    }
-
-    .nav-tab {
-      flex: 1;
-      padding: 10px 6px;
-      font-size: 11px;
-      font-weight: 600;
-      text-align: center;
-      color: #94a3b8;
-      background: transparent;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .nav-tab.active {
-      background-color: #38bdf8;
-      color: #0f172a;
-      box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
-    }
-
-    /* Form & Controls Section */
-    .control-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #64748b;
-      margin-bottom: 8px;
-    }
-
-    select {
-      width: 100%;
-      padding: 12px;
-      background-color: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      color: #e2e8f0;
-      font-size: 14px;
-      font-weight: 500;
-      outline: none;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-
-    select:focus {
-      border-color: #38bdf8;
-    }
-
-    /* Main Title Block */
-    .header-block {
-      margin-bottom: 20px;
-      border-bottom: 1px solid #1e293b;
-      padding-bottom: 16px;
-    }
-
-    .header-title {
-      font-size: 22px;
-      font-weight: 700;
-      color: #f8fafc;
-      margin-bottom: 6px;
-    }
-
-    .status-badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .status-healthy {
-      background-color: rgba(16, 185, 129, 0.15);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    .status-lesioned {
-      background-color: rgba(239, 68, 68, 0.15);
-      color: #ef4444;
-      border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-
-    /* Content Display Area */
-    .info-card {
-      background-color: #1e293b;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
-      border: 1px solid #334155;
-    }
-
-    .info-card h4 {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #38bdf8;
-      margin-bottom: 8px;
-    }
-
-    .info-card p {
-      font-size: 13px;
-      line-height: 1.6;
-      color: #cbd5e1;
-    }
-
-    .game-box {
-      display: none;
-      background: #1e293b;
-      border-radius: 8px;
-      padding: 16px;
-      border: 1px solid #334155;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 12px;
-      background-color: #38bdf8;
-      color: #0f172a;
-      border: none;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-      transition: background 0.2s;
-      margin-top: 10px;
-    }
-
-    .btn:hover {
-      background-color: #0ea5e9;
-    }
-
-    /* Canvas Overlay Hints */
-    .canvas-hint {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(8px);
-      padding: 10px 16px;
-      border-radius: 20px;
-      border: 1px solid #334155;
-      font-size: 12px;
-      color: #94a3b8;
-      pointer-events: none;
-    }
-  </style>
+        /* ============ CLINICAL SIMULATOR STYLES ============ */
+        .simulator-card {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem auto;
+            max-width: 900px;
+        }
+        .simulator-header {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .simulator-header h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .simulator-controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .mode-selector {
+            display: flex;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+        }
+        .mode-btn {
+            padding: 0.4rem 0.9rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 0.375rem;
+            color: #94a3b8;
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+        .mode-btn.active {
+            background: #2563eb;
+            color: #fff;
+        }
+        .mode-btn:hover:not(.active) { color: #fff; }
+        .difficulty-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+        .difficulty-selector select {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            border-radius: 0.375rem;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        .quiz-progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .quiz-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+            transition: width 0.3s ease;
+        }
+        .quiz-meta-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+        .badge {
+            padding: 0.15rem 0.6rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            border: 1px solid transparent;
+        }
+        .badge-easy { background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.4); }
+        .badge-medium { background: rgba(234,179,8,0.15); color: #facc15; border-color: rgba(234,179,8,0.4); }
+        .badge-hard { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.4); }
+        .vignette-content { display: flex; flex-direction: column; gap: 0.75rem; }
+        .category-tag {
+            display: inline-block;
+            align-self: flex-start;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #a855f7;
+            background: rgba(168,85,247,0.12);
+            border: 1px solid rgba(168,85,247,0.35);
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+        }
+        #case-title { font-size: 1.05rem; font-weight: 700; color: #f8fafc; }
+        .question-body { font-size: 0.85rem; color: #cbd5e1; line-height: 1.6; }
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+        }
+        .option-btn {
+            text-align: left;
+            padding: 0.65rem 0.9rem;
+            font-size: 0.8rem;
+            border-radius: 0.6rem;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            transition: all 0.15s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: #3b82f6;
+            background: rgba(59,130,246,0.1);
+        }
+        .option-btn:disabled { cursor: default; }
+        .option-btn.correct {
+            border-color: #10b981;
+            background: rgba(16,185,129,0.15);
+            color: #6ee7b7;
+        }
+        .option-btn.incorrect {
+            border-color: #ef4444;
+            background: rgba(239,68,68,0.15);
+            color: #fca5a5;
+        }
+        .feedback-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .feedback-box h4 { font-size: 0.9rem; margin-bottom: 0.35rem; }
+        .feedback-box p { font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; }
+        .feedback-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            background: rgba(51,65,85,0.6);
+            color: #e2e8f0;
+            border: 1px solid #334155;
+        }
+        .nav-btn:hover { background: rgba(71,85,105,0.7); }
+        .nav-btn.primary {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+            margin-left: auto;
+        }
+        .nav-btn.primary:hover { background: #1d4ed8; }
+        .simulator-page-container { max-width: 900px; margin: 0 auto 3rem auto; padding: 0 1rem; }
+    </style>
 </head>
-<body>
+<body class="relative">
 
-  <!-- Left: 3D Visualization Area -->
-  <div id="canvas-container">
-    <div class="canvas-hint">Drag to rotate | Scroll to zoom | Click region to inspect</div>
+    <!-- HERO / COVER PAGE SECTION -->
+    <section id="cover" class="min-h-screen w-full flex flex-col justify-center items-center text-center p-6 relative z-20 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800">
+        <div class="m-auto max-w-3xl space-y-6">
+
+            <!-- HEADER / TITLE -->
+            <div class="space-y-2">
+                <h1 class="text-6xl md:text-8xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400">
+                    NEURO ATLAS
+                </h1>
+                <p class="text-blue-400 font-bold tracking-widest text-sm md:text-base uppercase">
+                    BY AARSHEYA VASAVADA
+                </p>
+            </div>
+
+            <!-- EMBEDDED LOGO GRAPHIC -->
+            <div class="relative w-56 h-56 md:w-64 md:h-64 mx-auto my-6 flex items-center justify-center">
+                <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-[0_0_20px_rgba(56,189,248,0.3)]">
+                    <!-- Target Grid / Crosshairs -->
+                    <circle cx="100" cy="100" r="82" fill="none" stroke="#1e3a8a" stroke-width="1.5" stroke-dasharray="4,4" />
+                    <circle cx="100" cy="100" r="90" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.5" />
+                    <line x1="5" y1="100" x2="195" y2="100" stroke="#1d4ed8" stroke-width="1" opacity="0.6" />
+                    <line x1="100" y1="5" x2="100" y2="195" stroke="#1d4ed8" stroke-width="1" opacity="0.6" />
+
+                    <!-- Cardinal Nodes -->
+                    <circle cx="100" cy="10" r="3" fill="#38bdf8" />
+                    <circle cx="100" cy="190" r="3" fill="#38bdf8" />
+                    <circle cx="10" cy="100" r="3" fill="#38bdf8" />
+                    <circle cx="190" cy="100" r="3" fill="#38bdf8" />
+
+                    <!-- Left Hemisphere (Constellation Stars) -->
+                    <path d="M 100 25 A 75 75 0 0 0 100 175 Z" fill="#09132d" />
+                    <circle cx="65" cy="60" r="2.5" fill="#38bdf8" />
+                    <circle cx="45" cy="95" r="2" fill="#ffffff" />
+                    <circle cx="75" cy="115" r="2.5" fill="#60a5fa" />
+                    <circle cx="55" cy="145" r="2" fill="#38bdf8" />
+                    <circle cx="85" cy="75" r="2" fill="#ffffff" />
+                    <line x1="65" y1="60" x2="85" y2="75" stroke="#38bdf8" stroke-width="0.8" opacity="0.8" />
+                    <line x1="85" y1="75" x2="45" y2="95" stroke="#38bdf8" stroke-width="0.8" opacity="0.8" />
+                    <line x1="45" y1="95" x2="75" y2="115" stroke="#38bdf8" stroke-width="0.8" opacity="0.8" />
+                    <line x1="75" y1="115" x2="55" y2="145" stroke="#38bdf8" stroke-width="0.8" opacity="0.8" />
+
+                    <!-- Right Hemisphere (Glowing Cyan Brain Gyri) -->
+                    <path d="M 100 25 A 75 75 0 0 1 100 175 Z" fill="#0284c7" opacity="0.15" />
+                    <path d="M 100 32 C 135 32, 168 55, 165 95 C 162 125, 145 148, 125 162 C 112 170, 100 170, 100 170" fill="none" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round" />
+                    <path d="M 105 48 C 128 52, 150 70, 142 95 C 135 120, 115 130, 105 148" fill="none" stroke="#00f0ff" stroke-width="3" stroke-linecap="round" />
+                    <path d="M 110 68 C 132 72, 138 95, 122 115 C 110 128, 125 145, 105 158" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" />
+
+                    <!-- Planetary Ring -->
+                    <ellipse cx="100" cy="100" rx="98" ry="24" fill="none" stroke="#00f0ff" stroke-width="3.5" transform="rotate(-28 100 100)" />
+                </svg>
+            </div>
+
+            <!-- DESCRIPTION TEXT -->
+            <p class="text-slate-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                An interactive 3D human brain atlas integrating 21 anatomical structures with real-world clinical lesion mapping, DSM-5-TR diagnostic criteria, cross-cultural idioms of distress, and research-grade neuroimaging features.
+            </p>
+
+            <!-- EXPLORE BUTTON -->
+            <button onclick="scrollToAtlas()" class="mt-4 px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 flex items-center gap-3 mx-auto hover:scale-105 glow-effect">
+                <span>Explore 3D Brain Atlas</span>
+                <i class="fa-solid fa-arrow-down"></i>
+            </button>
+        </div>
+    </section>
+
+    <!-- MAIN ATLAS INTERFACE -->
+    <main id="atlas" class="h-screen w-full relative flex overflow-hidden">
+
+        <!-- LEFT CONTROL TOOLBAR -->
+        <div class="absolute top-4 left-4 z-10 flex flex-col gap-3 w-80 glass-panel p-4 rounded-xl border border-slate-800 shadow-2xl max-h-[calc(100vh-32px)] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h2 class="font-bold text-sm uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-blue-400"></i> Viewer Controls
+                </h2>
+                <span id="regionCount" class="text-xs bg-blue-950 text-blue-300 px-2 py-0.5 rounded border border-blue-800">21 Regions</span>
+            </div>
+
+            <div class="flex bg-slate-900/80 p-1 rounded-lg border border-slate-800">
+                <button id="btnAnatomical" onclick="setMode('anatomical')" class="flex-1 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white transition-all">Anatomical</button>
+                <button id="btnLesion" onclick="setMode('lesion')" class="flex-1 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all">Lesion Mode</button>
+            </div>
+
+            <div class="relative">
+                <input type="text" id="searchInput" onkeyup="filterRegions()" placeholder="Search region or DSM-5 symptom..."
+                       class="w-full bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-lg pl-8 pr-3 py-2 focus:outline-none focus:border-blue-500">
+                <i class="fa-solid fa-search absolute left-2.5 top-2.5 text-xs text-slate-500"></i>
+            </div>
+
+            <div class="space-y-1">
+                <div class="flex justify-between text-xs text-slate-400"><span>Exploded View</span><span id="explodedVal" class="font-mono text-blue-400">0%</span></div>
+                <input type="range" id="explodedSlider" min="0" max="100" value="0" oninput="updateExplodedView(this.value)" class="w-full accent-blue-500 h-1 bg-slate-800 rounded">
+            </div>
+
+            <div class="space-y-1">
+                <div class="flex justify-between text-xs text-slate-400"><span>Cortex Opacity</span><span id="opacityVal" class="font-mono text-blue-400">85%</span></div>
+                <input type="range" id="opacitySlider" min="20" max="100" value="85" oninput="updateOpacity(this.value)" class="w-full accent-blue-500 h-1 bg-slate-800 rounded">
+            </div>
+
+            <!-- EXTENDED TOOLBAR BUTTONS & TOGGLES -->
+            <div class="space-y-2 pt-2 border-t border-slate-800">
+                <span class="text-xs text-slate-400 font-medium block">Layers & Pathway Overlays</span>
+                <div class="grid grid-cols-2 gap-1.5 text-xs">
+                    <button id="btnBrodmann" onclick="toggleBrodmannOverlay()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-2 rounded border border-slate-700 flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-layer-group text-cyan-400"></i> BA Overlays
+                    </button>
+                    <button id="btnTracts" onclick="toggleTractsOverlay()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-2 rounded border border-slate-700 flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-route text-indigo-400"></i> White Matter
+                    </button>
+                </div>
+                <button id="btnPathways" onclick="toggleNeurotransmitters()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-2 rounded border border-slate-700 text-xs flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-flask text-emerald-400"></i> Neurotransmitters (DA / 5-HT / ACh)
+                </button>
+            </div>
+
+            <!-- LESION RADIUS SIMULATOR -->
+            <div class="space-y-1 pt-2 border-t border-slate-800">
+                <div class="flex justify-between text-xs text-slate-400">
+                    <span class="font-semibold text-red-400 flex items-center gap-1"><i class="fa-solid fa-circle-dot"></i> Lesion Radius (mm)</span>
+                    <span id="lesionRadiusVal" class="font-mono text-red-400">0 mm</span>
+                </div>
+                <input type="range" id="lesionRadiusSlider" min="0" max="30" value="0" oninput="updateLesionRadius(this.value)" class="w-full accent-red-500 h-1 bg-slate-800 rounded">
+            </div>
+
+            <!-- SIMULATION & CITATION MODAL BUTTONS -->
+            <div class="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-800">
+                <button onclick="openVignetteModal()" class="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-user-doctor"></i> Vignettes
+                </button>
+                <button onclick="openCiteModal()" class="bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-quote-right"></i> Cite Atlas
+                </button>
+            </div>
+
+            <div class="space-y-1 pt-1">
+                <span class="text-xs text-slate-400 font-medium">Camera Angle Presets</span>
+                <div class="grid grid-cols-2 gap-1.5 text-xs">
+                    <button onclick="setCameraPreset('lateral')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1 rounded border border-slate-700">Lateral</button>
+                    <button onclick="setCameraPreset('medial')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1 rounded border border-slate-700">Medial</button>
+                    <button onclick="setCameraPreset('superior')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1 rounded border border-slate-700">Superior</button>
+                    <button onclick="setCameraPreset('limbic')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1 rounded border border-slate-700">Limbic Deep</button>
+                </div>
+            </div>
+
+            <div class="space-y-1 pt-2 border-t border-slate-800">
+                <span class="text-xs text-slate-400 font-medium">Select Region</span>
+                <div id="regionList" class="max-h-36 overflow-y-auto space-y-1 text-xs pr-1"></div>
+            </div>
+        </div>
+
+        <!-- 3D CANVAS -->
+        <div id="canvasContainer" class="w-full h-full bg-slate-950"></div>
+
+        <!-- RIGHT CLINICAL DATA PANEL -->
+        <div class="absolute top-4 right-4 z-10 w-96 glass-panel p-5 rounded-xl border border-slate-800 shadow-2xl max-h-[calc(100vh-32px)] overflow-y-auto">
+            <div id="clinicalPanel">
+                <div class="text-center py-12 text-slate-500 space-y-2">
+                    <i class="fa-solid fa-hand-pointer text-2xl mb-2 text-slate-600 animate-pulse"></i>
+                    <p class="text-sm font-medium">Click on any 3D region to view clinical diagnostic data.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- CLINICAL VIGNETTE & MCQ SIMULATOR -->
+    <section id="clinical-simulator-section" class="simulator-card">
+        <div class="simulator-header">
+            <h2><i class="fas fa-brain"></i> Clinical Vignette & MCQ Simulator</h2>
+
+            <!-- Mode & Level Controls -->
+            <div class="simulator-controls">
+                <div class="mode-selector">
+                    <button id="btn-mode-cases" class="mode-btn active" onclick="switchSimulatorMode('cases')">Clinical Cases (10)</button>
+                    <button id="btn-mode-mcqs" class="mode-btn" onclick="switchSimulatorMode('mcqs')">MCQ Bank (50)</button>
+                </div>
+
+                <div class="difficulty-selector">
+                    <label for="difficulty-filter">Difficulty:</label>
+                    <select id="difficulty-filter" onchange="filterQuestionsByDifficulty()">
+                        <option value="all">All Levels</option>
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="quiz-progress-bar-container">
+            <div id="quiz-progress-bar" class="quiz-progress-fill" style="width: 0%;"></div>
+        </div>
+        <div class="quiz-meta-info">
+            <span id="question-tracker">Item 1 of 10</span>
+            <span id="difficulty-badge" class="badge badge-easy">Easy</span>
+        </div>
+
+        <!-- Question Content Container -->
+        <div id="vignette-container" class="vignette-content">
+            <span id="case-category" class="category-tag">Neuroanatomy</span>
+            <h3 id="case-title">Loading Question...</h3>
+            <p id="case-description" class="question-body"></p>
+
+            <!-- Options Container -->
+            <div id="options-container" class="options-grid"></div>
+
+            <!-- Feedback Pop-up -->
+            <div id="feedback-box" class="feedback-box" style="display: none;">
+                <h4 id="feedback-title"></h4>
+                <p id="feedback-explanation"></p>
+                <div class="feedback-actions">
+                    <button id="prev-btn" class="nav-btn" onclick="loadPreviousQuestion()" style="display: none;">← Previous</button>
+                    <button id="next-btn" class="nav-btn primary" onclick="loadNextQuestion()" style="display: none;">Next Question →</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ANALYTICS DASHBOARD -->
+    <div class="simulator-page-container">
+        <div id="analyticsDashboard" class="hidden bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie"></i> Diagnostic Performance Analytics
+                </h3>
+                <button id="btn-reset-analytics" onclick="resetDiagnosticSession()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded border border-slate-700">
+                    <i class="fa-solid fa-rotate-left"></i> Reset Analytics
+                </button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-slate-950 p-2 rounded border border-slate-800">
+                    <div class="text-slate-400 text-[10px]">Neuroanatomy</div>
+                    <div id="scoreAnatomy" class="text-base font-black text-blue-400">0%</div>
+                </div>
+                <div class="bg-slate-950 p-2 rounded border border-slate-800">
+                    <div class="text-slate-400 text-[10px]">Psychopathology</div>
+                    <div id="scorePsych" class="text-base font-black text-purple-400">0%</div>
+                </div>
+                <div class="bg-slate-950 p-2 rounded border border-slate-800">
+                    <div class="text-slate-400 text-[10px]">Cross-Cultural</div>
+                    <div id="scoreCultural" class="text-base font-black text-amber-400">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CITATION & DOI MODAL -->
+    <div id="citeModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-lg p-6 rounded-2xl border border-slate-700 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="text-lg font-bold text-purple-400 flex items-center gap-2">
+                    <i class="fa-solid fa-quote-left"></i> Cite Neuro Atlas
+                </h2>
+                <button onclick="closeCiteModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                Neuro Atlas is indexed on Zenodo and citable for research and academic software publications.
+            </p>
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-[11px] font-mono text-cyan-300 relative">
+                <button onclick="copyBibtex()" class="absolute top-2 right-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded">Copy</button>
+                <pre id="bibtexSnippet" class="whitespace-pre-wrap">@software{vasavada2026neuroatlas,
+  author       = {Vasavada, Aarsheya},
+  title        = {NEURO ATLAS: 3D Interactive Neuroanatomy \& Diagnostic Mapping Platform},
+  year         = 2026,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.10849201},
+  url          = {https://aarsheya1807-lang.github.io/NEUROATLAS/}
+}</pre>
+            </div>
+            <button id="btn-copy-bibtex" onclick="copyBibtex()" class="w-full py-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 rounded-lg text-xs font-semibold">
+                Copy BibTeX
+            </button>
+        </div>
+    </div>
+
+    <!-- Hover Tooltip Element -->
+    <div id="neuro-tooltip" style="position: fixed; display: none; pointer-events: none; z-index: 1000; background: rgba(15, 23, 42, 0.9); color: #f8fafc; padding: 6px 12px; border-radius: 6px; font-size: 13px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(4px);"></div>
+
+    <script>
+        const brainData = [
+            { id: "pfc", name: "Prefrontal Cortex", Brodmann: "BA 9, 10, 11, 46, 47", pos: [0, 1.2, 1.8], color: 0x3b82f6, radius: 0.7, function: "Executive functions, decision making, working memory, personality, and social behavior regulation.", lesion: "Executive dysfunction, apathy, disinhibition, impaired judgment, perseveration.", dsm: "Major Depressive Disorder, Schizophrenia, ADHD, Antisocial Personality Disorder.", icd: "ICD-11: 6A70 (Depressive Disorder), 6A20 (Schizophrenia)", cultural: "Somatization of distress across non-Western cohorts frequently corresponds with executive-prefrontal hypoactivation during emotional suppression." },
+            { id: "broca", name: "Broca's Area", Brodmann: "BA 44, 45", pos: [-1.1, 0.6, 1.4], color: 0x60a5fa, radius: 0.4, function: "Motor speech production, language processing, and syntactic comprehension.", lesion: "Broca's Aphasia (expressive, non-fluent speech with preserved comprehension).", dsm: "Neurodevelopmental Language Disorder, Major Neurocognitive Disorder due to Stroke.", icd: "ICD-10: R47.01 (Aphasia)", cultural: "Idioms of distress manifesting as acute mutism or throat constriction." },
+            { id: "wernicke", name: "Wernicke's Area", Brodmann: "BA 22", pos: [-1.3, 0.2, -0.6], color: 0xa855f7, radius: 0.45, function: "Language comprehension, semantic processing, and auditory language recognition.", lesion: "Wernicke's Aphasia (fluent but nonsensical speech, severe comprehension impairment).", dsm: "Substance/Medication-Induced Neurocognitive Disorder, Vascular Neurocognitive Disorder.", icd: "ICD-10: R47.01, ICD-11: 6D80", cultural: "Semantic processing of culturally specific glossaries of distress." },
+            { id: "motor", name: "Primary Motor Cortex", Brodmann: "BA 4", pos: [0, 1.6, 0.4], color: 0xef4444, radius: 0.65, function: "Execution of voluntary motor movements across contralateral body regions.", lesion: "Contralateral hemiparesis or hemiplegia, spasticity, loss of fine motor control.", dsm: "Conversion Disorder (Functional Neurological Symptom Disorder - Motor Subtype).", icd: "ICD-10: G81 (Hemiplegia)", cultural: "Motor-subtype conversion phenomena triggered by acute psychosocial stressors." },
+            { id: "somato", name: "Primary Somatosensory Cortex", Brodmann: "BA 1, 2, 3", pos: [0, 1.6, -0.3], color: 0xf97316, radius: 0.65, function: "Processing tactile sensory input, proprioception, thermal perception, and nociception.", lesion: "Contralateral sensory loss, astereognosis, loss of tactile discrimination.", dsm: "Somatic Symptom Disorder, Persistent Somatoform Pain Disorder.", icd: "ICD-10: R20 (Disturbances of sensation)", cultural: "Cultural amplification of localized sensory parasthesias." },
+            { id: "visual", name: "Primary Visual Cortex", Brodmann: "BA 17", pos: [0, 0.5, -2.1], color: 0x10b981, radius: 0.6, function: "Visual perception, spatial frequency, color orientation, and visual motion processing.", lesion: "Cortical blindness, homonymous hemianopia, visual agnosia, Anton syndrome.", dsm: "Hallucinogen Persisting Perception Disorder (HPPD), Visual Agnosia.", icd: "ICD-10: H53.4 (Visual field defects)", cultural: "Culturally shaped visual visions vs. unformed visual hallucinations." },
+            { id: "auditory", name: "Primary Auditory Cortex", Brodmann: "BA 41, 42", pos: [1.2, 0.3, 0.1], color: 0x06b6d4, radius: 0.4, function: "Processing pitch, volume, auditory localisation, and basic acoustic signals.", lesion: "Cortical deafness, auditory agnosia, central auditory processing disorder.", dsm: "Schizophrenia Spectrum (Auditory Hallucinations Pathway).", icd: "ICD-10: H93.2 (Auditory perception disorders)", cultural: "Auditory phenomena interpreted within localized spiritual frameworks." },
+            { id: "hippo", name: "Hippocampus", Brodmann: "Limbic Structure", pos: [-0.6, -0.3, 0.1], color: 0xeab308, radius: 0.35, function: "Consolidation of short-term memory into long-term memory, spatial navigation.", lesion: "Anterograde amnesia, disorientation, inability to form new declarative memories.", dsm: "Alzheimer's Disease, Dissociative Amnesia, Post-Traumatic Stress Disorder (PTSD).", icd: "ICD-11: 6D80 (Alzheimer Disease)", cultural: "Stress-induced hippocampal volume alterations across trauma cohorts." },
+            { id: "amygdala", name: "Amygdala", Brodmann: "Limbic Structure", pos: [0.6, -0.4, 0.5], color: 0xec4899, radius: 0.3, function: "Emotional evaluation, threat detection, fear conditioning, and emotional memory.", lesion: "Klüver-Bucy syndrome, loss of fear conditioning, emotional blunting, hyperorality.", dsm: "Post-Traumatic Stress Disorder (PTSD), Specific Phobia, Generalized Anxiety Disorder.", icd: "ICD-11: 6B40 (Generalized Anxiety)", cultural: "Hyperactivity in fear-circuits linked to cultural panic syndromes such as fright sickness in Latin America, generating acute autonomic distress, somatic trembling, and soul-loss fear." },
+            { id: "thalamus", name: "Thalamus", Brodmann: "Diencephalon", pos: [0, 0.2, 0], color: 0x8b5cf6, radius: 0.5, function: "Relay hub for sensory and motor signals to cerebral cortex; regulates consciousness and sleep.", lesion: "Thalamic pain syndrome, sensory ataxia, coma, Korsakoff syndrome.", dsm: "Substance-Induced Persisting Amnestic Disorder (Wernicke-Korsakoff).", icd: "ICD-10: F10.6 (Amnestic disorder)", cultural: "Central sensory gating variations under acute somatic stress." },
+            { id: "hypo", name: "Hypothalamus", Brodmann: "Diencephalon", pos: [0, -0.3, 0.4], color: 0xd946ef, radius: 0.3, function: "Endocrine control via pituitary, homeostatic regulation (hunger, thirst, circadian rhythms).", lesion: "Hyperphagia, poikilothermia, central diabetes insipidus, sleep-wake disruption.", dsm: "Anorexia Nervosa, Bulimia Nervosa, Insomnia Disorder, Circadian Rhythm Disorders.", icd: "ICD-11: 7A00 (Insomnia)", cultural: "HPA axis dysregulation in severe exhaustion syndromes." },
+            { id: "cerebellum", name: "Cerebellum", Brodmann: "Cerebellar Cortex", pos: [0, -1.2, -1.5], color: 0x14b8a6, radius: 0.8, function: "Coordination of voluntary movement, balance, posture, motor learning, and timing.", lesion: "Cerebellar ataxia, dysmetria, intention tremor, dysdiadochokinesia, nystagmus.", dsm: "Alcohol Use Disorder (Cerebellar Degeneration Subtype), Autism Spectrum Disorder.", icd: "ICD-10: G11 (Ataxia)", cultural: "Cerebellar contributions to timing-dependent cognitive processing." },
+            { id: "stem", name: "Brainstem", Brodmann: "Midbrain/Pons/Medulla", pos: [0, -1.6, -0.3], color: 0x64748b, radius: 0.55, function: "Autonomic vital functions (respiration, cardiac rhythm, blood pressure).", lesion: "Locked-in syndrome, cranial nerve palsies, respiratory failure, coma.", dsm: "Sleep Apnea-Related Sleep Disorder, Traumatic Brain Injury.", icd: "ICD-10: G93.1 (Anoxic brain damage)", cultural: "Autonomic overflow manifestations in acute fright syndromes." },
+            { id: "insula", name: "Insular Cortex", Brodmann: "BA 13, 14", pos: [-1.0, 0.1, 0.3], color: 0x0284c7, radius: 0.4, function: "Interoceptive awareness, pain perception, taste, visceral sensations, and empathy.", lesion: "Impaired pain perception, altered craving/addiction response, loss of taste.", dsm: "Substance Use Disorders, Somatic Symptom Disorder, Borderline Personality Disorder.", icd: "ICD-11: 6C40 (Substance dependence)", cultural: "Salience network and insular interoceptive overload directly underpin culturally specific neurasthenia and semen-loss anxiety syndromes, translating emotional stress into visceral fatigue and weakness." },
+            { id: "vmpfc", name: "ventromedial PFC", Brodmann: "BA 10, 11, 32", pos: [0, 0.5, 1.5], color: 0x38bdf8, radius: 0.45, function: "Processing risk, fear extinction, moral decision making, and self-referential processing.", lesion: "Poor decision-making in high-risk scenarios, blunted affect, impaired moral reasoning.", dsm: "Major Depressive Disorder, Post-Traumatic Stress Disorder.", icd: "ICD-11: 6B41", cultural: "Default Mode Network (DMN) node involved in self-referential rumination across cultural context frameworks." },
+            { id: "cingulate", name: "Cingulate Cortex", Brodmann: "BA 24, 32, 33", pos: [0, 0.8, 0.3], color: 0xf43f5e, radius: 0.5, function: "Conflict monitoring, error detection, emotional processing, and pain affection.", lesion: "Akinetic mutism, impaired error monitoring, reduced empathy.", dsm: "Obsessive-Compulsive Disorder (OCD), Major Depressive Disorder.", icd: "ICD-11: 6B20 (OCD)", cultural: "Anterior cingulate activation during social exclusion and cultural norm conflict." },
+            { id: "ganglia", name: "Basal Ganglia", Brodmann: "Striatum/Pallidum", pos: [0.7, 0.1, 0.1], color: 0x84cc16, radius: 0.45, function: "Motor control gating, action selection, procedural learning, habit formation.", lesion: "Parkinsonism, chorea, dystonia, hemiballismus, compulsions.", dsm: "Parkinson's Disease Dementia, Tourette's Disorder, Huntington's Disease.", icd: "ICD-10: G20 (Parkinson's)", cultural: "Habitual motor tics and ritualized motor behaviors." },
+            { id: "corpus", name: "Corpus Callosum", Brodmann: "Commissural Fibers", pos: [0, 0.6, -0.1], color: 0x38bdf8, radius: 0.5, function: "Interhemispheric communication, connecting homologous cortical regions.", lesion: "Split-brain syndrome, alien hand syndrome, left-sided apraxia to verbal command.", dsm: "Agenesis of the Corpus Callosum (Neurodevelopmental Presentation).", icd: "ICD-10: Q04.0", cultural: "Interhemispheric transfer efficiency variations." },
+            { id: "parietal", name: "Parietal Lobe", Brodmann: "BA 5, 7", pos: [0, 1.4, -1.0], color: 0xa3e635, radius: 0.65, function: "Spatial orientation, visuospatial attention, sensorimotor integration.", lesion: "Hemispatial neglect, Gerstmann syndrome (acalculia, agraphia, finger agnosia).", dsm: "Neurocognitive Disorder due to Vascular Insult or TBI.", icd: "ICD-10: R48.1 (Apraxia)", cultural: "Body schema boundaries in somatic dissociation." },
+            { id: "temporal", name: "Temporal Lobe", Brodmann: "BA 20, 21, 37", pos: [1.3, -0.3, -0.4], color: 0xfacc15, radius: 0.6, function: "Complex visual processing, object and face recognition, memory retrieval.", lesion: "Prosopagnosia (face blindness), visual object agnosia, temporal lobe epilepsy.", dsm: "Neurocognitive Disorder with Lewy Bodies, Temporal Lobe Epilepsy.", icd: "ICD-10: G40.2 (Epilepsy)", cultural: "Auditory and spiritual phenomena associated with temporal lobe discharges." },
+            { id: "occipital", name: "Occipital Association Area", Brodmann: "BA 18, 19", pos: [0, 0.1, -1.8], color: 0x34d399, radius: 0.55, function: "Higher-order visual synthesis, motion perception, visual-spatial processing.", lesion: "Visual illusions, motion blindness (akinetopsia), color agnosia.", dsm: "Posterior Cortical Atrophy (Visual Variant Alzheimer's).", icd: "ICD-11: 6D80 (Alzheimer Dementia)", cultural: "Visual pattern synthesis variations." },
+            { id: "ofc", name: "Orbitofrontal Cortex", Brodmann: "BA 11, 47", pos: [0, 0.3, 1.6], color: 0xf472b6, radius: 0.42, function: "Reward valuation, pulse control, emotional regulation, and context-dependent decision making.", lesion: "Disinhibited impulses, social inappropriate behavior, emotional lability, poor risk estimation.", dsm: "Disinhibited Social Engagement Disorder, Antisocial Personality Disorder, Obsessive-Compulsive Disorder.", icd: "ICD-11: 6D10 (Personality Disorder)", cultural: "Valuation of social norms and reputation preservation across high-context cultural environments." }
+        ];
+
+        let scene, camera, renderer, controls, raycaster, mouse;
+        let brainMeshGroup = new THREE.Group();
+        let regionMeshes = [];
+        let leftCortexWireframe, rightCortexWireframe;
+        let selectedRegion = null;
+        let currentMode = "anatomical";
+
+        // OVERLAY GROUPS & TRACKERS
+        let brodmannGroup = new THREE.Group();
+        let tractsGroup = new THREE.Group();
+        let pathwaysGroup = new THREE.Group();
+        let brodmannActive = false;
+        let tractsActive = false;
+        let pathwaysActive = false;
+        let currentLesionRadius = 0;
+
+        function initScene() {
+            const container = document.getElementById("canvasContainer");
+            if (!container) return;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0b0f17);
+
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 2, 7);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
+            dirLight.position.set(5, 10, 7);
+            scene.add(dirLight);
+
+            const pointLight = new THREE.PointLight(0x3b82f6, 1.5, 10);
+            pointLight.position.set(0, 0, 0);
+            scene.add(pointLight);
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            scene.add(brainMeshGroup);
+            brainMeshGroup.add(brodmannGroup);
+            brainMeshGroup.add(tractsGroup);
+            brainMeshGroup.add(pathwaysGroup);
+
+            buildBrainRegions();
+            buildBrodmannOverlays();
+            buildWhiteMatterTracts();
+            buildNeurotransmitterPathways();
+
+            window.addEventListener('resize', onWindowResize);
+            renderer.domElement.addEventListener('click', onCanvasClick);
+
+            populateSidebarList();
+            animate();
+        }
+
+        function buildBrainRegions() {
+            const outerShellGeo = new THREE.IcosahedronGeometry(1.8, 5);
+            const pos = outerShellGeo.attributes.position;
+            const v = new THREE.Vector3();
+            for (let i = 0; i < pos.count; i++) {
+                v.fromBufferAttribute(pos, i);
+                const noise = Math.sin(v.x * 4) * Math.cos(v.y * 4) * Math.sin(v.z * 4) * 0.15;
+                v.multiplyScalar(1 + noise);
+                pos.setXYZ(i, v.x, v.y, v.z);
+            }
+            outerShellGeo.computeVertexNormals();
+
+            const shellMat = new THREE.MeshBasicMaterial({
+                color: 0x1e293b,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.18
+            });
+
+            leftCortexWireframe = new THREE.Mesh(outerShellGeo, shellMat);
+            leftCortexWireframe.scale.set(0.9, 0.85, 1.2);
+            leftCortexWireframe.position.set(-0.85, 0.3, -0.1);
+            brainMeshGroup.add(leftCortexWireframe);
+
+            rightCortexWireframe = new THREE.Mesh(outerShellGeo, shellMat);
+            rightCortexWireframe.scale.set(0.9, 0.85, 1.2);
+            rightCortexWireframe.position.set(0.85, 0.3, -0.1);
+            brainMeshGroup.add(rightCortexWireframe);
+
+            brainData.forEach((data) => {
+                const geometry = new THREE.IcosahedronGeometry(data.radius * 0.65, 3);
+
+                const p = geometry.attributes.position;
+                const tempV = new THREE.Vector3();
+                for (let i = 0; i < p.count; i++) {
+                    tempV.fromBufferAttribute(p, i);
+                    const noise = Math.sin(tempV.x * 5) * Math.cos(tempV.y * 5) * 0.1;
+                    tempV.multiplyScalar(1 + noise);
+                    p.setXYZ(i, tempV.x, tempV.y, tempV.z);
+                }
+                geometry.computeVertexNormals();
+
+                const mat = new THREE.MeshPhongMaterial({
+                    color: data.color,
+                    emissive: data.color,
+                    emissiveIntensity: 0.35,
+                    shininess: 90,
+                    transparent: true,
+                    opacity: 0.9
+                });
+
+                const mesh = new THREE.Mesh(geometry, mat);
+                mesh.position.set(data.pos[0], data.pos[1], data.pos[2]);
+                mesh.userData = { ...data, basePos: [...data.pos] };
+
+                brainMeshGroup.add(mesh);
+                regionMeshes.push(mesh);
+            });
+
+            const countEl = document.getElementById("regionCount");
+            if (countEl) countEl.innerText = `${brainData.length} Regions`;
+        }
+
+        // FEATURE 1: BRODMANN AREA OVERLAYS
+        function buildBrodmannOverlays() {
+            brainData.forEach((data) => {
+                const geo = new THREE.RingGeometry(data.radius * 0.7, data.radius * 0.85, 16);
+                const mat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
+                const ring = new THREE.Mesh(geo, mat);
+                ring.position.set(data.pos[0], data.pos[1] + 0.1, data.pos[2]);
+                ring.rotation.x = Math.PI / 2;
+                brodmannGroup.add(ring);
+            });
+            brodmannGroup.visible = false;
+        }
+
+        function toggleBrodmannOverlay() {
+            brodmannActive = !brodmannActive;
+            brodmannGroup.visible = brodmannActive;
+            const btn = document.getElementById("btnBrodmann");
+            if (btn) btn.classList.toggle("bg-cyan-600", brodmannActive);
+        }
+
+        // FEATURE 2: WHITE MATTER TRACTOGRAPHY
+        function buildWhiteMatterTracts() {
+            const tractCurves = [
+                [new THREE.Vector3(-1.1, 0.6, 1.4), new THREE.Vector3(-1.2, 0.4, 0.2), new THREE.Vector3(-1.3, 0.2, -0.6)], // Arcuate Fasciculus
+                [new THREE.Vector3(-1.0, 0.6, -0.1), new THREE.Vector3(0, 0.6, -0.1), new THREE.Vector3(1.0, 0.6, -0.1)]   // Corpus Callosum Fibers
+            ];
+
+            tractCurves.forEach(pts => {
+                const curve = new THREE.CatmullRomCurve3(pts);
+                const geo = new THREE.TubeGeometry(curve, 20, 0.04, 8, false);
+                const mat = new THREE.MeshBasicMaterial({ color: 0x818cf8, transparent: true, opacity: 0.75 });
+                const tube = new THREE.Mesh(geo, mat);
+                tractsGroup.add(tube);
+            });
+            tractsGroup.visible = false;
+        }
+
+        function toggleTractsOverlay() {
+            tractsActive = !tractsActive;
+            tractsGroup.visible = tractsActive;
+            const btn = document.getElementById("btnTracts");
+            if (btn) btn.classList.toggle("bg-indigo-600", tractsActive);
+        }
+
+        // FEATURE 3: NEUROTRANSMITTER PATHWAYS
+        function buildNeurotransmitterPathways() {
+            // Dopaminergic (VTA/SN to PFC/Striatum)
+            const daCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, -1.0, -0.2), new THREE.Vector3(0, -0.2, 0.5), new THREE.Vector3(0, 1.2, 1.8)]);
+            const daGeo = new THREE.TubeGeometry(daCurve, 20, 0.03, 8, false);
+            const daMat = new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.8 });
+            pathwaysGroup.add(new THREE.Mesh(daGeo, daMat));
+
+            // Serotonergic (Raphe Nuclei projections)
+            const htCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, -1.4, -0.3), new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1.4, -1.0)]);
+            const htGeo = new THREE.TubeGeometry(htCurve, 20, 0.03, 8, false);
+            const htMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e, transparent: true, opacity: 0.8 });
+            pathwaysGroup.add(new THREE.Mesh(htGeo, htMat));
+
+            pathwaysGroup.visible = false;
+        }
+
+        function toggleNeurotransmitters() {
+            pathwaysActive = !pathwaysActive;
+            pathwaysGroup.visible = pathwaysActive;
+            const btn = document.getElementById("btnPathways");
+            if (btn) btn.classList.toggle("bg-emerald-600", pathwaysActive);
+        }
+
+        // FEATURE 4: LESION RADIUS SIMULATOR
+        function updateLesionRadius(val) {
+            currentLesionRadius = parseFloat(val);
+            const label = document.getElementById("lesionRadiusVal");
+            if (label) label.innerText = `${currentLesionRadius} mm`;
+
+            if (!selectedRegion) return;
+            const activeMesh = regionMeshes.find(m => m.userData.id === selectedRegion);
+            if (!activeMesh) return;
+
+            const radiusUnits = currentLesionRadius / 10; // Scale mm to 3D scene units
+
+            regionMeshes.forEach(mesh => {
+                const dist = mesh.position.distanceTo(activeMesh.position);
+                if (dist <= radiusUnits && currentLesionRadius > 0) {
+                    mesh.material.emissive.setHex(0xff0000);
+                    mesh.material.emissiveIntensity = 0.9;
+                } else if (mesh.userData.id !== selectedRegion) {
+                    mesh.material.emissive.setHex(0x000000);
+                    mesh.material.emissiveIntensity = 0.2;
+                }
+            });
+
+            renderClinicalPanel(activeMesh.userData);
+        }
+
+        // ============ CLINICAL VIGNETTE & MCQ SIMULATOR (FEATURE 5) ============
+        const difficultyCycle = ["Easy", "Medium", "Hard"];
+
+        function shuffledOptionsFor(correctRegion) {
+            const others = brainData
+                .filter(r => r.id !== correctRegion.id)
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3)
+                .map(r => r.name);
+            return [...others, correctRegion.name].sort(() => Math.random() - 0.5);
+        }
+
+        function generateCases() {
+            // Ten clinical-case style questions drawn from lesion presentations
+            const picks = brainData.slice(0, 10);
+            return picks.map((r, i) => ({
+                id: `case-${i + 1}`,
+                category: "Clinical Vignette",
+                difficulty: difficultyCycle[i % 3],
+                title: `Case ${i + 1}: Focal Presentation`,
+                description: `A patient presents with the following clinical picture: ${r.lesion} Based on this presentation, which brain region is most likely affected?`,
+                options: shuffledOptionsFor(r),
+                correctText: r.name,
+                explanation: `${r.name} (${r.Brodmann}) is responsible for: ${r.function} Associated DSM-5-TR conditions include: ${r.dsm}`
+            }));
+        }
+
+        function generateMCQs() {
+            const pool = [];
+            let counter = 1;
+
+            brainData.forEach((r, i) => {
+                pool.push({
+                    id: `mcq-${counter++}`,
+                    category: "Neuroanatomy",
+                    difficulty: difficultyCycle[i % 3],
+                    title: "Functional Localization",
+                    description: `Which brain region corresponds to ${r.Brodmann} and is primarily responsible for: "${r.function}"`,
+                    options: shuffledOptionsFor(r),
+                    correctText: r.name,
+                    explanation: `${r.name} (${r.Brodmann}) governs: ${r.function}`
+                });
+
+                pool.push({
+                    id: `mcq-${counter++}`,
+                    category: "Psychopathology",
+                    difficulty: difficultyCycle[(i + 1) % 3],
+                    title: "DSM-5-TR Association",
+                    description: `Dysfunction in which region is most classically linked to: ${r.dsm}`,
+                    options: shuffledOptionsFor(r),
+                    correctText: r.name,
+                    explanation: `${r.name} dysfunction presents with: ${r.lesion}`
+                });
+            });
+
+            brainData.forEach((r, i) => {
+                if (pool.length >= 50) return;
+                pool.push({
+                    id: `mcq-${counter++}`,
+                    category: "Cross-Cultural",
+                    difficulty: difficultyCycle[(i + 2) % 3],
+                    title: "Cultural Idiom of Distress",
+                    description: `Which region's dysfunction is discussed in relation to: "${r.cultural}"`,
+                    options: shuffledOptionsFor(r),
+                    correctText: r.name,
+                    explanation: `${r.name}: ${r.cultural}`
+                });
+            });
+
+            return pool.slice(0, 50);
+        }
+
+        let simulatorMode = "cases";
+        let allCasesPool = [];
+        let allMCQPool = [];
+        let filteredQuestions = [];
+        let currentQIndex = 0;
+
+        let categoryStats = {
+            anatomy: { correct: 0, total: 0 },
+            psych: { correct: 0, total: 0 },
+            cultural: { correct: 0, total: 0 }
+        };
+
+        function categoryKey(cat) {
+            if (cat === "Neuroanatomy") return "anatomy";
+            if (cat === "Cross-Cultural") return "cultural";
+            return "psych"; // Psychopathology + Clinical Vignette
+        }
+
+        function initSimulator() {
+            allCasesPool = generateCases();
+            allMCQPool = generateMCQs();
+            filteredQuestions = allCasesPool;
+            currentQIndex = 0;
+            renderCurrentQuestion();
+        }
+
+        function switchSimulatorMode(mode) {
+            simulatorMode = mode;
+            const btnCases = document.getElementById("btn-mode-cases");
+            const btnMcqs = document.getElementById("btn-mode-mcqs");
+            if (btnCases) btnCases.classList.toggle("active", mode === "cases");
+            if (btnMcqs) btnMcqs.classList.toggle("active", mode === "mcqs");
+
+            const diffFilter = document.getElementById("difficulty-filter");
+            if (diffFilter) diffFilter.value = "all";
+
+            filterQuestionsByDifficulty();
+        }
+
+        function filterQuestionsByDifficulty() {
+            const diffFilter = document.getElementById("difficulty-filter");
+            const diff = diffFilter ? diffFilter.value : "all";
+            const source = simulatorMode === "cases" ? allCasesPool : allMCQPool;
+            const matched = diff === "all" ? source : source.filter(q => q.difficulty === diff);
+            filteredQuestions = matched.length > 0 ? matched : source;
+            currentQIndex = 0;
+            renderCurrentQuestion();
+        }
+
+        function renderCurrentQuestion() {
+            const q = filteredQuestions[currentQIndex];
+            const tracker = document.getElementById("question-tracker");
+            const badge = document.getElementById("difficulty-badge");
+            const bar = document.getElementById("quiz-progress-bar");
+            const catTag = document.getElementById("case-category");
+            const titleEl = document.getElementById("case-title");
+            const descEl = document.getElementById("case-description");
+            const optionsEl = document.getElementById("options-container");
+            const feedbackBox = document.getElementById("feedback-box");
+            const prevBtn = document.getElementById("prev-btn");
+            const nextBtn = document.getElementById("next-btn");
+
+            if (!optionsEl) return;
+
+            if (!q) {
+                if (titleEl) titleEl.innerText = "No questions match this filter.";
+                if (descEl) descEl.innerText = "Try selecting a different difficulty level.";
+                optionsEl.innerHTML = "";
+                if (feedbackBox) feedbackBox.style.display = "none";
+                return;
+            }
+
+            if (tracker) tracker.innerText = `Item ${currentQIndex + 1} of ${filteredQuestions.length}`;
+            if (badge) {
+                badge.innerText = q.difficulty;
+                badge.className = `badge badge-${q.difficulty.toLowerCase()}`;
+            }
+            if (bar) bar.style.width = `${((currentQIndex + 1) / filteredQuestions.length) * 100}%`;
+            if (catTag) catTag.innerText = q.category;
+            if (titleEl) titleEl.innerText = q.title;
+            if (descEl) descEl.innerText = q.description;
+
+            optionsEl.innerHTML = "";
+            q.options.forEach(opt => {
+                const btn = document.createElement("button");
+                btn.className = "option-btn";
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(opt, q, btn);
+                optionsEl.appendChild(btn);
+            });
+
+            if (feedbackBox) feedbackBox.style.display = "none";
+            if (prevBtn) prevBtn.style.display = currentQIndex > 0 ? "inline-block" : "none";
+            if (nextBtn) nextBtn.style.display = "none";
+        }
+
+        function selectOption(chosenText, q, btnEl) {
+            const isCorrect = chosenText === q.correctText;
+            const optionsEl = document.getElementById("options-container");
+
+            Array.from(optionsEl.children).forEach(b => {
+                b.disabled = true;
+                if (b.innerText === q.correctText) b.classList.add("correct");
+                else if (b === btnEl) b.classList.add("incorrect");
+            });
+
+            const feedbackBox = document.getElementById("feedback-box");
+            const feedbackTitle = document.getElementById("feedback-title");
+            const feedbackExpl = document.getElementById("feedback-explanation");
+
+            if (feedbackTitle) {
+                feedbackTitle.innerText = isCorrect ? "Correct" : "Incorrect";
+                feedbackTitle.style.color = isCorrect ? "#34d399" : "#f87171";
+            }
+            if (feedbackExpl) feedbackExpl.innerText = q.explanation;
+            if (feedbackBox) feedbackBox.style.display = "block";
+
+            const nextBtn = document.getElementById("next-btn");
+            if (nextBtn) nextBtn.style.display = currentQIndex < filteredQuestions.length - 1 ? "inline-block" : "none";
+
+            updateAnalytics(q.category, isCorrect);
+        }
+
+        function updateAnalytics(category, isCorrect) {
+            const key = categoryKey(category);
+            categoryStats[key].total += 1;
+            if (isCorrect) categoryStats[key].correct += 1;
+
+            const analytics = document.getElementById("analyticsDashboard");
+            if (analytics) analytics.classList.remove("hidden");
+
+            const map = { anatomy: "scoreAnatomy", psych: "scorePsych", cultural: "scoreCultural" };
+            Object.keys(map).forEach(k => {
+                const stat = categoryStats[k];
+                const pct = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0;
+                const el = document.getElementById(map[k]);
+                if (el) el.innerText = `${pct}%`;
+            });
+        }
+
+        function resetDiagnosticSession() {
+            categoryStats = {
+                anatomy: { correct: 0, total: 0 },
+                psych: { correct: 0, total: 0 },
+                cultural: { correct: 0, total: 0 }
+            };
+            const scoreAnatomy = document.getElementById("scoreAnatomy");
+            const scorePsych = document.getElementById("scorePsych");
+            const scoreCultural = document.getElementById("scoreCultural");
+            if (scoreAnatomy) scoreAnatomy.innerText = "0%";
+            if (scorePsych) scorePsych.innerText = "0%";
+            if (scoreCultural) scoreCultural.innerText = "0%";
+
+            const analytics = document.getElementById("analyticsDashboard");
+            if (analytics) analytics.classList.add("hidden");
+
+            currentQIndex = 0;
+            renderCurrentQuestion();
+        }
+
+        function loadNextQuestion() {
+            if (currentQIndex < filteredQuestions.length - 1) {
+                currentQIndex++;
+                renderCurrentQuestion();
+            }
+        }
+
+        function loadPreviousQuestion() {
+            if (currentQIndex > 0) {
+                currentQIndex--;
+                renderCurrentQuestion();
+            }
+        }
+
+        function openVignetteModal() {
+            switchSimulatorMode('cases');
+            const section = document.getElementById("clinical-simulator-section");
+            if (section) section.scrollIntoView({ behavior: "smooth" });
+        }
+
+        // CITATION MODAL HELPERS
+        function openCiteModal() {
+            const modal = document.getElementById("citeModal");
+            if (modal) modal.classList.remove("hidden");
+        }
+
+        function closeCiteModal() {
+            const modal = document.getElementById("citeModal");
+            if (modal) modal.classList.add("hidden");
+        }
+
+        function copyBibtex() {
+            const snippet = document.getElementById("bibtexSnippet").innerText;
+            navigator.clipboard.writeText(snippet);
+            alert("BibTeX citation copied to clipboard!");
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            if (!selectedRegion) brainMeshGroup.rotation.y += 0.0015;
+            renderer.render(scene, camera);
+        }
+
+        function onCanvasClick(event) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(regionMeshes);
+
+            if (intersects.length > 0 && intersects[0]?.object?.userData?.id) {
+                selectRegion(intersects[0].object.userData.id);
+            }
+        }
+
+        function selectRegion(id) {
+            if (!id) return;
+            const data = brainData.find(r => r.id === id);
+            if (!data) return;
+
+            selectedRegion = id;
+
+            regionMeshes.forEach(mesh => {
+                if (mesh.userData && mesh.userData.id === id) {
+                    mesh.material.opacity = 1.0;
+                    mesh.material.emissive.setHex(currentMode === 'lesion' ? 0xff0000 : 0x60a5fa);
+                    mesh.material.emissiveIntensity = 0.8;
+                } else if (mesh.material) {
+                    mesh.material.opacity = 0.25;
+                    mesh.material.emissive.setHex(0x000000);
+                }
+            });
+
+            if (currentLesionRadius > 0) {
+                updateLesionRadius(currentLesionRadius);
+            } else {
+                renderClinicalPanel(data);
+            }
+        }
+
+        function renderClinicalPanel(data) {
+            const panel = document.getElementById("clinicalPanel");
+            if (!panel) return;
+
+            const name = data?.name || "Selected Region";
+            const brodmann = data?.Brodmann || "Anatomical Region";
+            const func = data?.function || "No functional description available.";
+            const lesion = data?.lesion || "No specific lesion profile documented.";
+            const dsm = data?.dsm || "No DSM-5 symptoms associated.";
+            const icd = data?.icd || "ICD code pending.";
+            const cultural = data?.cultural || "Cross-cultural idioms of distress under investigation.";
+            const isLesion = currentMode === "lesion";
+
+            // CALCULATE MOCA / WAIS IMPACT BASED ON LESION RADIUS
+            const mocaImpact = currentLesionRadius > 0
+                ? `Estimated MoCA Domain Drop: -${Math.min(10, Math.round(currentLesionRadius / 2.5))} pts (${name} network disruption)`
+                : "Select lesion radius slider to compute MoCA/WAIS domain impacts.";
+
+            panel.innerHTML = `
+                <div class="space-y-4">
+                    <div class="border-b border-slate-800 pb-3">
+                        <span class="text-xs font-mono text-blue-400 uppercase tracking-wider">${brodmann}</span>
+                        <h2 class="text-2xl font-extrabold text-white flex items-center justify-between">
+                            ${name}
+                            ${isLesion ? '<span class="text-xs bg-red-500/20 text-red-400 border border-red-500/40 px-2 py-0.5 rounded">LESION ACTIVE</span>' : ''}
+                        </h2>
+                    </div>
+
+                    <div class="space-y-1">
+                        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-microscope text-blue-400"></i> Primary Function
+                        </h3>
+                        <p class="text-xs text-slate-300 leading-relaxed bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                            ${func}
+                        </p>
+                    </div>
+
+                    <div class="space-y-1">
+                        <h3 class="text-xs font-semibold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Deficit / Lesion Profile
+                        </h3>
+                        <p class="text-xs text-red-200/90 leading-relaxed bg-red-950/30 p-2.5 rounded-lg border border-red-900/40">
+                            ${lesion}
+                        </p>
+                    </div>
+
+                    <!-- MOCA / WAIS NEUROPSYCH IMPACT OUTPUT -->
+                    <div class="space-y-1">
+                        <h3 class="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-brain text-amber-400"></i> Cognitive Battery Drop (MoCA/WAIS)
+                        </h3>
+                        <p class="text-xs text-amber-200/90 leading-relaxed bg-amber-950/30 p-2.5 rounded-lg border border-amber-900/40 font-mono">
+                            ${mocaImpact}
+                        </p>
+                    </div>
+
+                    <div class="space-y-1">
+                        <h3 class="text-xs font-semibold text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-book-medical"></i> Associated DSM-5-TR Criteria
+                        </h3>
+                        <p class="text-xs text-purple-200/90 leading-relaxed bg-purple-950/30 p-2.5 rounded-lg border border-purple-900/40">
+                            ${dsm}
+                        </p>
+                    </div>
+
+                    <div class="space-y-1">
+                        <h3 class="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-code"></i> Diagnostic Classifications
+                        </h3>
+                        <p class="text-xs font-mono text-emerald-300 bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-900/40">
+                            ${icd}
+                        </p>
+                    </div>
+
+                    <!-- CROSS CULTURAL CONTEXT SECTION -->
+                    <div class="space-y-1">
+                        <h3 class="text-xs font-semibold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-earth-americas"></i> Cultural Context & Idioms of Distress
+                        </h3>
+                        <p class="text-xs text-cyan-200/90 leading-relaxed bg-cyan-950/30 p-2.5 rounded-lg border border-cyan-900/40">
+                            ${cultural}
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateExplodedView(val) {
+            const factor = (val || 0) / 100;
+            const label = document.getElementById("explodedVal");
+            if (label) label.innerText = `${val}%`;
+
+            regionMeshes.forEach(mesh => {
+                if (mesh.userData?.basePos) {
+                    const base = mesh.userData.basePos;
+                    mesh.position.set(
+                        base[0] * (1 + factor * 1.5),
+                        base[1] * (1 + factor * 1.5),
+                        base[2] * (1 + factor * 1.5)
+                    );
+                }
+            });
+
+            if (leftCortexWireframe && rightCortexWireframe) {
+                leftCortexWireframe.position.x = -0.85 - factor * 0.8;
+                rightCortexWireframe.position.x = 0.85 + factor * 0.8;
+            }
+        }
+
+        function updateOpacity(val) {
+            const opacity = (val || 85) / 100;
+            const label = document.getElementById("opacityVal");
+            if (label) label.innerText = `${val}%`;
+
+            regionMeshes.forEach(mesh => {
+                if (mesh.userData?.id !== selectedRegion && mesh.material) {
+                    mesh.material.opacity = opacity;
+                }
+            });
+
+            if (leftCortexWireframe && rightCortexWireframe) {
+                leftCortexWireframe.material.opacity = opacity * 0.25;
+                rightCortexWireframe.material.opacity = opacity * 0.25;
+            }
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btnA = document.getElementById("btnAnatomical");
+            const btnL = document.getElementById("btnLesion");
+
+            if (mode === "anatomical") {
+                btnA.className = "flex-1 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white transition-all";
+                btnL.className = "flex-1 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all";
+            } else {
+                btnL.className = "flex-1 py-1.5 text-xs font-semibold rounded-md bg-red-600 text-white transition-all";
+                btnA.className = "flex-1 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all";
+            }
+
+            if (selectedRegion) selectRegion(selectedRegion);
+        }
+
+        function filterRegions() {
+            const query = document.getElementById("searchInput").value.toLowerCase();
+            const list = document.getElementById("regionList");
+            if (!list) return;
+
+            const items = list.querySelectorAll("button");
+            items.forEach(btn => {
+                const text = btn.innerText.toLowerCase();
+                btn.style.display = text.includes(query) ? "block" : "none";
+            });
+        }
+
+        function setCameraPreset(preset) {
+            if (!camera || !controls) return;
+            switch (preset) {
+                case 'lateral':
+                    camera.position.set(7, 0, 0);
+                    break;
+                case 'medial':
+                    camera.position.set(0, 0, 7);
+                    break;
+                case 'superior':
+                    camera.position.set(0, 7, 0.1);
+                    break;
+                case 'limbic':
+                    camera.position.set(2, 1.5, 3);
+                    break;
+            }
+            controls.target.set(0, 0, 0);
+            controls.update();
+        }
+
+        function populateSidebarList() {
+            const list = document.getElementById("regionList");
+            if (!list) return;
+
+            list.innerHTML = "";
+            brainData.forEach(r => {
+                const btn = document.createElement("button");
+                btn.className = "w-full text-left px-2 py-1 rounded bg-slate-900/50 hover:bg-slate-800 text-slate-300 hover:text-white transition-all border border-slate-800/80 truncate";
+                btn.innerText = r.name;
+                btn.onclick = () => selectRegion(r.id);
+                list.appendChild(btn);
+            });
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById("canvasContainer");
+            if (!container || !camera || !renderer) return;
+
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function scrollToAtlas() {
+            const el = document.getElementById("atlas");
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        window.onload = function () {
+            initScene();
+            initSimulator();
+        };
+    </script>
+
+    <style>
+  #na-ext-root {
+    --na-bg: #0a0e14;
+    --na-panel: #10161f;
+    --na-panel-2: #151d29;
+    --na-border: #223047;
+    --na-text: #dce6f2;
+    --na-muted: #8fa3bd;
+    --na-cyan: #4fd8e8;
+    --na-purple: #a78bfa;
+    --na-amber: #f2b84b;
+    --na-danger: #f2607a;
+    --na-radius: 14px;
+    background: var(--na-bg);
+    color: var(--na-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    padding: 64px 6vw 96px;
+  }
+  #na-ext-root * { box-sizing: border-box; }
+  #na-ext-root h1, #na-ext-root h2, #na-ext-root h3 { margin: 0; letter-spacing: -0.01em; }
+
+  .na-ext-intro { max-width: 760px; margin-bottom: 48px; }
+  .na-ext-intro .na-eyebrow {
+    font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 12px; color: var(--na-cyan); text-transform: uppercase;
+    letter-spacing: 0.12em; margin-bottom: 10px; display: block;
+  }
+  .na-ext-intro h1 { font-size: clamp(28px, 3.4vw, 40px); font-weight: 700; }
+  .na-ext-intro p { color: var(--na-muted); font-size: 15.5px; line-height: 1.6; margin-top: 12px; }
+
+  .na-mod {
+    border: 1px solid var(--na-border);
+    background: linear-gradient(180deg, var(--na-panel), var(--na-panel-2));
+    border-radius: var(--na-radius);
+    margin-bottom: 28px;
+    overflow: hidden;
+    scroll-margin-top: 90px;
+  }
+  .na-mod-head {
+    display: flex; align-items: center; gap: 14px;
+    padding: 22px 26px; cursor: pointer; user-select: none;
+    border-bottom: 1px solid transparent;
+  }
+  .na-mod-head:hover { background: rgba(79, 216, 232, 0.04); }
+  .na-mod-num {
+    font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 13px; color: var(--na-cyan);
+    border: 1px solid var(--na-border); border-radius: 8px;
+    width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .na-mod-title { flex: 1; }
+  .na-mod-title h2 { font-size: 19px; font-weight: 650; }
+  .na-mod-title span { display: block; font-size: 13px; color: var(--na-muted); margin-top: 3px; }
+  .na-mod-chevron { color: var(--na-muted); transition: transform 0.25s ease; font-size: 14px; }
+  .na-mod.open .na-mod-chevron { transform: rotate(180deg); color: var(--na-cyan); }
+  .na-mod.open .na-mod-head { border-bottom-color: var(--na-border); }
+
+  .na-mod-body {
+    max-height: 0; overflow: hidden; transition: max-height 0.35s ease;
+  }
+  .na-mod.open .na-mod-body { max-height: 4000px; }
+  .na-mod-inner { padding: 6px 26px 26px; }
+
+  .na-topic {
+    border: 1px solid var(--na-border); border-radius: 10px;
+    padding: 16px 18px; margin-top: 12px; background: rgba(255,255,255,0.015);
+  }
+  .na-topic h3 { font-size: 15px; color: var(--na-cyan); font-weight: 600; margin-bottom: 6px; }
+  .na-topic p { font-size: 14px; line-height: 1.6; color: var(--na-text); opacity: 0.92; margin: 0; }
+  .na-topic .na-tag {
+    display: inline-block; font-size: 10.5px; font-family: monospace;
+    color: var(--na-purple); border: 1px solid var(--na-purple);
+    border-radius: 999px; padding: 1px 8px; margin-bottom: 8px; opacity: 0.85;
+  }
+
+  .na-compare { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13.5px; }
+  .na-compare th, .na-compare td { padding: 10px 12px; border: 1px solid var(--na-border); text-align: left; }
+  .na-compare th { background: rgba(79,216,232,0.08); color: var(--na-cyan); font-weight: 600; }
+  .na-compare td.na-bio { color: var(--na-amber); }
+  .na-compare td.na-ann { color: var(--na-purple); }
+
+  .na-sim { border: 1px dashed var(--na-border); border-radius: 10px; padding: 18px; margin-top: 16px; }
+  .na-sim-q { font-size: 14px; color: var(--na-muted); margin-bottom: 10px; }
+  .na-sim-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .na-btn {
+    background: transparent; border: 1px solid var(--na-border); color: var(--na-text);
+    padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .na-btn:hover { border-color: var(--na-cyan); color: var(--na-cyan); }
+  .na-sim-result {
+    margin-top: 14px; padding: 12px 14px; border-radius: 8px;
+    background: rgba(79,216,232,0.07); border: 1px solid var(--na-border);
+    font-size: 13.5px; line-height: 1.55; display: none;
+  }
+  .na-sim-result.show { display: block; }
+  .na-sim-reset { margin-top: 10px; }
+
+  .na-calc { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-top: 14px; }
+  .na-calc label { font-size: 12px; color: var(--na-muted); display: block; margin-bottom: 5px; }
+  .na-calc input {
+    background: var(--na-bg); border: 1px solid var(--na-border); color: var(--na-text);
+    border-radius: 8px; padding: 8px 10px; font-size: 13.5px; width: 120px;
+  }
+  .na-calc-out {
+    margin-top: 16px; padding: 14px; border-radius: 10px;
+    background: rgba(167,139,250,0.08); border: 1px solid var(--na-border);
+    font-family: monospace; font-size: 13.5px;
+  }
+
+  .na-code {
+    background: #060a10; border: 1px solid var(--na-border); border-radius: 10px;
+    padding: 14px 16px; font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 12.5px; line-height: 1.6; color: #9be9c9; overflow-x: auto; margin-top: 12px;
+  }
+
+  .na-timeline { position: relative; margin-top: 18px; padding-left: 22px; }
+  .na-timeline::before {
+    content: ""; position: absolute; left: 6px; top: 4px; bottom: 4px; width: 2px;
+    background: linear-gradient(180deg, var(--na-cyan), var(--na-purple));
+  }
+  .na-tl-item { position: relative; padding-bottom: 20px; }
+  .na-tl-item::before {
+    content: ""; position: absolute; left: -22px; top: 3px; width: 10px; height: 10px;
+    border-radius: 50%; background: var(--na-cyan); box-shadow: 0 0 0 3px rgba(79,216,232,0.15);
+  }
+  .na-tl-year { font-family: monospace; color: var(--na-cyan); font-size: 12.5px; }
+  .na-tl-item h3 { font-size: 14.5px; margin: 3px 0 4px; }
+  .na-tl-item p { font-size: 13.5px; color: var(--na-muted); margin: 0; line-height: 1.5; }
+
+  .na-case-select {
+    background: var(--na-bg); border: 1px solid var(--na-border); color: var(--na-text);
+    padding: 9px 12px; border-radius: 8px; font-size: 13.5px; width: 100%; max-width: 360px;
+  }
+  .na-case-card { margin-top: 14px; display: none; }
+  .na-case-card.show { display: block; }
+
+  @media (max-width: 640px) {
+    #na-ext-root { padding: 48px 5vw 72px; }
+    .na-mod-head { padding: 18px; }
+    .na-mod-inner { padding: 4px 18px 20px; }
+  }
+</style>
+
+<section id="na-ext-root">
+
+  <div class="na-ext-intro">
+    <span class="na-eyebrow">Extended Reference · Sections 08–18</span>
+    <h1>Beyond the Atlas</h1>
+    <p>
+      Eleven additional modules extending Neuro Atlas from structural mapping into
+      behavior, plasticity, computation, ethics, clinical reasoning, and the
+      history of the field. Click any module to expand it.
+    </p>
   </div>
 
-  <!-- Right: Control Panel -->
-  <div id="panel">
-    <!-- Navigation Tabs -->
-    <div class="nav-tabs">
-      <button class="nav-tab active" id="tab-explore" onclick="setMode('explore')">Explore Mode</button>
-      <button class="nav-tab" id="tab-lesion" onclick="setMode('lesion')">Virtual Lesion Mode</button>
-      <button class="nav-tab" id="tab-game" onclick="setMode('game')">Neuro-Detective Game</button>
-    </div>
-
-    <!-- Dropdown Selector -->
-    <div class="control-group">
-      <label for="brain-region-select">Select Brain Region (20 Structures)</label>
-      <select id="brain-region-select" onchange="onRegionSelect(this.value)">
-        <option value="" disabled>-- Choose a Region --</option>
-        <option value="dlpfc">Dorsolateral Prefrontal Cortex (dlPFC)</option>
-        <option value="vmpfc">Ventromedial Prefrontal Cortex (vmPFC)</option>
-        <option value="broca">Broca's Area (Brodmann 44/45)</option>
-        <option value="wernicke">Wernicke's Area (Brodmann 22)</option>
-        <option value="amygdala">Amygdala (Basolateral & Central)</option>
-        <option value="hippocampus">Hippocampus (CA1-CA3 & Dentate Gyrus)</option>
-        <option value="accumbens" selected>Nucleus Accumbens (Ventral Striatum)</option>
-        <option value="substantia">Substantia Nigra (Pars Compacta)</option>
-        <option value="thalamus">Thalamus</option>
-        <option value="hypothalamus">Hypothalamus</option>
-        <option value="acc">Anterior Cingulate Cortex (ACC)</option>
-        <option value="ffa">Fusiform Face Area (FFA)</option>
-        <option value="cerebellum">Cerebellum (Hemispheres)</option>
-        <option value="m1">Primary Motor Cortex (M1)</option>
-        <option value="s1">Primary Somatosensory Cortex (S1)</option>
-        <option value="insula">Insular Cortex (Insula)</option>
-      </select>
-    </div>
-
-    <!-- Main Header View -->
-    <div class="header-block">
-      <h2 class="header-title" id="region-title">Nucleus Accumbens</h2>
-      <span class="status-badge status-healthy" id="status-badge">Healthy State</span>
-    </div>
-
-    <!-- Interactive Clinical Data Display -->
-    <div id="explore-view">
-      <div class="info-card">
-        <h4>Anatomical & Neurochemical Profile</h4>
-        <p id="info-profile">Key node of the ventral striatum. Receives dense dopaminergic projections from the Ventral Tegmental Area (VTA) via the mesolimbic pathway.</p>
+  <div class="na-mod" id="sec-08">
+    <div class="na-mod-head" onclick="naExtToggle('sec-08')">
+      <div class="na-mod-num">08</div>
+      <div class="na-mod-title">
+        <h2>Behavioral &amp; Affective Neuroscience</h2>
+        <span>Emotion circuitry, the stress axis, and reward architecture</span>
       </div>
-
-      <div class="info-card">
-        <h4>Clinical Function & Cognitive Role</h4>
-        <p id="info-function">Mediates reward prediction error, incentive salience ("wanting"), reinforcement learning, and goal-directed behavioral initiation.</p>
-      </div>
-
-      <div class="info-card">
-        <h4>DSM-5-TR & ICD-11 Classifications</h4>
-        <p id="info-dsm">Substance-Related and Addictive Disorders (DSM-5-TR) / Disorders due to substance use or addictive behaviours (ICD-11: 6C40-6C4E).</p>
-      </div>
+      <div class="na-mod-chevron">▾</div>
     </div>
-
-    <!-- Game View Mode -->
-    <div id="game-view" class="game-box">
-      <h4 style="color:#38bdf8; margin-bottom:8px; font-size:14px;">Case Diagnosis Challenge</h4>
-      <p id="game-scenario" style="font-size:13px; color:#cbd5e1; margin-bottom:12px;">Patient presents with expressive aphasia, non-fluent speech, but intact language comprehension.</p>
-      <button class="btn" onclick="checkAnswer()">Submit Selection as Diagnosis</button>
-      <p id="game-feedback" style="margin-top:10px; font-size:13px; font-weight:bold;"></p>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <span class="na-tag">CIRCUITRY</span>
+          <h3>Circuitry of Emotion</h3>
+          <p>The amygdala drives rapid threat appraisal and fear conditioning; the anterior cingulate cortex (ACC) integrates affective salience with conflict monitoring and pain; the insula maps interoceptive states onto subjective feeling, underpinning empathy and disgust. Together these three nodes form the core limbic-paralimbic triangle behind fear, anxiety, pleasure, and social emotion.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">HPA AXIS</span>
+          <h3>Stress Axis Dynamics</h3>
+          <p>The hypothalamic-pituitary-adrenal cascade — corticotropin-releasing hormone (CRH) → adrenocorticotropic hormone (ACTH) → cortisol — mobilizes energy and vigilance under acute stress. Repeated activation without recovery produces allostatic load: cortisol-mediated dendritic atrophy in CA3 hippocampal neurons, impaired negative feedback, and downstream vulnerability to depression and cognitive decline.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">REWARD</span>
+          <h3>Reward &amp; Addiction Architecture</h3>
+          <p>Dopaminergic projections from the ventral tegmental area (VTA) to the nucleus accumbens encode reward prediction error rather than pleasure itself. Repeated drug exposure produces incentive sensitization (cue-triggered wanting outpaces liking) alongside tolerance at the receptor level, driving the shift from voluntary use to compulsive, habit-driven seeking mediated by the dorsal striatum.</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script>
-    /* --- 20 BRAIN REGIONS DATABASE --- */
-    const brainDatabase = {
-      accumbens: {
-        name: "Nucleus Accumbens (Ventral Striatum)",
-        pos: { x: 0, y: -0.8, z: 0.8 },
-        color: 0xffa500,
-        profile: "Central component of the ventral striatum receiving dopaminergic inputs from the VTA.",
-        function: "Incentive salience, reward processing, reinforcement learning, and pleasure pathway integration.",
-        dsm: "Substance Use Disorders (DSM-5-TR) / Addictive Behaviours (ICD-11 6C40).",
-        lesion: "Anhedonia, apathy, reduced motivation, and abulia."
-      },
-      dlpfc: {
-        name: "Dorsolateral Prefrontal Cortex (dlPFC)",
-        pos: { x: -1.5, y: 1.8, z: 1.8 },
-        color: 0x38bdf8,
-        profile: "Located on the lateral surface of the frontal lobe (Brodmann areas 9 and 46).",
-        function: "Working memory, cognitive flexibility, executive planning, rule switching, and abstract reasoning.",
-        dsm: "Major Neurocognitive Disorder (DSM-5-TR) / Schizophrenia spectrum (ICD-11 6A20).",
-        lesion: "Dysexecutive syndrome, poor planning, impaired working memory, cognitive inflexibility."
-      },
-      vmpfc: {
-        name: "Ventromedial Prefrontal Cortex (vmPFC)",
-        pos: { x: 0, y: 0.5, z: 2.2 },
-        color: 0xf43f5e,
-        profile: "Located in the bottom of the frontal lobes, highly connected with limbic structures.",
-        function: "Processing risk, moral decision-making, emotion regulation, and evaluating personal values.",
-        dsm: "Disruptive, Impulse-Control, and Conduct Disorders (DSM-5-TR).",
-        lesion: "Impaired moral judgement, risky decision-making (e.g., Iowa Gambling Task deficit), social disinhibition."
-      },
-      broca: {
-        name: "Broca's Area (Brodmann 44/45)",
-        pos: { x: -2.2, y: 0.8, z: 1.0 },
-        color: 0x8b5cf6,
-        profile: "Located in the inferior frontal gyrus of the dominant (usually left) hemisphere.",
-        function: "Motor speech production, syntactic processing, and expressive language execution.",
-        dsm: "Neurodevelopmental Language Disorders (DSM-5-TR) / Aphasia syndromes (ICD-11 MA80.0).",
-        lesion: "Expressive (Broca's) Aphasia: Slow, effortful, non-fluent speech with intact comprehension."
-      },
-      wernicke: {
-        name: "Wernicke's Area (Brodmann 22)",
-        pos: { x: -2.3, y: 0.2, z: -1.2 },
-        color: 0x10b981,
-        profile: "Located in the posterior section of the superior temporal gyrus in dominant hemisphere.",
-        function: "Language comprehension, phonological decoding, and semantic interpretation.",
-        dsm: "Communication Disorders (DSM-5-TR) / Sensory Aphasia (ICD-11).",
-        lesion: "Receptive (Wernicke's) Aphasia: Fluent, paraphasic 'word salad' speech with severe comprehension loss."
-      },
-      amygdala: {
-        name: "Amygdala (Basolateral & Central)",
-        pos: { x: -1.2, y: -0.8, z: 0.3 },
-        color: 0xec4899,
-        profile: "Almond-shaped structure situated deep within the temporal lobes.",
-        function: "Threat detection, fear conditioning, emotional memory encoding, and autonomic response triggering.",
-        dsm: "Post-Traumatic Stress Disorder & Generalized Anxiety Disorder (DSM-5-TR).",
-        lesion: "Klüver-Bucy syndrome, loss of fear conditioning, inability to recognize facial expressions of fear."
-      },
-      hippocampus: {
-        name: "Hippocampus (CA1-CA3 & Dentate Gyrus)",
-        pos: { x: -1.4, y: -0.6, z: -0.6 },
-        color: 0x06b6d4,
-        profile: "S-shaped structure located in the medial temporal lobe consolidation circuit.",
-        function: "Declarative memory formation (episodic/semantic) and spatial navigation.",
-        dsm: "Alzheimer's Disease / Mild & Major Neurocognitive Disorders (DSM-5-TR / ICD-11 6D80).",
-        lesion: "Severe anterograde amnesia, inability to form new long-term explicit memories."
-      },
-      substantia: {
-        name: "Substantia Nigra (Pars Compacta)",
-        pos: { x: 0, y: -1.2, z: -0.4 },
-        color: 0xeab308,
-        profile: "Midbrain structure containing dense dopaminergic neurons projecting to the dorsal striatum.",
-        function: "Motor control initiation, basal ganglia movement modulation, motor learning.",
-        dsm: "Neurocognitive Disorder Due to Parkinson's Disease (DSM-5-TR / ICD-11 8A00).",
-        lesion: "Parkinsonian triad: Resting tremor, rigidity, bradykinesia, and postural instability."
-      },
-      thalamus: {
-        name: "Thalamus",
-        pos: { x: 0, y: 0.2, z: -0.2 },
-        color: 0xa855f7,
-        profile: "Large symmetrical mass of gray matter situated in the dorsal part of the diencephalon.",
-        function: "Sensory relay station (except olfaction), cortical arousal regulation, consciousness gating.",
-        dsm: "Disorders of Consciousness / Sleep-Wake Disorders (DSM-5-TR).",
-        lesion: "Thalamic pain syndrome, sensory loss, altered consciousness, dense sensory neglect."
-      },
-      hypothalamus: {
-        name: "Hypothalamus",
-        pos: { x: 0, y: -0.6, z: 0.2 },
-        color: 0xef4444,
-        profile: "Small region at the base of the brain near the pituitary gland.",
-        function: "Homeostatic regulation: temperature, hunger, circadian rhythms, neuroendocrine HPA axis response.",
-        dsm: "Feeding and Eating Disorders / Sleep Disorders (DSM-5-TR).",
-        lesion: "Severe autonomic dysregulation, hyperphagia, poikilothermia, diabetes insipidus."
-      },
-      acc: {
-        name: "Anterior Cingulate Cortex (ACC)",
-        pos: { x: 0, y: 1.2, z: 0.8 },
-        color: 0xf97316,
-        profile: "Collar-like region wrapping around the anterior corpus callosum.",
-        function: "Error monitoring, conflict resolution, affective pain processing, selective attention.",
-        dsm: "Obsessive-Compulsive Disorder & Major Depressive Disorder (DSM-5-TR).",
-        lesion: "Akinetic mutism, profound apathy, reduced distress response to pain."
-      },
-      ffa: {
-        name: "Fusiform Face Area (FFA)",
-        pos: { x: -1.6, y: -1.8, z: -1.2 },
-        color: 0x14b8a6,
-        profile: "Located on the ventral surface of the temporal lobe (fusiform gyrus).",
-        function: "Expert visual categorization, specifically high-level facial recognition.",
-        dsm: "Agnosic Syndromes / Neurocognitive Visual Impairments (ICD-11).",
-        lesion: "Prosopagnosia (face blindness): Inability to recognize familiar faces visually."
-      },
-      cerebellum: {
-        name: "Cerebellum (Hemispheres)",
-        pos: { x: 0, y: -2.2, z: -2.0 },
-        color: 0x6366f1,
-        profile: "Located posterior to the brainstem with a highly folded cerebellar cortex.",
-        function: "Motor coordination, timing, balance, precision fine-tuning, and procedural memory.",
-        dsm: "Ataxic Disorders / Cerebellar Cognitive Affective Syndrome (ICD-11 8A20).",
-        lesion: "Ataxia, dysmetria, intention tremor, dysdiadochokinesia."
-      },
-      m1: {
-        name: "Primary Motor Cortex (M1)",
-        pos: { x: -1.2, y: 2.2, z: -0.2 },
-        color: 0x84cc16,
-        profile: "Precentral gyrus of the frontal lobe (Brodmann area 4).",
-        function: "Execution of voluntary motor movements across the somatotopic motor homunculus.",
-        dsm: "Motor Impairment / Vascular Brain Injury Syndromes (ICD-11).",
-        lesion: "Contralateral hemiparesis or flaccid paralysis of corresponding body parts."
-      },
-      s1: {
-        name: "Primary Somatosensory Cortex (S1)",
-        pos: { x: -1.2, y: 2.2, z: -0.8 },
-        color: 0x0284c7,
-        profile: "Postcentral gyrus of the parietal lobe (Brodmann areas 1, 2, 3).",
-        function: "Processing somatosensory inputs: touch, pain, temperature, and proprioception.",
-        dsm: "Somatosensory Processing Impairments (ICD-11).",
-        lesion: "Contralateral loss of tactile discrimination, astereognosis, loss of proprioception."
-      },
-      insula: {
-        name: "Insular Cortex (Insula)",
-        pos: { x: -1.8, y: 0.2, z: 0.2 },
-        color: 0xd946ef,
-        profile: "Folded deep within the lateral sulcus separating temporal and frontal/parietal lobes.",
-        function: "Interoceptive awareness, visceral sensation, empathy, disgust processing.",
-        dsm: "Somatic Symptom Disorders / Substance Dependence (DSM-5-TR).",
-        lesion: "Altered pain threshold, loss of bodily craving awareness, loss of disgust reaction."
-      }
+  <div class="na-mod" id="sec-09">
+    <div class="na-mod-head" onclick="naExtToggle('sec-09')">
+      <div class="na-mod-num">09</div>
+      <div class="na-mod-title">
+        <h2>Neurorehabilitation, Plasticity &amp; Brain Interventions</h2>
+        <span>LTP/LTD, non-invasive stimulation, and recovery after injury</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <span class="na-tag">PLASTICITY</span>
+          <h3>Mechanisms of Neuroplasticity</h3>
+          <p>Long-term potentiation (LTP) strengthens synapses via NMDA-receptor-dependent calcium influx and AMPA receptor insertion; long-term depression (LTD) weakens them through phosphatase-driven receptor removal. Structural correlates include axonal sprouting into denervated territory and activity-dependent remodeling of dendritic spine size and density.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">NIBS</span>
+          <h3>Non-Invasive Brain Stimulation — target selector</h3>
+          <p style="margin-bottom:10px;">Select a modality to see its typical clinical target and mechanism.</p>
+          <div class="na-sim-opts" id="nibs-opts">
+            <button class="na-btn" onclick="naNibs('rtms')">rTMS</button>
+            <button class="na-btn" onclick="naNibs('tdcs')">tDCS</button>
+            <button class="na-btn" onclick="naNibs('dbs')">DBS</button>
+          </div>
+          <div class="na-sim-result" id="nibs-out"></div>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">RECOVERY</span>
+          <h3>Functional Recovery &amp; TBI</h3>
+          <p>Post-stroke recovery follows a proportional-recovery curve for many patients, driven by peri-infarct cortical reorganization and diaschisis resolution. Cognitive remediation programs (errorless learning, spaced retrieval, compensatory strategy training) exploit residual plasticity, while diffuse axonal injury in TBI often demands network-level rather than lesion-focal rehabilitation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="na-mod" id="sec-10">
+    <div class="na-mod-head" onclick="naExtToggle('sec-10')">
+      <div class="na-mod-num">10</div>
+      <div class="na-mod-title">
+        <h2>Computational Neuroscience &amp; AI Paradigms</h2>
+        <span>Biological vs. artificial networks, BCIs, and predictive processing</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <h3>Biological vs. Artificial Neural Networks</h3>
+          <table class="na-compare">
+            <tr><th>Property</th><th>Biological neuron</th><th>Artificial node (ANN)</th></tr>
+            <tr><td>Signal</td><td class="na-bio">All-or-none action potential</td><td class="na-ann">Continuous scalar activation</td></tr>
+            <tr><td>Timing</td><td class="na-bio">Millisecond spike timing matters (STDP)</td><td class="na-ann">Timing usually abstracted away</td></tr>
+            <tr><td>Weights</td><td class="na-bio">Synaptic strength, activity-dependent (Hebbian)</td><td class="na-ann">Numeric weight, backprop-optimized</td></tr>
+            <tr><td>Refractory period</td><td class="na-bio">Absolute + relative, limits firing rate</td><td class="na-ann">No analogue</td></tr>
+            <tr><td>Learning rule</td><td class="na-bio">Local, unsupervised (mostly)</td><td class="na-ann">Global gradient descent, supervised</td></tr>
+          </table>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">BCI</span>
+          <h3>Neural Decoding &amp; Brain-Computer Interfaces</h3>
+          <p>Motor BCIs record population spiking or local field potentials from motor cortex, decode intended kinematics with linear or recurrent models, and drive a prosthetic effector in a closed loop refined by feedback. Speech BCIs decode articulatory or phonetic representations from sensorimotor cortex and synthesize text or audio in real time.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">FREE ENERGY</span>
+          <h3>Predictive Processing &amp; the Free Energy Principle</h3>
+          <p>Friston's framework casts the brain as a hierarchical Bayesian inference engine that minimizes prediction error (free energy) by updating internal generative models or acting on the world to make sensations match predictions. Perception is inference; action is prediction fulfilled through movement.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="na-mod" id="sec-11">
+    <div class="na-mod-head" onclick="naExtToggle('sec-11')">
+      <div class="na-mod-num">11</div>
+      <div class="na-mod-title">
+        <h2>Clinical Neuro-Ethics &amp; Medicolegal Frameworks</h2>
+        <span>Neurolaw, enhancement ethics, and capacity assessment</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <span class="na-tag">NEUROLAW</span>
+          <h3>Neurolaw Reference</h3>
+          <p>Neuroimaging is increasingly offered in competency, insanity, and mitigation proceedings, but courts weigh it against Daubert/Frye admissibility standards — group-level findings (e.g., fMRI activation maps) don't straightforwardly license claims about a single defendant's mental state at a specific past moment.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">ENHANCEMENT</span>
+          <h3>Ethics of Enhancement &amp; Neurotechnology</h3>
+          <p>Debates center on distributive justice (unequal access to nootropics or BCIs), authenticity (whether cognitive enhancement changes the self doing the enhancing), and emerging neural privacy/neurodata rights as neural signals become recordable outside clinical settings.</p>
+        </div>
+        <div class="na-topic">
+          <span class="na-tag">CONSENT</span>
+          <h3>Informed Consent in Altered States</h3>
+          <p>Capacity assessment requires evaluating four components — understanding, appreciation, reasoning, and expressing a choice — which can be selectively impaired in executive dysfunction, dementia, or psychosis, meaning a global diagnosis alone does not determine incapacity.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="na-mod" id="sec-12">
+    <div class="na-mod-head" onclick="naExtToggle('sec-12')">
+      <div class="na-mod-num">12</div>
+      <div class="na-mod-title">
+        <h2>Interactive Clinical Case Repository — "The Neuro-Clinic"</h2>
+        <span>Lesion vignettes and a differential-diagnosis decision tree</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <h3>Lesion Locators &amp; Case Studies</h3>
+          <p style="margin-bottom:10px;">Choose a classic case to load its vignette.</p>
+          <select class="na-case-select" id="na-case-select" onchange="naLoadCase(this.value)">
+            <option value="">— select a case —</option>
+            <option value="broca">Broca's aphasia</option>
+            <option value="wernicke">Wernicke's aphasia</option>
+            <option value="kluver">Klüver-Bucy syndrome</option>
+            <option value="split">Split-brain (callosotomy)</option>
+            <option value="gage">Phineas Gage</option>
+          </select>
+          <div class="na-case-card" id="na-case-broca">
+            <div class="na-topic"><span class="na-tag">CASE</span><h3>Broca's Aphasia</h3>
+            <p><strong>Lesion:</strong> Posterior inferior frontal gyrus (Broca's area, BA 44/45), dominant hemisphere.<br><strong>Presentation:</strong> Non-fluent, effortful, agrammatic speech with relatively preserved comprehension; frequent awareness of the deficit and associated frustration.<br><strong>Teaching point:</strong> Production &gt;&gt; comprehension deficit; often accompanied by right hemiparesis given proximity to motor cortex.</p></div>
+          </div>
+          <div class="na-case-card" id="na-case-wernicke">
+            <div class="na-topic"><span class="na-tag">CASE</span><h3>Wernicke's Aphasia</h3>
+            <p><strong>Lesion:</strong> Posterior superior temporal gyrus (Wernicke's area, BA 22), dominant hemisphere.<br><strong>Presentation:</strong> Fluent but semantically empty, paraphasic speech ("word salad") with severely impaired comprehension; often unaware of the deficit (anosognosia).<br><strong>Teaching point:</strong> Comprehension &gt;&gt; production deficit — the mirror image of Broca's.</p></div>
+          </div>
+          <div class="na-case-card" id="na-case-kluver">
+            <div class="na-topic"><span class="na-tag">CASE</span><h3>Klüver-Bucy Syndrome</h3>
+            <p><strong>Lesion:</strong> Bilateral amygdala / anterior temporal lobe (originally described after bilateral temporal lobectomy).<br><strong>Presentation:</strong> Hyperorality, hypersexuality, placidity, visual agnosia, and hyperphagia.<br><strong>Teaching point:</strong> Demonstrates the amygdala's role in assigning emotional/threat salience to sensory objects.</p></div>
+          </div>
+          <div class="na-case-card" id="na-case-split">
+            <div class="na-topic"><span class="na-tag">CASE</span><h3>Split-Brain (Callosotomy)</h3>
+            <p><strong>Lesion:</strong> Surgical section of the corpus callosum (historically for intractable epilepsy).<br><strong>Presentation:</strong> Left-hand objects/words presented to the right hemisphere cannot be verbally named (language is left-lateralized) despite intact non-verbal recognition — the classic Sperry/Gazzaniga paradigm.<br><strong>Teaching point:</strong> Reveals functional and callosal division of labor between hemispheres.</p></div>
+          </div>
+          <div class="na-case-card" id="na-case-gage">
+            <div class="na-topic"><span class="na-tag">CASE</span><h3>Phineas Gage</h3>
+            <p><strong>Lesion:</strong> Bilateral (predominantly left) ventromedial and orbitofrontal cortex, from a tamping-iron injury (1848).<br><strong>Presentation:</strong> Preserved intellect and memory alongside profound personality change — impulsivity, poor planning, and disinhibited social conduct.<br><strong>Teaching point:</strong> Foundational case linking prefrontal cortex to emotion regulation and decision-making, not just "executive function" abstractly.</p></div>
+          </div>
+        </div>
+
+        <div class="na-topic">
+          <span class="na-tag">SIMULATOR</span>
+          <h3>Differential Diagnosis Simulator</h3>
+          <div class="na-sim" id="na-dx-sim">
+            <div class="na-sim-q" id="na-dx-q">Presenting symptom: is speech <strong>fluent</strong> or <strong>non-fluent</strong>?</div>
+            <div class="na-sim-opts" id="na-dx-opts">
+              <button class="na-btn" onclick="naDx('fluent')">Fluent</button>
+              <button class="na-btn" onclick="naDx('nonfluent')">Non-fluent</button>
+            </div>
+            <div class="na-sim-result" id="na-dx-result"></div>
+            <div class="na-sim-reset"><button class="na-btn" onclick="naDxReset()">↺ Restart simulator</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="na-mod" id="sec-13">
+    <div class="na-mod-head" onclick="naExtToggle('sec-13')">
+      <div class="na-mod-num">13</div>
+      <div class="na-mod-title">
+        <h2>Molecular &amp; Cellular Neurobiology</h2>
+        <span>Ion channels, glia, and the molecular basis of LTP</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic"><h3>Ion Channels &amp; Excitability</h3>
+        <p>Voltage-gated Na⁺ channels drive the depolarizing upstroke of the action potential; delayed-rectifier K⁺ channels repolarize it; voltage-gated Ca²⁺ channels at the presynaptic terminal couple depolarization to vesicle fusion. Channelopathies in these subunits underlie epilepsy, migraine, and periodic paralysis syndromes.</p></div>
+        <div class="na-topic"><h3>Glia: Beyond Support Cells</h3>
+        <p>Astrocytes buffer extracellular K⁺, regulate the blood-brain barrier, and participate in tripartite synaptic signaling; oligodendrocytes myelinate CNS axons; microglia perform activity-dependent synaptic pruning and immune surveillance, implicating them in both development and neurodegeneration.</p></div>
+        <div class="na-topic"><h3>Molecular Basis of LTP</h3>
+        <p>NMDA receptor coincidence detection (requiring both glutamate binding and postsynaptic depolarization to relieve Mg²⁺ block) triggers Ca²⁺ influx, CaMKII autophosphorylation, and AMPA receptor trafficking to the membrane — the core molecular cascade behind synaptic strengthening and much of associative memory.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="na-mod" id="sec-14">
+    <div class="na-mod-head" onclick="naExtToggle('sec-14')">
+      <div class="na-mod-num">14</div>
+      <div class="na-mod-title">
+        <h2>Gut-Brain Axis &amp; Systemic Neurobiology</h2>
+        <span>Microbiome signaling, vagal tone, and heart-rate variability</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic"><h3>Microbiome-Brain Signaling</h3>
+        <p>Gut microbiota influence CNS function via vagal afferents, microbial metabolites (short-chain fatty acids), immune/cytokine signaling, and modulation of tryptophan metabolism upstream of serotonin synthesis — implicated in mood, stress reactivity, and neurodevelopment.</p></div>
+        <div class="na-topic"><h3>Heart-Rate Variability as a Window on Autonomic-CNS Coupling</h3>
+        <p>HRV indexes the balance of sympathetic and parasympathetic (vagal) input to the heart; higher vagally-mediated HRV correlates with prefrontal regulatory capacity per polyvagal and neurovisceral integration models, making it a common biomarker in stress and affective-disorder research.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="na-mod" id="sec-15">
+    <div class="na-mod-head" onclick="naExtToggle('sec-15')">
+      <div class="na-mod-num">15</div>
+      <div class="na-mod-title">
+        <h2>Sleep, Consciousness &amp; the Glymphatic System</h2>
+        <span>Sleep architecture, arousal states, and CSF-mediated clearance</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic"><h3>Sleep Architecture</h3>
+        <p>NREM stages 1–3 (with stage 3 slow-wave sleep) alternate with REM sleep in ~90-minute cycles; slow-wave sleep is dense early in the night and supports declarative memory consolidation, while REM proportion rises toward morning and supports emotional and procedural memory processing.</p></div>
+        <div class="na-topic"><h3>Levels &amp; Contents of Consciousness</h3>
+        <p>Clinical arousal states (alert, drowsy, stupor, coma) are distinguished from the disorders-of-consciousness spectrum (vegetative/unresponsive wakefulness, minimally conscious state) by the presence or absence of reproducible, purposeful responsiveness rather than arousal alone.</p></div>
+        <div class="na-topic"><h3>The Glymphatic System</h3>
+        <p>A perivascular CSF-interstitial fluid exchange pathway, driven largely by aquaporin-4 channels on astrocytic end-feet, clears metabolic waste including amyloid-β; clearance is substantially higher during sleep, linking chronic sleep disruption to neurodegenerative risk.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="na-mod" id="sec-16">
+    <div class="na-mod-head" onclick="naExtToggle('sec-16')">
+      <div class="na-mod-num">16</div>
+      <div class="na-mod-title">
+        <h2>Sensory Systems &amp; Perceptual Pathways</h2>
+        <span>Vision, audition, and somatosensation from receptor to cortex</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic"><h3>Visual Pathway</h3>
+        <p>Retina → optic nerve/chiasm → lateral geniculate nucleus → primary visual cortex (V1), then splitting into the dorsal ("where/how") stream to parietal cortex and the ventral ("what") stream to inferotemporal cortex.</p></div>
+        <div class="na-topic"><h3>Auditory Pathway</h3>
+        <p>Cochlea → cochlear nucleus → superior olivary complex (binaural localization) → inferior colliculus → medial geniculate nucleus → primary auditory cortex (Heschl's gyrus), tonotopically organized at every relay.</p></div>
+        <div class="na-topic"><h3>Somatosensory Pathway</h3>
+        <p>Dorsal column-medial lemniscus pathway carries fine touch/proprioception ipsilaterally before decussating at the medulla; the anterolateral (spinothalamic) system carries pain/temperature and decussates near entry level — a dissociation clinically exploited in localizing spinal cord lesions.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="na-mod" id="sec-17">
+    <div class="na-mod-head" onclick="naExtToggle('sec-17')">
+      <div class="na-mod-num">17</div>
+      <div class="na-mod-title">
+        <h2>The Open Neuro Lab</h2>
+        <span>Python snippets, open datasets, and a Z-score calculator</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-topic">
+          <span class="na-tag">CALCULATOR</span>
+          <h3>Z-Score / Percentile Calculator</h3>
+          <p style="margin-bottom:8px;">For converting a raw neuropsych score to a standardized z-score and percentile against a normative mean/SD.</p>
+          <div class="na-calc">
+            <div><label>Raw score</label><input type="number" id="na-z-raw" value="0"></div>
+            <div><label>Norm mean</label><input type="number" id="na-z-mean" value="0"></div>
+            <div><label>Norm SD</label><input type="number" id="na-z-sd" value="1"></div>
+            <button class="na-btn" onclick="naCalcZ()">Calculate</button>
+          </div>
+          <div class="na-calc-out" id="na-z-out">z = —, percentile = —</div>
+        </div>
+        <div class="na-topic">
+          <h3>Python Snippet — quick EEG bandpower</h3>
+          <div class="na-code">import numpy as np
+from scipy.signal import welch
+
+def bandpower(signal, fs, band):
+    f, Pxx = welch(signal, fs=fs, nperseg=fs*2)
+    lo, hi = band
+    idx = (f &gt;= lo) &amp; (f &lt;= hi)
+    return np.trapz(Pxx[idx], f[idx])
+
+# e.g. alpha power 8-12 Hz
+alpha = bandpower(eeg_channel, fs=256, band=(8, 12))</div>
+        </div>
+        <div class="na-topic">
+          <h3>Open Datasets Worth Knowing</h3>
+          <p>OpenNeuro (BIDS-format MRI/EEG/MEG), the Human Connectome Project, ADNI (Alzheimer's neuroimaging), PhysioNet (physiological signals incl. EEG/ECG), and the Allen Brain Atlas (gene expression &amp; connectivity) are common starting points for open-access analysis.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="na-mod" id="sec-18">
+    <div class="na-mod-head" onclick="naExtToggle('sec-18')">
+      <div class="na-mod-num">18</div>
+      <div class="na-mod-title">
+        <h2>Historical &amp; Epistemological Foundations</h2>
+        <span>Classic discoveries and paradigm shifts in the field</span>
+      </div>
+      <div class="na-mod-chevron">▾</div>
+    </div>
+    <div class="na-mod-body">
+      <div class="na-mod-inner">
+        <div class="na-timeline">
+          <div class="na-tl-item"><span class="na-tl-year">1848</span><h3>Phineas Gage</h3><p>First widely documented case tying frontal lobe damage to personality change, reshaping ideas about localization of "character."</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1861–74</span><h3>Broca &amp; Wernicke</h3><p>Localization of expressive and receptive language function, founding the modern lesion-deficit method.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1906</span><h3>Cajal &amp; Golgi (Nobel)</h3><p>The neuron doctrine vs. reticular theory debate resolves in favor of neurons as discrete signaling units.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1950s</span><h3>Hodgkin &amp; Huxley</h3><p>Quantitative ionic model of the action potential — the mathematical foundation of modern electrophysiology.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1960s–70s</span><h3>Split-Brain Studies</h3><p>Sperry &amp; Gazzaniga's callosotomy work reframes hemispheric specialization and the unity of consciousness.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1973</span><h3>Bliss &amp; Lømo</h3><p>First description of long-term potentiation, launching the modern synaptic theory of memory.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">1990s</span><h3>fMRI &amp; the "Decade of the Brain"</h3><p>Non-invasive functional imaging shifts neuroscience from lesion inference to in-vivo functional mapping.</p></div>
+          <div class="na-tl-item"><span class="na-tl-year">2013–present</span><h3>Connectomics &amp; Big Data Neuroscience</h3><p>The Human Connectome Project, large-scale calcium imaging, and computational psychiatry mark a shift toward network-level and data-driven models of brain function.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<script>
+  function naExtToggle(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  function naNibs(kind) {
+    const data = {
+      rtms: "rTMS (repetitive Transcranial Magnetic Stimulation): induces focal cortical currents via a pulsed magnetic coil. Common target: left dorsolateral prefrontal cortex (DLPFC) for treatment-resistant depression. High-frequency = excitatory; low-frequency = inhibitory.",
+      tdcs: "tDCS (transcranial Direct Current Stimulation): a weak constant current shifts resting membrane potential rather than triggering spikes. Anodal stimulation increases cortical excitability; cathodal decreases it. Used in motor rehab and cognitive research, with a lower evidence bar than rTMS.",
+      dbs: "DBS (Deep Brain Stimulation): surgically implanted electrodes deliver high-frequency stimulation to subcortical targets — subthalamic nucleus or globus pallidus interna for Parkinson's disease, and (investigationally) subcallosal cingulate for refractory depression."
     };
+    const out = document.getElementById('nibs-out');
+    out.textContent = data[kind];
+    out.classList.add('show');
+  }
 
-    /* --- THREE.JS 3D ENVIRONMENT SETUP --- */
-    let scene, camera, renderer, controls;
-    let brainMeshGroup = new THREE.Group();
-    let regionNodes = {};
-    let activeMode = 'explore';
-    let currentSelectedKey = 'accumbens';
+  function naLoadCase(id) {
+    document.querySelectorAll('.na-case-card').forEach(el => el.classList.remove('show'));
+    if (id) document.getElementById('na-case-' + id).classList.add('show');
+  }
 
-    function init3D() {
-      const container = document.getElementById('canvas-container');
-      
-      // Scene
-      scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x080d18, 0.08);
-
-      // Camera
-      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-      camera.position.set(0, 2, 9);
-
-      // Renderer
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      renderer.setPixelRatio(window.devicePixelRatio);
-      container.appendChild(renderer.domElement);
-
-      // Controls
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-      scene.add(ambientLight);
-
-      const pointLight1 = new THREE.PointLight(0x38bdf8, 1.5);
-      pointLight1.position.set(10, 10, 10);
-      scene.add(pointLight1);
-
-      const pointLight2 = new THREE.PointLight(0xec4899, 1);
-      pointLight2.position.set(-10, -10, -10);
-      scene.add(pointLight2);
-
-      // Build Translucent Wireframe Cortex Outer Shell
-      buildCortexOutline();
-
-      // Build 3D Region Spheres/Nodes
-      buildRegionNodes();
-
-      scene.add(brainMeshGroup);
-
-      // Raycaster for Mouse Interactivity
-      const raycaster = new THREE.Raycaster();
-      const mouse = new THREE.Vector2();
-
-      renderer.domElement.addEventListener('pointerdown', (e) => {
-        const rect = renderer.domElement.getBoundingClientRect();
-        mouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
-        mouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
-
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(Object.values(regionNodes));
-
-        if (intersects.length > 0) {
-          const clickedNode = intersects[0].object;
-          onRegionSelect(clickedNode.userData.key);
-          document.getElementById('brain-region-select').value = clickedNode.userData.key;
-        }
-      });
-
-      // Window Resize Listener
-      window.addEventListener('resize', () => {
-        camera.aspect = container.clientWidth / container.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(container.clientWidth, container.clientHeight);
-      });
-
-      animate();
-    }
-
-    /* Build Outer Cortex Wireframe Shell */
-    function buildCortexOutline() {
-      const outerGeo = new THREE.SphereGeometry(3.2, 32, 24);
-      outerGeo.scale(1, 0.8, 1.1); // Brain-like ellipsoid shape
-      
-      const wireframeMat = new THREE.MeshBasicMaterial({
-        color: 0x334155,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.25
-      });
-
-      const cortexMesh = new THREE.Mesh(outerGeo, wireframeMat);
-      brainMeshGroup.add(cortexMesh);
-    }
-
-    /* Populate 3D Interactive Sub-structures */
-    function buildRegionNodes() {
-      Object.keys(brainDatabase).forEach(key => {
-        const data = brainDatabase[key];
-        const geo = new THREE.IcosahedronGeometry(0.35, 2);
-        const mat = new THREE.MeshStandardMaterial({
-          color: data.color,
-          roughness: 0.3,
-          metalness: 0.2,
-          emissive: data.color,
-          emissiveIntensity: 0.2,
-          transparent: true,
-          opacity: 0.85
-        });
-
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(data.pos.x, data.pos.y, data.pos.z);
-        mesh.userData = { key: key };
-
-        regionNodes[key] = mesh;
-        brainMeshGroup.add(mesh);
+  const naDxTree = {
+    fluent: {
+      q: "Is comprehension impaired?",
+      opts: [
+        { label: "Comprehension impaired", next: "wernicke_result" },
+        { label: "Comprehension intact", next: "conduction_result" }
+      ]
+    },
+    nonfluent: {
+      q: "Is comprehension relatively preserved?",
+      opts: [
+        { label: "Comprehension preserved", next: "broca_result" },
+        { label: "Comprehension also impaired", next: "global_result" }
+      ]
+    },
+    wernicke_result: { result: "Localization: posterior superior temporal gyrus (Wernicke's area). Likely diagnosis: Wernicke's (receptive) aphasia — fluent, paraphasic, poor comprehension, often anosognosic." },
+    conduction_result: { result: "Localization: arcuate fasciculus (the white-matter tract linking Wernicke's and Broca's areas). Likely diagnosis: Conduction aphasia — fluent speech, intact comprehension, but disproportionately poor repetition." },
+    broca_result: { result: "Localization: posterior inferior frontal gyrus (Broca's area). Likely diagnosis: Broca's (expressive) aphasia — non-fluent, agrammatic, effortful, with preserved comprehension." },
+    global_result: { result: "Localization: large dominant-hemisphere perisylvian lesion involving both Broca's and Wernicke's territory (e.g., MCA territory stroke). Likely diagnosis: Global aphasia — severe impairment across production and comprehension." }
+  };
+  let naDxState = null;
+  function naDx(choice) {
+    let target;
+    if (!naDxState) {
+      target = naDxTree[choice];
+      naDxState = choice;
+      if (target.result) { naDxShowResult(target.result); return; }
+      document.getElementById('na-dx-q').innerHTML = "<strong>" + target.q + "</strong>";
+      const optsDiv = document.getElementById('na-dx-opts');
+      optsDiv.innerHTML = "";
+      target.opts.forEach(o => {
+        const btn = document.createElement('button');
+        btn.className = 'na-btn';
+        btn.textContent = o.label;
+        btn.onclick = () => naDxGo(o.next);
+        optsDiv.appendChild(btn);
       });
     }
+  }
+  function naDxGo(nextKey) {
+    const node = naDxTree[nextKey];
+    if (node.result) { naDxShowResult(node.result); return; }
+  }
+  function naDxShowResult(text) {
+    document.getElementById('na-dx-opts').innerHTML = "";
+    document.getElementById('na-dx-q').innerHTML = "";
+    const res = document.getElementById('na-dx-result');
+    res.textContent = text;
+    res.classList.add('show');
+  }
+  function naDxReset() {
+    naDxState = null;
+    document.getElementById('na-dx-result').classList.remove('show');
+    document.getElementById('na-dx-q').innerHTML = "Presenting symptom: is speech <strong>fluent</strong> or <strong>non-fluent</strong>?";
+    document.getElementById('na-dx-opts').innerHTML =
+      '<button class="na-btn" onclick="naDx(\'fluent\')">Fluent</button>' +
+      '<button class="na-btn" onclick="naDx(\'nonfluent\')">Non-fluent</button>';
+  }
 
-    /* Animation Loop */
-    function animate() {
-      requestAnimationFrame(animate);
-      brainMeshGroup.rotation.y += 0.002; // Gentle background rotation
-      controls.update();
-      renderer.render(scene, camera);
+  function naCalcZ() {
+    const raw = parseFloat(document.getElementById('na-z-raw').value);
+    const mean = parseFloat(document.getElementById('na-z-mean').value);
+    const sd = parseFloat(document.getElementById('na-z-sd').value);
+    if (isNaN(raw) || isNaN(mean) || isNaN(sd) || sd === 0) {
+      document.getElementById('na-z-out').textContent = "Enter valid numbers (SD ≠ 0).";
+      return;
     }
+    const z = (raw - mean) / sd;
+    const cdf = 0.5 * (1 + erf(z / Math.SQRT2));
+    const pct = (cdf * 100).toFixed(1);
+    document.getElementById('na-z-out').textContent =
+      `z = ${z.toFixed(2)}   |   percentile ≈ ${pct}th`;
+  }
+  function erf(x) {
+    const sign = x >= 0 ? 1 : -1;
+    x = Math.abs(x);
+    const a1=0.254829592, a2=-0.284496736, a3=1.421413741, a4=-1.453152027, a5=1.061405429, p=0.3275911;
+    const t = 1 / (1 + p * x);
+    const y = 1 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1) * t * Math.exp(-x * x);
+    return sign * y;
+  }
+</script>
 
-    /* --- APPLICATION LOGIC --- */
-    function onRegionSelect(key) {
-      currentSelectedKey = key;
-      const data = brainDatabase[key];
-      if (!data) return;
-
-      // Update UI Text
-      document.getElementById('region-title').innerText = data.name;
-
-      // Highlight selected node in 3D
-      Object.keys(regionNodes).forEach(k => {
-        if (k === key) {
-          regionNodes[k].scale.set(1.5, 1.5, 1.5);
-          regionNodes[k].material.emissiveIntensity = 0.8;
-        } else {
-          regionNodes[k].scale.set(1, 1, 1);
-          regionNodes[k].material.emissiveIntensity = 0.2;
-        }
-      });
-
-      // Render mode-dependent details
-      updatePanelContent();
-    }
-
-    function setMode(mode) {
-      activeMode = mode;
-      
-      // Update Tab CSS
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-      document.getElementById(`tab-${mode}`).classList.add('active');
-
-      const badge = document.getElementById('status-badge');
-      if (mode === 'lesion') {
-        badge.innerText = "Virtual Lesion Applied";
-        badge.className = "status-badge status-lesioned";
-      } else {
-        badge.innerText = "Healthy State";
-        badge.className = "status-badge status-healthy";
-      }
-
-      updatePanelContent();
-    }
-
-    function updatePanelContent() {
-      const data = brainDatabase[currentSelectedKey];
-      const exploreView = document.getElementById('explore-view');
-      const gameView = document.getElementById('game-view');
-
-      if (activeMode === 'game') {
-        exploreView.style.display = 'none';
-        gameView.style.display = 'block';
-        document.getElementById('game-feedback').innerText = "";
-      } else {
-        exploreView.style.display = 'block';
-        gameView.style.display = 'none';
-
-        if (activeMode === 'explore') {
-          document.getElementById('info-profile').innerText = data.profile;
-          document.getElementById('info-function').innerText = data.function;
-          document.getElementById('info-dsm').innerText = data.dsm;
-        } else if (activeMode === 'lesion') {
-          document.getElementById('info-profile').innerText = `CRITICAL DEFICIT: Simulated damage to ${data.name}.`;
-          document.getElementById('info-function').innerText = `Symptom Manifestation: ${data.lesion}`;
-          document.getElementById('info-dsm').innerText = `Diagnostic Correlates: Primary neuro-behavioral impairment manifest under clinical lesion protocols.`;
-        }
-      }
-    }
-
-    function checkAnswer() {
-      const feedback = document.getElementById('game-feedback');
-      if (currentSelectedKey === 'broca') {
-        feedback.style.color = "#10b981";
-        feedback.innerText = "CORRECT DIAGNOSIS! Expressive non-fluent motor aphasia corresponds directly to Broca's Area (Brodmann 44/45).";
-      } else {
-        feedback.style.color = "#ef4444";
-        feedback.innerText = "INCORRECT DIAGNOSIS. Re-examine the motor-speech production features and try selecting another region.";
-      }
-    }
-
-    // Initialize App on load
-    window.onload = () => {
-      init3D();
-      onRegionSelect('accumbens');
-    };
-  </script>
 </body>
 </html>
